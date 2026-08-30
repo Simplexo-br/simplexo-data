@@ -10,9 +10,13 @@ completed:
   - initial_architecture_and_adrs_drafted
   - initial_oca_provider_competitor_audits_drafted
   - drive_folder_read_verified_empty
+  - phase_issues_1_through_15_created
 blocked:
   - id: github-project-access
     detail: GitHub token lacks read:project; corporate Project MCP returned internal error
     resolution: Grant Project scopes, inspect Project 13, and add backlog
+  - id: github-actions-billing
+    detail: Run 33334919755 did not start; GitHub reported failed recent payments or spending limit
+    resolution: Resolve organization/account Actions billing or spending limit, then rerun documentation CI
 pending_gates: [architecture_human_review, legal_provider_review, lgpd_legal_review, licensing_decision, phase_0_exit_review]
-next_action: Complete Phase 0 evidence and Project backlog, run CI, and obtain architecture approval before Phase 1
+next_action: Resolve Project access and Actions billing, link issues 1-15 to Project 13, rerun CI, review Phase 0 documents, and obtain architecture approval
