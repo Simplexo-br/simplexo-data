@@ -1,0 +1,18 @@
+schema_version: 1
+project: simplexo-data
+repository: Simplexo-br/simplexo-data
+default_branch: main
+phase: {number: 0, name: discovery-and-architecture, status: in_progress}
+checkpoint: {date: 2026-08-30, summary: Initial recovery and Phase 0 baseline}
+completed:
+  - repository_state_recovered
+  - continuity_files_created
+  - initial_architecture_and_adrs_drafted
+  - initial_oca_provider_competitor_audits_drafted
+  - drive_folder_read_verified_empty
+blocked:
+  - id: github-project-access
+    detail: GitHub token lacks read:project; corporate Project MCP returned internal error
+    resolution: Grant Project scopes, inspect Project 13, and add backlog
+pending_gates: [architecture_human_review, legal_provider_review, lgpd_legal_review, licensing_decision, phase_0_exit_review]
+next_action: Complete Phase 0 evidence and Project backlog, run CI, and obtain architecture approval before Phase 1

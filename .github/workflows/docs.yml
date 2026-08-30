@@ -1,0 +1,19 @@
+name: Documentation integrity
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check canonical files
+        run: |
+          test -s AGENTS.md
+          test -s .simplexo/state.yaml
+          test -s docs/CURRENT.md
+          test -s docs/ARCHITECTURE.md
+          test -s docs/OCA_REUSE_MATRIX.md
+      - name: Reject private keys
+        run: |
+          if git grep -n -- 'BEGIN .*PRIVATE KEY' -- ':!*.md'; then exit 1; fi
