@@ -1,4 +1,7 @@
 ## Context and scope
+## Context budget (LOW / MEDIUM / HIGH) and expansion reason
+## Evidence reused / new evidence
+## Full audit (no / trigger and scope)
 ## Odoo/OCA/Simplexo gap analysis
 ## Changes and migrations
 ## Tests actually executed and results
