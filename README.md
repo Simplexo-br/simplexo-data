@@ -6,7 +6,7 @@ Os milhões de CNPJs não são replicados nos bancos Odoo nem viram `res.partner
 
 ## Estado
 
-Fase 0 — Discovery e Arquitetura. Leia `AGENTS.md`, `.simplexo/state.yaml` e `docs/CURRENT.md`, nesta ordem. Nenhum módulo Odoo deve ser iniciado antes do gate técnico da Fase 0.
+Fase 0 — Discovery e Arquitetura. Comece por `PROJECT_STATE.md` e siga a leitura seletiva definida em `AGENTS.md`; consulte estado/documentação detalhados somente quando a tarefa exigir. Nenhum módulo Odoo deve ser iniciado antes do gate técnico da Fase 0.
 
 - Repositório: `Simplexo-br/simplexo-data`
 - GitHub Project: https://github.com/orgs/Simplexo-br/projects/13

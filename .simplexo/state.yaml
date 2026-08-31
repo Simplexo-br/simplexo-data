@@ -3,7 +3,7 @@ project: simplexo-data
 repository: Simplexo-br/simplexo-data
 default_branch: main
 phase: {number: 0, name: discovery-and-architecture, status: in_progress}
-checkpoint: {date: 2026-08-30, summary: Initial recovery and Phase 0 baseline}
+checkpoint: {date: 2026-08-31, summary: CTEP governance migration on chore/ctep-governance}
 completed:
   - repository_state_recovered
   - continuity_files_created
@@ -11,12 +11,27 @@ completed:
   - initial_oca_provider_competitor_audits_drafted
   - drive_folder_read_verified_empty
   - phase_issues_1_through_15_created
+  - github_project_13_access_verified
+  - phase_issues_1_through_15_verified_in_project
+  - ctep_governance_migrated
+  - ctep_pull_request_16_opened
+  - phase_0_project_item_marked_in_progress
+  - phase_0_targeted_gap_review_recorded
 blocked:
-  - id: github-project-access
-    detail: GitHub token lacks read:project; corporate Project MCP returned internal error
-    resolution: Grant Project scopes, inspect Project 13, and add backlog
   - id: github-actions-billing
-    detail: Run 33334919755 did not start; GitHub reported failed recent payments or spending limit
+    detail: Runs 33334919755 and 33334967455 did not start; GitHub reported failed recent payments or spending limit
     resolution: Resolve organization/account Actions billing or spending limit, then rerun documentation CI
 pending_gates: [architecture_human_review, legal_provider_review, lgpd_legal_review, licensing_decision, phase_0_exit_review]
-next_action: Resolve Project access and Actions billing, link issues 1-15 to Project 13, rerun CI, review Phase 0 documents, and obtain architecture approval
+next_action: Merge CTEP governance after review, resolve Actions billing, rerun CI, complete Phase 0 document deltas, and obtain architecture approval
+context_efficiency:
+  context_budget: HIGH
+  selective_reading_used: true
+  full_audit_triggered: true
+  full_audit_reason: Explicit CTEP migration request and governance audit
+  reused_evidence_count: 9
+  new_evidence_count: 3
+  files_read_count: 34
+  files_changed_count: 10
+  targeted_tests_first: true
+  context_expansions: 1
+  avoidable_rework_detected: false

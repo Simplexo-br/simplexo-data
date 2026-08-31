@@ -10,10 +10,17 @@ jobs:
       - name: Check canonical files
         run: |
           test -s AGENTS.md
+          test -s PROJECT_STATE.md
           test -s .simplexo/state.yaml
           test -s docs/CURRENT.md
+          test -s docs/GOVERNANCE.md
           test -s docs/ARCHITECTURE.md
           test -s docs/OCA_REUSE_MATRIX.md
+      - name: Check operational state is concise
+        run: |
+          lines=$(wc -l < PROJECT_STATE.md)
+          test "$lines" -ge 60
+          test "$lines" -le 150
       - name: Reject private keys
         run: |
-          if git grep -n -- 'BEGIN .*PRIVATE KEY' -- ':!*.md'; then exit 1; fi
+          if git grep -n -E -- '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'; then exit 1; fi
