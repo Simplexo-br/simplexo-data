@@ -14,6 +14,9 @@ completed:
   - github_project_13_access_verified
   - phase_issues_1_through_15_verified_in_project
   - ctep_governance_migrated
+  - ctep_pull_request_16_opened
+  - phase_0_project_item_marked_in_progress
+  - phase_0_targeted_gap_review_recorded
 blocked:
   - id: github-actions-billing
     detail: Runs 33334919755 and 33334967455 did not start; GitHub reported failed recent payments or spending limit
@@ -26,7 +29,7 @@ context_efficiency:
   full_audit_triggered: true
   full_audit_reason: Explicit CTEP migration request and governance audit
   reused_evidence_count: 9
-  new_evidence_count: 2
+  new_evidence_count: 3
   files_read_count: 34
   files_changed_count: 10
   targeted_tests_first: true

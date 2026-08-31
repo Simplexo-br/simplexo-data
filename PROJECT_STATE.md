@@ -11,9 +11,9 @@
 ## Estado atual
 
 - Entrega em andamento: revisão e gate da arquitetura da Fase 0.
-- Branch de migração CTEP: `chore/ctep-governance`.
+- Branch/PR de migração CTEP: `chore/ctep-governance`, [PR #16](https://github.com/Simplexo-br/simplexo-data/pull/16).
 - Baseline técnica: commits `016c113` e `af8442c`.
-- Project #13: acessível, 15 itens, issues #1–#15 vinculadas, todos em `Todo` na última verificação.
+- Project #13: acessível, 15 itens e issues #1–#15 vinculadas; Fase 0 em `In Progress`, demais itens em `Todo`.
 - Drive oficial: acessível e vazio na última verificação.
 - CI: workflows criados, mas runners não iniciam por billing/spending limit do GitHub.
 - PRs: nenhum antes desta migração.
@@ -67,7 +67,7 @@
 
 ## Próximos passos
 
-1. Concluir revisão/PR da migração CTEP sem mudança funcional.
+1. Revisar e mesclar o PR #16 sem mudança funcional.
 2. Corrigir billing/spending de Actions e obter CI documental executado/verde.
 3. Revisar os documentos de Fase 0, completar pins/licenças/validações pendentes e registrar deltas.
 4. Obter aprovação humana do gate arquitetural.
