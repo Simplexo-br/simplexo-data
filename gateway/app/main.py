@@ -17,9 +17,11 @@ from mining.estimator import estimate_company_metrics
 from mining.decisors import profile_decisors
 from mining.email_validator import validate_corporate_email
 from mining.technographics import detect_technologies
+from fastapi.responses import HTMLResponse
 from gateway.app.reveal import PIXEL_JS, resolve_ip_to_host
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://simplexo:simplexo_secure_pass_2026@localhost:5432/simplexo_data")
+TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "index.html")
 
 app = FastAPI(
     title="Simplexo Data Gateway API",
@@ -34,6 +36,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
+def serve_web_station():
+    """Serves the interactive Simplexo Data Station B2B web application."""
+    if os.path.exists(TEMPLATE_PATH):
+        with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Simplexo Data Station 2.0</h1><p>Template not found.</p>")
 
 @app.get("/health")
 def health_check():

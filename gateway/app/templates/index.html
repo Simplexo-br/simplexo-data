@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplexo Data — Plataforma de Inteligência B2B & Mailing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8' },
+                        simplexo: { 400: '#60a5fa', 500: '#3b82f6', 600: '#1d4ed8', 900: '#0f172a' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+</head>
+<body class="h-full font-sans antialiased bg-slate-950 selection:bg-blue-600 selection:text-white">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-view" class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950 -z-10"></div>
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-xl shadow-blue-500/20 mb-4">
+                <i class="fa-solid fa-chart-network text-2xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold tracking-tight text-white">Simplexo Data</h2>
+            <p class="mt-2 text-sm text-slate-400">Inteligência B2B, Prospecção Ativa & Enriquecimento de Dados</p>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4">
+            <div class="bg-slate-900/80 backdrop-blur-xl py-8 px-6 shadow-2xl rounded-2xl border border-slate-800 sm:px-10">
+                <form id="login-form" class="space-y-6" onsubmit="handleLogin(event)">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">E-mail Corporativo</label>
+                        <div class="mt-2 relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                                <i class="fa-solid fa-envelope"></i>
+                            </span>
+                            <input id="login-email" type="email" required value="admin@simplexo.com.br"
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-600">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">Senha de Acesso</label>
+                        <div class="mt-2 relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                                <i class="fa-solid fa-lock"></i>
+                            </span>
+                            <input id="login-pass" type="password" required value="simplexo2026"
+                                class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-600">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs">
+                        <label class="flex items-center text-slate-400">
+                            <input type="checkbox" checked class="rounded bg-slate-950 border-slate-800 text-blue-600 focus:ring-0 mr-2"> Lembrar credenciais
+                        </label>
+                        <span class="text-blue-400 hover:text-blue-300 cursor-pointer">Base RFB 2026-09</span>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full flex justify-center items-center py-3 px-4 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 transition duration-200">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> Entrar na Plataforma
+                    </button>
+                </form>
+
+                <div class="mt-6 border-t border-slate-800/80 pt-4 text-center">
+                    <span class="inline-flex items-center text-xs text-emerald-400 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                        50.39M Empresas Conectadas na VM
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP DASHBOARD VIEW -->
+    <div id="app-view" class="hidden min-h-full flex flex-col">
+        
+        <!-- TOP NAVIGATION -->
+        <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 font-bold text-lg">
+                        S
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-white tracking-tight">Simplexo Data</span>
+                            <span class="px-2 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">Station 2.0</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Plataforma de Inteligência Comercial B2B</p>
+                    </div>
+                </div>
+
+                <!-- NAV TABS -->
+                <nav class="hidden md:flex items-center space-x-1">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold text-white bg-slate-800 border border-slate-700">
+                        <i class="fa-solid fa-gauge mr-1.5 text-blue-400"></i> Visão Geral
+                    </button>
+                    <button onclick="switchTab('prospecting')" id="nav-prospecting" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-magnifying-glass mr-1.5 text-indigo-400"></i> Prospecção B2B
+                    </button>
+                    <button onclick="switchTab('batch')" id="nav-batch" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-file-csv mr-1.5 text-emerald-400"></i> Enriquecimento em Lote
+                    </button>
+                    <button onclick="switchTab('reveal')" id="nav-reveal" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60">
+                        <i class="fa-solid fa-satellite-dish mr-1.5 text-purple-400"></i> Simplexo Reveal
+                    </button>
+                </nav>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden sm:flex items-center px-3 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                        <span id="header-total-companies">50.396.768 Empresas</span>
+                    </div>
+                    <button onclick="handleLogout()" class="text-xs font-medium text-slate-400 hover:text-red-400 transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            
+            <!-- 1. DASHBOARD VIEW -->
+            <section id="view-dashboard" class="space-y-6">
+                <!-- METRIC CARDS -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm hover:border-slate-700 transition">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Simples Nacional</span>
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span id="stat-simples" class="text-2xl font-extrabold text-white">50.396.768</span>
+                            <p class="text-[11px] text-emerald-400 mt-1 font-medium"><i class="fa-solid fa-check mr-1"></i>Base oficial RFB 2026-09</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm hover:border-slate-700 transition">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Microempreendedores (MEI)</span>
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                                <i class="fa-solid fa-user-tie"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span id="stat-mei" class="text-2xl font-extrabold text-white">17.523.665</span>
+                            <p class="text-[11px] text-slate-400 mt-1">Registros individuais indexados</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm hover:border-slate-700 transition">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Qualificadas & Mineradas</span>
+                            <div class="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span id="stat-scores" class="text-2xl font-extrabold text-white">Ativo</span>
+                            <p class="text-[11px] text-purple-400 mt-1 font-medium">Worker com Playwright & AI</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm hover:border-slate-700 transition">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Canais Verificados</span>
+                            <div class="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span id="stat-whats" class="text-2xl font-extrabold text-white">WhatsApp / MX</span>
+                            <p class="text-[11px] text-amber-400 mt-1 font-medium">Validação em tempo real</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK SEARCH BANNER -->
+                <div class="bg-gradient-to-r from-blue-900/40 via-indigo-900/20 to-slate-900 border border-blue-800/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+                    <div class="max-w-2xl relative z-10 space-y-4">
+                        <span class="px-3 py-1 text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full">
+                            Motor de Prospecção Ativa
+                        </span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                            Pesquise mais de 50 milhões de empresas brasileiras
+                        </h2>
+                        <p class="text-sm text-slate-300">
+                            Filtre por CNAE, localização, faturamento estimado, WhatsApp validado, sócios no LinkedIn e softwares detectados no site da empresa.
+                        </p>
+                        <div class="pt-2">
+                            <button onclick="switchTab('prospecting')" class="inline-flex items-center px-5 py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition">
+                                <i class="fa-solid fa-magnifying-glass mr-2"></i> Abrir Busca Avançada
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. PROSPECTING / SEARCH VIEW -->
+            <section id="view-prospecting" class="hidden space-y-6">
+                <!-- SEARCH FILTERS BAR -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- QUERY -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Termo / CNPJ / Nome</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-search"></i></span>
+                                <input id="filter-q" type="text" placeholder="Ex: Simplexo, Tecnologia, 53265892..." 
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- STATE / UF -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Estado (UF)</label>
+                            <select id="filter-state" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="">Todos os Estados (Brasil)</option>
+                                <option value="SP">São Paulo (SP)</option>
+                                <option value="RJ">Rio de Janeiro (RJ)</option>
+                                <option value="MG">Minas Gerais (MG)</option>
+                                <option value="PR">Paraná (PR)</option>
+                                <option value="SC">Santa Catarina (SC)</option>
+                                <option value="RS">Rio Grande do Sul (RS)</option>
+                                <option value="BA">Bahia (BA)</option>
+                                <option value="DF">Distrito Federal (DF)</option>
+                                <option value="GO">Goiás (GO)</option>
+                                <option value="PE">Pernambuco (PE)</option>
+                                <option value="CE">Ceará (CE)</option>
+                            </select>
+                        </div>
+
+                        <!-- FATURAMENTO ESTIMADO -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Faturamento Estimado</label>
+                            <select id="filter-faturamento" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="">Todas as Faixas</option>
+                                <option value="ATE_360K">Até R$ 360k (ME / MEI)</option>
+                                <option value="360K_A_4_8M">R$ 360k a R$ 4.8M (EPP)</option>
+                                <option value="4_8M_A_16M">R$ 4.8M a R$ 16M (Médio Porte)</option>
+                                <option value="16M_A_90M">R$ 16M a R$ 90M (Consolidado)</option>
+                                <option value="ACIMA_90M">Acima de R$ 90M (Enterprise)</option>
+                            </select>
+                        </div>
+
+                        <!-- MIN SCORE -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Score Comercial Mínimo</label>
+                            <select id="filter-score" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <option value="0">Qualquer Score</option>
+                                <option value="50">BOM (Score >= 50)</option>
+                                <option value="70">MUITO BOM (Score >= 70)</option>
+                                <option value="90">EXCELENTE (Score >= 90)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                        <label class="flex items-center text-xs text-slate-300 font-medium">
+                            <input id="filter-whatsapp" type="checkbox" class="rounded bg-slate-950 border-slate-800 text-blue-600 focus:ring-0 mr-2">
+                            Apenas empresas com <span class="text-emerald-400 ml-1 font-semibold">WhatsApp Validado</span>
+                        </label>
+
+                        <button onclick="executeSearch()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl shadow-md transition flex items-center">
+                            <i class="fa-solid fa-filter mr-1.5"></i> Filtrar Empresas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SEARCH RESULTS TABLE -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+                    <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                        <span id="results-count" class="text-xs font-semibold uppercase tracking-wider text-slate-400">Resultados Encontrados</span>
+                        <button onclick="exportResultsCSV()" class="text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                            <i class="fa-solid fa-download mr-1 text-blue-400"></i> Exportar CSV
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-950/60 text-slate-400 border-b border-slate-800">
+                                    <th class="p-3.5 font-semibold">Empresa / CNPJ</th>
+                                    <th class="p-3.5 font-semibold">Localização</th>
+                                    <th class="p-3.5 font-semibold">CNAE Principal</th>
+                                    <th class="p-3.5 font-semibold">Faturamento Estimado</th>
+                                    <th class="p-3.5 font-semibold">Canais & Score</th>
+                                    <th class="p-3.5 font-semibold text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="search-table-body" class="divide-y divide-slate-800/60 text-slate-300">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. BATCH ENRICHMENT VIEW -->
+            <section id="view-batch" class="hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm max-w-3xl mx-auto space-y-6">
+                    <div class="text-center space-y-2">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Enriquecimento em Lote (Planilha CSV)</h3>
+                        <p class="text-xs text-slate-400">Suba uma lista de CNPJs para preencher automaticamente telefones, WhatsApps validados, sócios, e-mails corporativos e score comercial.</p>
+                    </div>
+
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-2xl p-8 text-center cursor-pointer transition bg-slate-950/40"
+                        onclick="document.getElementById('csv-file-input').click()">
+                        <input id="csv-file-input" type="file" accept=".csv,.txt" class="hidden" onchange="handleCSVSelect(event)">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-3"></i>
+                        <p id="file-name-label" class="text-xs font-semibold text-slate-300">Clique para selecionar ou arraste o arquivo CSV aqui</p>
+                        <p class="text-[11px] text-slate-500 mt-1">Formato: 1 CNPJ por linha ou coluna CNPJ (delimitador vírgula ou ponto e vírgula)</p>
+                    </div>
+
+                    <button id="btn-process-batch" onclick="processBatchUpload()" disabled
+                        class="w-full py-3 bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center">
+                        <i class="fa-solid fa-bolt mr-2"></i> Iniciar Enriquecimento em Alta Velocidade
+                    </button>
+
+                    <div id="batch-results-area" class="hidden space-y-4 pt-4 border-t border-slate-800">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-white"><span id="batch-processed-count">0</span> Empresas Enriquecidas</span>
+                            <button onclick="downloadBatchResults()" class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg hover:bg-emerald-500/20">
+                                <i class="fa-solid fa-download mr-1"></i> Baixar Planilha Pronta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. SIMPLEXO REVEAL VIEW -->
+            <section id="view-reveal" class="hidden space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-base font-bold text-white flex items-center">
+                                <i class="fa-solid fa-satellite-dish text-purple-400 mr-2"></i> Simplexo Reveal — Visitantes B2B
+                            </h3>
+                            <p class="text-xs text-slate-400 mt-0.5">Identifique empresas que estão navegando no seu site antes de preencherem formulários.</p>
+                        </div>
+                        <span class="px-2.5 py-1 text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg animate-pulse">
+                            Live Stream
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
+                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-800 text-slate-400 font-semibold text-[11px]">
+                            <span>Snippet para instalar no seu site (<head>):</span>
+                            <button onclick="copyRevealSnippet()" class="text-blue-400 hover:text-blue-300"><i class="fa-solid fa-copy mr-1"></i>Copiar</button>
+                        </div>
+                        <code id="reveal-snippet">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- COMPANY 360 MODAL / DRAWER -->
+    <div id="company-modal" class="hidden fixed inset-0 z-50 overflow-hidden">
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeCompanyModal()"></div>
+        <div class="absolute inset-y-0 right-0 max-w-2xl w-full bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
+            <!-- HEADER -->
+            <div class="p-6 border-b border-slate-800 flex items-start justify-between bg-slate-950/40">
+                <div>
+                    <span id="modal-cnpj" class="text-xs font-mono font-bold text-blue-400">CNPJ: 00.000.000/0000-00</span>
+                    <h2 id="modal-trade-name" class="text-xl font-black text-white mt-0.5">Razão / Nome Fantasia</h2>
+                    <p id="modal-legal-name" class="text-xs text-slate-400">Razão Social Completa</p>
+                </div>
+                <button onclick="closeCompanyModal()" class="text-slate-500 hover:text-white p-2 rounded-lg text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                
+                <!-- BADGES & STATUS -->
+                <div class="flex flex-wrap gap-2">
+                    <span id="modal-status-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ATIVA</span>
+                    <span id="modal-simples-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">Simples Nacional</span>
+                    <span id="modal-score-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Score: 85 (MUITO BOM)</span>
+                </div>
+
+                <!-- ECONOMICS / REVENUE -->
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Estimativa Econômica & Porte</span>
+                    <div class="grid grid-cols-2 gap-4 pt-1">
+                        <div>
+                            <span class="text-[11px] text-slate-500">Faturamento Presumido</span>
+                            <p id="modal-rev-label" class="text-xs font-bold text-white">Até R$ 360 mil / ano</p>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-500">Quadro de Colaboradores</span>
+                            <p id="modal-emp-label" class="text-xs font-bold text-white">1 a 5 colaboradores</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACTION BUTTONS (WHATSAPP & PHONE) -->
+                <div class="grid grid-cols-2 gap-3">
+                    <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition">
+                        <i class="fa-brands fa-whatsapp text-base mr-2"></i> Chamar no WhatsApp
+                    </a>
+                    <a id="modal-btn-call" href="#" class="flex items-center justify-center py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-700 transition">
+                        <i class="fa-solid fa-phone text-xs mr-2 text-blue-400"></i> Ligar Telefone
+                    </a>
+                </div>
+
+                <!-- DECISORS & QSA -->
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
+                        <i class="fa-solid fa-user-tie mr-2 text-blue-400"></i> Decisores & Sócios (QSA)
+                    </span>
+                    <div id="modal-decisors-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- ENRICHED CONTACTS -->
+                <div class="space-y-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
+                        <i class="fa-solid fa-address-book mr-2 text-emerald-400"></i> Contatos Minerados
+                    </span>
+                    <div id="modal-contacts-list" class="space-y-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CLIENT SCRIPT -->
+    <script>
+        let currentBatchData = [];
+
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            loadDashboardStats();
+            executeSearch();
+        }
+
+        function handleLogout() {
+            document.getElementById('app-view').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+        }
+
+        function switchTab(tabId) {
+            ['dashboard', 'prospecting', 'batch', 'reveal'].forEach(t => {
+                document.getElementById('view-' + t).classList.add('hidden');
+                document.getElementById('nav-' + t).classList.remove('bg-slate-800', 'text-white', 'border', 'border-slate-700');
+                document.getElementById('nav-' + t).classList.add('text-slate-300');
+            });
+
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            document.getElementById('nav-' + tabId).classList.add('bg-slate-800', 'text-white', 'border', 'border-slate-700');
+            document.getElementById('nav-' + tabId).classList.remove('text-slate-300');
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/v1/stats');
+                const data = await res.json();
+                if (data.total_simples_nacional) {
+                    document.getElementById('stat-simples').innerText = Number(data.total_simples_nacional).toLocaleString('pt-BR');
+                    document.getElementById('stat-mei').innerText = Number(data.total_meis).toLocaleString('pt-BR');
+                }
+            } catch (err) {
+                console.error("Stats load error:", err);
+            }
+        }
+
+        async function executeSearch() {
+            const q = document.getElementById('filter-q').value;
+            const state = document.getElementById('filter-state').value;
+            const faturamento = document.getElementById('filter-faturamento').value;
+            const minScore = document.getElementById('filter-score').value;
+            const hasWhatsApp = document.getElementById('filter-whatsapp').checked;
+
+            let url = `/api/v1/search?limit=50&min_score=${minScore}`;
+            if (q) url += `&q=${encodeURIComponent(q)}`;
+            if (state) url += `&state=${encodeURIComponent(state)}`;
+            if (faturamento) url += `&faturamento_faixa=${encodeURIComponent(faturamento)}`;
+            if (hasWhatsApp) url += `&has_whatsapp=true`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                renderSearchResults(data.results || []);
+            } catch (err) {
+                console.error("Search error:", err);
+            }
+        }
+
+        function renderSearchResults(items) {
+            document.getElementById('results-count').innerText = `${items.length} Empresas Encontradas`;
+            const tbody = document.getElementById('search-table-body');
+            tbody.innerHTML = '';
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhuma empresa encontrada com os filtros selecionados.</td></tr>`;
+                return;
+            }
+
+            items.forEach(emp => {
+                const scoreColor = emp.score >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : (emp.score >= 40 ? 'text-blue-400 bg-blue-500/10 border-blue-500/20' : 'text-slate-400 bg-slate-800 border-slate-700');
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-900/60 transition";
+                row.innerHTML = `
+                    <td class="p-3.5">
+                        <div class="font-bold text-white">${emp.trade_name || emp.legal_name}</div>
+                        <div class="text-[11px] font-mono text-slate-500">${emp.cnpj}</div>
+                    </td>
+                    <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded bg-slate-950 text-slate-300 font-medium">${emp.city_name} - ${emp.state_code}</span>
+                    </td>
+                    <td class="p-3.5 font-mono text-slate-400">${emp.cnae_main || 'N/D'}</td>
+                    <td class="p-3.5">
+                        <span class="text-slate-300 font-medium">${emp.estimated_metrics ? emp.estimated_metrics.revenue_label : 'N/D'}</span>
+                    </td>
+                    <td class="p-3.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 text-[10px] font-bold rounded border ${scoreColor}">Score: ${emp.score}</span>
+                            ${emp.has_whatsapp ? '<i class="fa-brands fa-whatsapp text-emerald-400 text-sm" title="WhatsApp Validado"></i>' : ''}
+                            ${emp.has_email ? '<i class="fa-solid fa-envelope text-blue-400 text-sm" title="E-mail Válido"></i>' : ''}
+                        </div>
+                    </td>
+                    <td class="p-3.5 text-right">
+                        <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1.5 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/20 rounded-lg text-xs font-semibold transition">
+                            Company 360
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function openCompanyModal(cnpj) {
+            try {
+                const res = await fetch(`/api/v1/company/${cnpj}`);
+                const data = await res.json();
+                const p = data.profile;
+                const e = data.estimated_economics;
+
+                document.getElementById('modal-cnpj').innerText = `CNPJ: ${p.cnpj}`;
+                document.getElementById('modal-trade-name').innerText = p.trade_name || p.legal_name;
+                document.getElementById('modal-legal-name').innerText = p.legal_name;
+
+                if (e) {
+                    document.getElementById('modal-rev-label').innerText = e.revenue_label;
+                    document.getElementById('modal-emp-label').innerText = e.employee_label;
+                }
+
+                // WhatsApp button
+                const btnWa = document.getElementById('modal-btn-whatsapp');
+                if (p.cadastral_phone_1) {
+                    btnWa.href = `https://wa.me/55${p.cadastral_phone_1}`;
+                    btnWa.classList.remove('opacity-50', 'pointer-events-none');
+                } else {
+                    btnWa.classList.add('opacity-50', 'pointer-events-none');
+                }
+
+                // Decisors list
+                const decisorsContainer = document.getElementById('modal-decisors-list');
+                decisorsContainer.innerHTML = '';
+                if (data.decisors && data.decisors.length > 0) {
+                    data.decisors.forEach(d => {
+                        decisorsContainer.innerHTML += `
+                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="font-bold text-white">${d.name}</span>
+                                    <p class="text-[11px] text-slate-400">${d.formal_role} &bull; <span class="text-blue-400">${d.seniority}</span></p>
+                                </div>
+                                <a href="${d.linkedin_search_url}" target="_blank" class="px-2.5 py-1 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/20 rounded-lg text-[11px] font-semibold transition">
+                                    <i class="fa-brands fa-linkedin mr-1"></i> LinkedIn
+                                </a>
+                            </div>
+                        `;
+                    });
+                } else {
+                    decisorsContainer.innerHTML = `<p class="text-xs text-slate-500">Nenhum sócio mapeado.</p>`;
+                }
+
+                document.getElementById('company-modal').classList.remove('hidden');
+            } catch (err) {
+                console.error("Company 360 error:", err);
+            }
+        }
+
+        function closeCompanyModal() {
+            document.getElementById('company-modal').classList.add('hidden');
+        }
+
+        function handleCSVSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-name-label').innerText = `Arquivo selecionado: ${file.name}`;
+                document.getElementById('btn-process-batch').disabled = false;
+            }
+        }
+
+        async function processBatchUpload() {
+            const fileInput = document.getElementById('csv-file-input');
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const btn = document.getElementById('btn-process-batch');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processando Ingestão...`;
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/v1/enrich/batch', { method: 'POST', body: formData });
+                const data = await res.json();
+                currentBatchData = data.data || [];
+                document.getElementById('batch-processed-count').innerText = currentBatchData.length;
+                document.getElementById('batch-results-area').classList.remove('hidden');
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Enriquecimento Concluído!`;
+            } catch (err) {
+                console.error("Batch error:", err);
+                btn.innerHTML = `Erro no processamento`;
+            }
+        }
+
+        function downloadBatchResults() {
+            if (!currentBatchData.length) return;
+            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Score,Grade,WhatsApp,Faturamento_Estimado\n";
+            currentBatchData.forEach(r => {
+                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.score}","${r.score_grade}","${r.has_whatsapp ? 'SIM' : 'NAO'}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `simplexo_mailing_enriquecido_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        function copyRevealSnippet() {
+            const snippet = document.getElementById('reveal-snippet').innerText;
+            navigator.clipboard.writeText(snippet);
+            alert("Snippet copiado para a área de transferência!");
+        }
+    </script>
+</body>
+</html>
