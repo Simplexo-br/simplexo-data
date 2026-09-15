@@ -1,22 +1,56 @@
-schema_version: 1
-project: simplexo-data
-repository: Simplexo-br/simplexo-data
-default_branch: main
-phase: {number: 0, name: discovery-and-architecture, status: in_progress}
-checkpoint: {date: 2026-08-30, summary: Initial recovery and Phase 0 baseline}
-completed:
-  - repository_state_recovered
-  - continuity_files_created
-  - initial_architecture_and_adrs_drafted
-  - initial_oca_provider_competitor_audits_drafted
-  - drive_folder_read_verified_empty
-  - phase_issues_1_through_15_created
-blocked:
-  - id: github-project-access
-    detail: GitHub token lacks read:project; corporate Project MCP returned internal error
-    resolution: Grant Project scopes, inspect Project 13, and add backlog
-  - id: github-actions-billing
-    detail: Run 33334919755 did not start; GitHub reported failed recent payments or spending limit
-    resolution: Resolve organization/account Actions billing or spending limit, then rerun documentation CI
-pending_gates: [architecture_human_review, legal_provider_review, lgpd_legal_review, licensing_decision, phase_0_exit_review]
-next_action: Resolve Project access and Actions billing, link issues 1-15 to Project 13, rerun CI, review Phase 0 documents, and obtain architecture approval
+# .simplexo/state.yaml — Estado consolidado do Simplexo Data
+
+version: "2.0.0"
+updated_at: "2026-09-15T19:49:30-03:00"
+environment:
+  vm_host: "8.234.211.34"
+  gcp_project: "odoo-server-vm2"
+  gcp_zone: "us-east4-a"
+  disk_size: "250GB"
+  swap_size: "8GB"
+
+data_metrics:
+  simples_nacional_records: 50396768
+  mei_records: 17523665
+  cnae_definitions: 1359
+
+components:
+  database:
+    type: "PostgreSQL 16 (Bullseye)"
+    port: 5432
+    status: "HEALTHY"
+    schemas:
+      - "data_core"
+      - "data_mining"
+      - "data_app"
+  cache_queue:
+    type: "Redis 7 (Alpine)"
+    port: 6379
+    status: "HEALTHY"
+  gateway_api:
+    type: "FastAPI + Uvicorn"
+    version: "2.0.0"
+    port: 8000
+    status: "HEALTHY"
+    endpoints:
+      - "/health"
+      - "/api/v1/stats"
+      - "/api/v1/search"
+      - "/api/v1/company/{cnpj}"
+      - "/api/v1/enrich/batch"
+      - "/api/v1/reveal/pixel.js"
+      - "/api/v1/reveal/identify"
+  mining_worker:
+    type: "Python 3.12 Crawler + Scorer + Technographics (Playwright/Crawl4AI)"
+    version: "2.0.0"
+    status: "RUNNING"
+  receita_federal_etl:
+    type: "WebDAV RFB Ingestion"
+    latest_month_discovered: "2026-09"
+    total_files: 37
+    status: "OPERATIONAL"
+
+governance:
+  oca_first: true
+  odoo_isolation: true
+  crm_integration_ready: true

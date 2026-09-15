@@ -1,0 +1,95 @@
+services:
+  postgres:
+    image: postgres:16-bullseye
+    container_name: simplexo_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-simplexo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-simplexo_secure_pass_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-simplexo_data}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: >
+      postgres -c shared_buffers=1024MB
+               -c effective_cache_size=3072MB
+               -c work_mem=64MB
+               -c maintenance_work_mem=256MB
+               -c min_wal_size=1GB
+               -c max_wal_size=4GB
+               -c checkpoint_completion_target=0.9
+               -c wal_buffers=16MB
+               -c default_statistics_target=100
+               -c max_parallel_workers_per_gather=2
+               -c max_parallel_workers=4
+               -c max_parallel_maintenance_workers=2
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-simplexo} -d ${POSTGRES_DB:-simplexo_data}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: simplexo_redis
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: simplexo_gateway
+    restart: always
+    command: uvicorn gateway.app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-simplexo}:${POSTGRES_PASSWORD:-simplexo_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-simplexo_data}
+      REDIS_URL: redis://redis:6379/0
+      API_SECRET_KEY: ${API_SECRET_KEY:-simplexo_gateway_secret_2026}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ..:/app
+      - /data/rfb_raw:/data/rfb_raw
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: simplexo_mining_worker
+    restart: always
+    command: python -m mining.worker
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-simplexo}:${POSTGRES_PASSWORD:-simplexo_secure_pass_2026}@postgres:5432/${POSTGRES_DB:-simplexo_data}
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - ..:/app
+      - /data/rfb_raw:/data/rfb_raw
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local

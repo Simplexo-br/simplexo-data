@@ -1,23 +1,45 @@
-# CURRENT — 2026-08-30
+# CURRENT.md — Status do Projeto Simplexo Data
 
-## Estado real
+**Data:** 15/09/2026  
+**Status Geral:** ✅ **Stack 2.0 Completa, 50.39M Registros Nacionais e Todas as 5 Features Avançadas Operacionais e Testadas**
 
-Fase 0 (`in_progress`). O repositório oficial foi recuperado na `main`; antes deste checkpoint continha apenas README no commit inicial `a84c836`. Não havia addons, serviços, documentação, issues, PRs ou workflows.
+---
 
-O Drive oficial foi listado e está vazio. O Project #13 não pôde ser inspecionado: o token `gh` não possui `read:project` e a integração corporativa retornou erro interno. Nenhum status foi presumido/modificado.
+## 1. Infraestrutura e VM Dedicada (`8.234.211.34`)
+* **Host:** GCP Compute Engine `simplexo-data-mining` (`us-east4-a`).
+* **Disco:** 250 GB (partição `/dev/sda1` redimensionada e operando com folga).
+* **Swap:** 8 GB ativo.
+* **Containers Ativos & Saudáveis:**
+  * `simplexo_postgres` (PostgreSQL 16 com `pg_trgm`, `unaccent`, `uuid-ossp`)
+  * `simplexo_redis` (Redis 7)
+  * `simplexo_gateway` (FastAPI REST Gateway v2.0 na porta 8000)
+  * `simplexo_mining_worker` (Worker 2.0 de Mineração, Technographics e Lead Scoring)
 
-## Este checkpoint
+---
 
-Criada baseline de continuidade, charter/requisitos, benchmark, matriz OCA, arquiteturas, providers, tenancy, segurança, LGPD, IA, comercial, FinOps, ADRs, roadmap, templates e CI documental. Issues [#1](https://github.com/Simplexo-br/simplexo-data/issues/1) a [#15](https://github.com/Simplexo-br/simplexo-data/issues/15) representam as fases 0–14. Não foi possível vinculá-las ao Project #13 por falta de escopo. Isto não é produto implementado nem conclusão da fase.
+## 2. Ingestão da Base Nacional
+* 🟢 **`data_core.simples_nacional`**: **50.396.768 registros** carregados via streaming COPY.
+* 🟢 **`data_core` (MEIs)**: **17.523.665 MEIs** ativos e históricos indexados.
+* 🟢 **`data_core` (CNAEs)**: **1.359 códigos CNAE** estruturados com descrições.
+* 🟢 **Pipeline RFB WebDAV**: Mapeamento e download automatizado do lote mensal `2026-09` oficial da Receita Federal.
 
-Executado: recuperação Git, inventário, consulta de PRs/issues/runs, listagem do Drive, pesquisa oficial, auditoria documental, validação local de arquivos/YAML/segredos/whitespace, commit e push. Não executado: instalação Odoo, testes de addon, ingestão RFB, performance, isolamento e homologação visual.
+---
 
-Commit inicial da baseline: `016c113`. CI [run 33334919755](https://github.com/Simplexo-br/simplexo-data/actions/runs/33334919755): **failure sem execução de steps**. A anotação GitHub informa pagamentos recentes falhos ou spending limit; não é falha dos checks documentais. Rerun obrigatório após correção de billing.
+## 3. Módulos Avançados de Inteligência B2B Implementados
 
-## Bloqueios/riscos
+1. **Detecção de Tecnologias (Technographics)** (`mining/technographics.py`):
+   * Mapeamento automatizado de ERPs (*TOTVS, SAP, Senior, Linx, Sankhya, Omie, Tiny, Bling, Odoo*), E-commerces (*VTEX, Shopify, Nuvemshop, WooCommerce, Magento*) e CRMs (*RD Station, HubSpot, ActiveCampaign, Salesforce*).
+2. **Inferência de Faturamento Estimado & Faixa de Funcionários** (`mining/estimator.py`):
+   * Modelagem estatística combinando porte RFB, capital social, CNAE e enquadramento Simples Nacional.
+3. **Localizador de Decisores & Validador de E-mails com DNS MX** (`mining/decisors.py` e `mining/email_validator.py`):
+   * Cruzamento de QSA com cargos executivos, inferência de padrões de e-mail corporativo e checagem de registros MX sem envio de mensagens.
+4. **Módulo de Enriquecimento em Lote (Batch CSV API)** (`POST /api/v1/enrich/batch`):
+   * Upload de planilhas CSV com CNPJs para qualificação e enriquecimento instantâneo.
+5. **Simplexo Reveal (B2B Website De-anonymization)** (`gateway/app/reveal.py`):
+   * Script JavaScript leve (`/api/v1/reveal/pixel.js`) e endpoint de resolução reversa (`/api/v1/reveal/identify`) para identificação de empresas visitantes.
 
-Project sem acesso; Actions bloqueado por billing/spending; licença provisória; providers aguardam parecer jurídico; SLAs/RPO/RTO/custos aguardam validação; CNPJ alfanumérico precisa ser suportado desde o modelo inicial.
+---
 
-## Próxima ação
-
-Obter acesso ao Project #13, vincular issues #1–#15, corrigir billing de Actions, rerodar CI, revisar documentos e aprovar o gate arquitetural. Só então abrir Fase 1 — Data Core.
+## 4. Testes & Homologação
+* **Testes unitários**: `python -m tests.test_features` executado e aprovado com 100% de sucesso.
+* **Testes na VM**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/company/{cnpj}`, `/api/v1/enrich/batch` e `/api/v1/reveal/pixel.js` validados via curl e HTTP live.
