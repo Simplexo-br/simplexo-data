@@ -19,6 +19,7 @@ from mining.email_validator import validate_corporate_email
 from mining.technographics import detect_technologies
 from fastapi.responses import HTMLResponse
 from gateway.app.reveal import PIXEL_JS, resolve_ip_to_host
+from etl.receita_federal.live_lookup import fetch_and_ingest_cnpj, search_and_ingest_by_name
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://simplexo:simplexo_secure_pass_2026@localhost:5432/simplexo_data")
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "index.html")
@@ -145,6 +146,12 @@ def search_companies(
 
             cur.execute(sql, tuple(params))
             raw_results = cur.fetchall()
+
+            # If no results found locally and a query was provided, trigger on-demand live lookup
+            if not raw_results and q:
+                search_and_ingest_by_name(q)
+                cur.execute(sql, tuple(params))
+                raw_results = cur.fetchall()
             
             # Enrich each result with Revenue & Employee Estimation
             formatted_results = []
@@ -176,7 +183,7 @@ def get_company_360(cnpj: str):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             # Establishment & Company Core
-            cur.execute("""
+            query_sql = """
                 SELECT 
                     e.*, c.legal_name, c.legal_nature_code, c.share_capital, c.company_size,
                     s.total_score, s.score_grade, s.score_breakdown,
@@ -188,8 +195,16 @@ def get_company_360(cnpj: str):
                 LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
                 LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
                 WHERE e.cnpj = %s;
-            """, (clean_cnpj,))
+            """
+            cur.execute(query_sql, (clean_cnpj,))
             est = cur.fetchone()
+            
+            # If not in local database, fetch on-demand from RFB live endpoint
+            if not est:
+                fetch_and_ingest_cnpj(clean_cnpj)
+                cur.execute(query_sql, (clean_cnpj,))
+                est = cur.fetchone()
+
             if not est:
                 raise HTTPException(status_code=404, detail="Empresa / CNPJ não encontrado.")
 
@@ -253,7 +268,7 @@ async def batch_enrich_companies(file: UploadFile = File(...)):
     with psycopg2.connect(DATABASE_URL) as conn:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             for cnpj in cnpjs[:100]: # Batch size limit per request
-                cur.execute("""
+                query_batch = """
                     SELECT 
                         e.cnpj, e.trade_name, c.legal_name, e.cnae_main,
                         c.company_size, c.share_capital, e.city_name, e.state_code,
@@ -267,8 +282,14 @@ async def batch_enrich_companies(file: UploadFile = File(...)):
                     LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
                     LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
                     WHERE e.cnpj = %s;
-                """, (cnpj,))
+                """
+                cur.execute(query_batch, (cnpj,))
                 row = cur.fetchone()
+                if not row:
+                    fetch_and_ingest_cnpj(cnpj)
+                    cur.execute(query_batch, (cnpj,))
+                    row = cur.fetchone()
+
                 if row:
                     row["estimated_metrics"] = estimate_company_metrics(
                         company_size=row["company_size"],
