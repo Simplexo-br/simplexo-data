@@ -5,1071 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simplexo Data — Inteligência de Mercado B2B & Oportunidades</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com">
-        // ==========================================================
-        // 5 COMMERCIAL INTELLIGENCE PRODUCTIVITY CONTROLLERS
-        // ==========================================================
-
-        let activeLoadedLists = [];
-        let currentViewingList = null;
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function copyToClipboard(elementId, successMsg) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            const text = el.innerText || el.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(successMsg || "Copiado para a área de transferência!");
-            }).catch(err => {
-                console.error("Copy error:", err);
-                showToast("Erro ao copiar.", "error");
-            });
-        }
-
-        // --- 1. MEUS ALERTAS ---
-        async function loadUserAlerts() {
-            try {
-                const res = await fetch('/api/v1/alerts');
-                const data = await res.json();
-                const grid = document.getElementById('alerts-grid');
-                const countEl = document.getElementById('alerts-count');
-                const sidebarBadge = document.getElementById('sidebar-alerts-badge');
-                
-                if (countEl) countEl.innerText = data.count || 0;
-                if (sidebarBadge) sidebarBadge.innerText = `${data.count || 0} Ativos`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-bell-slash text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhum radar de alerta configurado</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie um alerta para monitorar novas aberturas e oportunidades por CNAE ou Região.</p>
-                            <button onclick="openCreateAlertModal()" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeiro Alerta</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                data.results.forEach(al => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative hover:shadow-sm transition";
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">
-                                    <i class="fa-solid fa-radar"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${al.name}</h5>
-                                    <span class="text-[10px] text-slate-400">Freq: ${al.frequency}</span>
-                                </div>
-                            </div>
-                            <button onclick="deleteAlert('${al.id}')" title="Remover Alerta" class="text-slate-400 hover:text-rose-600 text-xs p-1">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 text-[10px]">
-                            ${al.state_code ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">UF: ${al.state_code}</span>` : ''}
-                            ${al.cnae_prefix ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">CNAE: ${al.cnae_prefix}</span>` : ''}
-                            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">Score >= ${al.min_score}</span>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Alerts load error:", err);
-            }
-        }
-
-        function openCreateAlertModal() {
-            document.getElementById('modal-create-alert').classList.remove('hidden');
-        }
-
-        async function handleCreateAlert(e) {
-            e.preventDefault();
-            const name = document.getElementById('alert-input-name').value;
-            const state_code = document.getElementById('alert-input-uf').value.trim() || null;
-            const cnae_prefix = document.getElementById('alert-input-cnae').value.trim() || null;
-            const min_score = parseInt(document.getElementById('alert-input-score').value) || 70;
-            const frequency = document.getElementById('alert-input-freq').value;
-
-            try {
-                const res = await fetch('/api/v1/alerts', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, state_code, cnae_prefix, min_score, frequency })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Alerta cadastrado com sucesso!");
-                    closeModal('modal-create-alert');
-                    loadUserAlerts();
-                }
-            } catch (err) {
-                console.error("Create alert error:", err);
-                showToast("Erro ao criar alerta.", "error");
-            }
-        }
-
-        async function deleteAlert(alertId) {
-            if (!confirm("Deseja realmente remover este alerta?")) return;
-            try {
-                const res = await fetch(`/api/v1/alerts/${alertId}`, { method: 'DELETE' });
-                showToast("Alerta removido!");
-                loadUserAlerts();
-            } catch (err) {
-                console.error("Delete alert error:", err);
-            }
-        }
-
-        // --- 2. MINHAS LISTAS ---
-        async function loadLeadLists() {
-            try {
-                const res = await fetch('/api/v1/lists');
-                const data = await res.json();
-                activeLoadedLists = data.results || [];
-                const grid = document.getElementById('lists-grid');
-                const sidebarBadge = document.getElementById('sidebar-lists-badge');
-                
-                if (sidebarBadge) sidebarBadge.innerText = `${activeLoadedLists.length} Listas`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (activeLoadedLists.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-list-check text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhuma lista criada ainda</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie listas para agrupar e qualificar seus leads selecionados.</p>
-                            <button onclick="openCreateListModal()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeira Lista</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                activeLoadedLists.forEach(list => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 hover:border-blue-300 hover:shadow-xs transition cursor-pointer";
-                    card.onclick = () => viewListDetails(list.id);
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: ${list.tag_color || '#3b82f6'};"></span>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${list.name}</h5>
-                                    <span class="text-[10px] text-slate-400">${new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                            </div>
-                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${list.real_leads_count || 0} Leads</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 line-clamp-2">${list.description || 'Sem descrição definida.'}</p>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Lists load error:", err);
-            }
-        }
-
-        function openCreateListModal() {
-            document.getElementById('modal-create-list').classList.remove('hidden');
-        }
-
-        async function handleCreateList(e) {
-            e.preventDefault();
-            const name = document.getElementById('list-input-name').value;
-            const description = document.getElementById('list-input-desc').value;
-            const tag_color = document.getElementById('list-input-color').value;
-
-            try {
-                const res = await fetch('/api/v1/lists', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, description, tag_color })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Lista criada com sucesso!");
-                    closeModal('modal-create-list');
-                    loadLeadLists();
-                }
-            } catch (err) {
-                console.error("Create list error:", err);
-                showToast("Erro ao criar lista.", "error");
-            }
-        }
-
-        async function viewListDetails(listId) {
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}`);
-                const data = await res.json();
-                currentViewingList = data.list;
-                
-                const container = document.getElementById('active-list-container');
-                container.classList.remove('hidden');
-                
-                document.getElementById('active-list-name').innerText = data.list.name;
-                document.getElementById('active-list-desc').innerText = data.list.description || `${data.items_count} leads salvos`;
-                document.getElementById('active-list-color-dot').style.backgroundColor = data.list.tag_color || '#3b82f6';
-                
-                const tbody = document.getElementById('active-list-items-table');
-                tbody.innerHTML = '';
-
-                if (data.items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma empresa adicionada a esta lista ainda.</td></tr>`;
-                    return;
-                }
-
-                data.items.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900 cursor-pointer hover:text-blue-600" onclick="openCompanyModal('${item.cnpj}')">${item.trade_name || item.legal_name}</div>
-                            <div class="text-[10px] font-mono text-slate-400">${item.cnpj}</div>
-                        </td>
-                        <td class="p-3 font-medium text-slate-600">${item.city_name} - ${item.state_code}</td>
-                        <td class="p-3 text-[11px] text-slate-500 max-w-xs truncate">${item.cnae_main_desc || 'N/D'}</td>
-                        <td class="p-3">
-                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">Score: ${item.score}</span>
-                        </td>
-                        <td class="p-3">
-                            <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">${item.status}</span>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="openCompanyModal('${item.cnpj}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">Dossiê</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                container.scrollIntoView({ behavior: 'smooth' });
-            } catch (err) {
-                console.error("View list error:", err);
-            }
-        }
-
-        async function openAddToListModal() {
-            if (selectedSearchCnpjs.size === 0) {
-                showToast("Selecione pelo menos uma empresa na tabela.", "info");
-                return;
-            }
-
-            const res = await fetch('/api/v1/lists');
-            const data = await res.json();
-            const select = document.getElementById('modal-select-target-list');
-            select.innerHTML = '';
-
-            if (!data.results || data.results.length === 0) {
-                showToast("Crie uma lista primeiro antes de salvar leads.", "info");
-                openCreateListModal();
-                return;
-            }
-
-            data.results.forEach(l => {
-                const opt = document.createElement('option');
-                opt.value = l.id;
-                opt.innerText = `${l.name} (${l.real_leads_count || 0} leads)`;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('modal-selected-count-label').innerText = selectedSearchCnpjs.size;
-            document.getElementById('modal-add-to-list').classList.remove('hidden');
-        }
-
-        async function confirmAddSelectedToList() {
-            const listId = document.getElementById('modal-select-target-list').value;
-            const notes = document.getElementById('modal-list-notes').value || null;
-            
-            // Map selected CNPJs to establishment IDs
-            const selectedEstIds = [];
-            lastSearchResults.forEach(r => {
-                if (selectedSearchCnpjs.has(r.cnpj)) {
-                    selectedEstIds.push(r.id);
-                }
-            });
-
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}/items`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ establishment_ids: selectedEstIds, notes })
-                });
-                const data = await res.json();
-                showToast(`${data.added_count} leads adicionados à lista com sucesso!`);
-                closeModal('modal-add-to-list');
-                loadLeadLists();
-            } catch (err) {
-                console.error("Add to list error:", err);
-                showToast("Erro ao adicionar à lista.", "error");
-            }
-        }
-
-        function exportActiveListToExcel() {
-            if (!currentViewingList) return;
-            showToast(`Exportando lista "${currentViewingList.name}" em formato Excel (.xlsx)...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: `Lista: ${currentViewingList.name}`,
-                    leads_count: currentViewingList.total_leads_count || 10,
-                    file_name: `lista_${currentViewingList.name.toLowerCase().replace(/\s+/g, '_')}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Download da planilha concluído!");
-            }, 1000);
-        }
-
-        function sendActiveListToCRM() {
-            if (!currentViewingList) return;
-            showToast(`Enviando ${currentViewingList.total_leads_count || 10} leads para o Simplexo Vendas CRM...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'CRM_SYNC',
-                    destination_name: 'Simplexo Vendas / CRM Funil Prospecção',
-                    leads_count: currentViewingList.total_leads_count || 10
-                })
-            });
-            setTimeout(() => {
-                showToast("Leads integrados ao funil comercial com sucesso!");
-            }, 1200);
-        }
-
-        // --- 3. ASSISTENTE DE VENDAS (IA SALES COPILOT) ---
-        async function generateSalesCopilotPitch(cnpjOverride) {
-            const input = document.getElementById('copilot-cnpj-input');
-            const cnpj = cnpjOverride || (input ? input.value.trim() : '');
-            if (!cnpj) {
-                showToast("Digite o CNPJ ou Razão Social da empresa.", "info");
-                return;
-            }
-
-            const btn = document.getElementById('btn-copilot-generate');
-            if (btn) {
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando...`;
-                btn.disabled = true;
-            }
-
-            try {
-                const res = await fetch('/api/v1/sales-assistant/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cnpj: cnpj })
-                });
-                const data = await res.json();
-                
-                // Populate UI
-                document.getElementById('copilot-result-container').classList.remove('hidden');
-                document.getElementById('copilot-target-company').innerText = data.company_name;
-                document.getElementById('copilot-target-decisor').innerText = data.decisor_targeted || 'Diretoria';
-                
-                // Signals Tags
-                const tagsContainer = document.getElementById('copilot-signals-tags');
-                tagsContainer.innerHTML = '';
-                (data.signals_detected || []).forEach(sig => {
-                    const sp = document.createElement('span');
-                    sp.className = "bg-white border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md";
-                    sp.innerText = sig;
-                    tagsContainer.appendChild(sp);
-                });
-
-                // 1. WhatsApp
-                document.getElementById('copilot-whatsapp-text').innerText = data.whatsapp_icebreaker;
-
-                // 2. Email
-                document.getElementById('copilot-email-subject').innerText = data.executive_email.subject;
-                document.getElementById('copilot-email-body').innerText = data.executive_email.body;
-
-                // 3. Cold Call Script
-                document.getElementById('copilot-script-abertura').innerText = data.cold_call_script.abertura;
-                document.getElementById('copilot-script-gancho').innerText = data.cold_call_script.gancho_de_valor;
-                document.getElementById('copilot-script-pergunta').innerText = data.cold_call_script.pergunta_de_qualificacao;
-                document.getElementById('copilot-script-cta').innerText = data.cold_call_script.fechamento_cta;
-
-                // 4. Objections
-                const objGrid = document.getElementById('copilot-objections-grid');
-                objGrid.innerHTML = '';
-                (data.objection_matrix || []).forEach(obj => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1";
-                    card.innerHTML = `
-                        <div class="text-[10px] font-bold text-rose-600">"${obj.objecao}"</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">${obj.resposta}</p>
-                    `;
-                    objGrid.appendChild(card);
-                });
-
-                showToast("Briefing e Roteiro de Vendas gerados com IA!");
-            } catch (err) {
-                console.error("Copilot error:", err);
-                showToast("Erro ao gerar roteiro com IA.", "error");
-            } finally {
-                if (btn) {
-                    btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Gerar Pitch com IA`;
-                    btn.disabled = false;
-                }
-            }
-        }
-
-        function openSalesCopilotFromDossier() {
-            if (!activeCompanyProfile) return;
-            const cnpj = activeCompanyProfile.profile.cnpj;
-            closeCompanyModal();
-            switchNav('sales-assistant');
-            document.getElementById('copilot-cnpj-input').value = cnpj;
-            generateSalesCopilotPitch(cnpj);
-        }
-
-        // --- 4. HISTÓRICO DE PESQUISAS ---
-        async function loadSearchHistory() {
-            try {
-                const res = await fetch('/api/v1/history');
-                const data = await res.json();
-                const tbody = document.getElementById('history-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhuma pesquisa registrada no histórico ainda.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(h => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${h.query_term || 'Todos os Segmentos'}</td>
-                        <td class="p-3 text-slate-600">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-semibold">${h.state_code ? 'UF: ' + h.state_code : 'Brasil'} • Score >= ${h.min_score || 0}</span>
-                        </td>
-                        <td class="p-3"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px]">${h.results_count} empresas</span></td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(h.searched_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="replaySearch('${h.query_term || ''}', '${h.state_code || ''}', ${h.min_score || 0})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
-                                <i class="fa-solid fa-rotate-right mr-1"></i> Repetir Busca
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("History load error:", err);
-            }
-        }
-
-        function replaySearch(query, state, minScore) {
-            switchNav('search');
-            if (document.getElementById('filter-q')) document.getElementById('filter-q').value = query === 'Todos os Segmentos' || query === 'Busca Geral' ? '' : query;
-            if (document.getElementById('filter-state')) document.getElementById('filter-state').value = state;
-            if (document.getElementById('filter-score')) document.getElementById('filter-score').value = minScore;
-            executeSearch();
-            showToast("Pesquisa recarregada com sucesso!");
-        }
-
-        // --- 5. CENTRAL DE EXPORTAÇÕES ---
-        async function loadExportLogs() {
-            try {
-                const res = await fetch('/api/v1/exports');
-                const data = await res.json();
-                const tbody = document.getElementById('exports-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Nenhuma exportação realizada recentemente.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(ex => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${ex.file_name || 'Lote de Prospecção'}</td>
-                        <td class="p-3"><span class="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded">${ex.export_format}</span></td>
-                        <td class="p-3 text-slate-600">${ex.destination_name}</td>
-                        <td class="p-3 font-bold text-blue-600">${ex.leads_count} leads</td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(ex.exported_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3"><span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px]">${ex.status}</span></td>
-                        <td class="p-3 text-right">
-                            <button onclick="showToast('Baixando arquivo exportado...')" class="text-blue-600 hover:text-blue-800 font-bold text-xs"><i class="fa-solid fa-download"></i> Baixar</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("Export logs load error:", err);
-            }
-        }
-
-        function exportSearchResultsToExcel() {
-            if (lastSearchResults.length === 0) {
-                showToast("Realize uma pesquisa primeiro para exportar os resultados.", "info");
-                return;
-            }
-            showToast(`Exportando ${lastSearchResults.length} empresas em planilha Excel (.xlsx)...`);
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: 'Download Direto (.xlsx)',
-                    leads_count: lastSearchResults.length,
-                    file_name: `prospeccao_simplexo_${new Date().toISOString().slice(0,10)}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Planilha gerada com sucesso!");
-            }, 1000);
-        }
-    
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Chart.js for High-End Analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js">
-        // ==========================================================
-        // 5 COMMERCIAL INTELLIGENCE PRODUCTIVITY CONTROLLERS
-        // ==========================================================
-
-        let activeLoadedLists = [];
-        let currentViewingList = null;
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function copyToClipboard(elementId, successMsg) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            const text = el.innerText || el.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(successMsg || "Copiado para a área de transferência!");
-            }).catch(err => {
-                console.error("Copy error:", err);
-                showToast("Erro ao copiar.", "error");
-            });
-        }
-
-        // --- 1. MEUS ALERTAS ---
-        async function loadUserAlerts() {
-            try {
-                const res = await fetch('/api/v1/alerts');
-                const data = await res.json();
-                const grid = document.getElementById('alerts-grid');
-                const countEl = document.getElementById('alerts-count');
-                const sidebarBadge = document.getElementById('sidebar-alerts-badge');
-                
-                if (countEl) countEl.innerText = data.count || 0;
-                if (sidebarBadge) sidebarBadge.innerText = `${data.count || 0} Ativos`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-bell-slash text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhum radar de alerta configurado</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie um alerta para monitorar novas aberturas e oportunidades por CNAE ou Região.</p>
-                            <button onclick="openCreateAlertModal()" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeiro Alerta</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                data.results.forEach(al => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative hover:shadow-sm transition";
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">
-                                    <i class="fa-solid fa-radar"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${al.name}</h5>
-                                    <span class="text-[10px] text-slate-400">Freq: ${al.frequency}</span>
-                                </div>
-                            </div>
-                            <button onclick="deleteAlert('${al.id}')" title="Remover Alerta" class="text-slate-400 hover:text-rose-600 text-xs p-1">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 text-[10px]">
-                            ${al.state_code ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">UF: ${al.state_code}</span>` : ''}
-                            ${al.cnae_prefix ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">CNAE: ${al.cnae_prefix}</span>` : ''}
-                            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">Score >= ${al.min_score}</span>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Alerts load error:", err);
-            }
-        }
-
-        function openCreateAlertModal() {
-            document.getElementById('modal-create-alert').classList.remove('hidden');
-        }
-
-        async function handleCreateAlert(e) {
-            e.preventDefault();
-            const name = document.getElementById('alert-input-name').value;
-            const state_code = document.getElementById('alert-input-uf').value.trim() || null;
-            const cnae_prefix = document.getElementById('alert-input-cnae').value.trim() || null;
-            const min_score = parseInt(document.getElementById('alert-input-score').value) || 70;
-            const frequency = document.getElementById('alert-input-freq').value;
-
-            try {
-                const res = await fetch('/api/v1/alerts', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, state_code, cnae_prefix, min_score, frequency })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Alerta cadastrado com sucesso!");
-                    closeModal('modal-create-alert');
-                    loadUserAlerts();
-                }
-            } catch (err) {
-                console.error("Create alert error:", err);
-                showToast("Erro ao criar alerta.", "error");
-            }
-        }
-
-        async function deleteAlert(alertId) {
-            if (!confirm("Deseja realmente remover este alerta?")) return;
-            try {
-                const res = await fetch(`/api/v1/alerts/${alertId}`, { method: 'DELETE' });
-                showToast("Alerta removido!");
-                loadUserAlerts();
-            } catch (err) {
-                console.error("Delete alert error:", err);
-            }
-        }
-
-        // --- 2. MINHAS LISTAS ---
-        async function loadLeadLists() {
-            try {
-                const res = await fetch('/api/v1/lists');
-                const data = await res.json();
-                activeLoadedLists = data.results || [];
-                const grid = document.getElementById('lists-grid');
-                const sidebarBadge = document.getElementById('sidebar-lists-badge');
-                
-                if (sidebarBadge) sidebarBadge.innerText = `${activeLoadedLists.length} Listas`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (activeLoadedLists.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-list-check text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhuma lista criada ainda</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie listas para agrupar e qualificar seus leads selecionados.</p>
-                            <button onclick="openCreateListModal()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeira Lista</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                activeLoadedLists.forEach(list => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 hover:border-blue-300 hover:shadow-xs transition cursor-pointer";
-                    card.onclick = () => viewListDetails(list.id);
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: ${list.tag_color || '#3b82f6'};"></span>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${list.name}</h5>
-                                    <span class="text-[10px] text-slate-400">${new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                            </div>
-                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${list.real_leads_count || 0} Leads</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 line-clamp-2">${list.description || 'Sem descrição definida.'}</p>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Lists load error:", err);
-            }
-        }
-
-        function openCreateListModal() {
-            document.getElementById('modal-create-list').classList.remove('hidden');
-        }
-
-        async function handleCreateList(e) {
-            e.preventDefault();
-            const name = document.getElementById('list-input-name').value;
-            const description = document.getElementById('list-input-desc').value;
-            const tag_color = document.getElementById('list-input-color').value;
-
-            try {
-                const res = await fetch('/api/v1/lists', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, description, tag_color })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Lista criada com sucesso!");
-                    closeModal('modal-create-list');
-                    loadLeadLists();
-                }
-            } catch (err) {
-                console.error("Create list error:", err);
-                showToast("Erro ao criar lista.", "error");
-            }
-        }
-
-        async function viewListDetails(listId) {
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}`);
-                const data = await res.json();
-                currentViewingList = data.list;
-                
-                const container = document.getElementById('active-list-container');
-                container.classList.remove('hidden');
-                
-                document.getElementById('active-list-name').innerText = data.list.name;
-                document.getElementById('active-list-desc').innerText = data.list.description || `${data.items_count} leads salvos`;
-                document.getElementById('active-list-color-dot').style.backgroundColor = data.list.tag_color || '#3b82f6';
-                
-                const tbody = document.getElementById('active-list-items-table');
-                tbody.innerHTML = '';
-
-                if (data.items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma empresa adicionada a esta lista ainda.</td></tr>`;
-                    return;
-                }
-
-                data.items.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900 cursor-pointer hover:text-blue-600" onclick="openCompanyModal('${item.cnpj}')">${item.trade_name || item.legal_name}</div>
-                            <div class="text-[10px] font-mono text-slate-400">${item.cnpj}</div>
-                        </td>
-                        <td class="p-3 font-medium text-slate-600">${item.city_name} - ${item.state_code}</td>
-                        <td class="p-3 text-[11px] text-slate-500 max-w-xs truncate">${item.cnae_main_desc || 'N/D'}</td>
-                        <td class="p-3">
-                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">Score: ${item.score}</span>
-                        </td>
-                        <td class="p-3">
-                            <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">${item.status}</span>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="openCompanyModal('${item.cnpj}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">Dossiê</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                container.scrollIntoView({ behavior: 'smooth' });
-            } catch (err) {
-                console.error("View list error:", err);
-            }
-        }
-
-        async function openAddToListModal() {
-            if (selectedSearchCnpjs.size === 0) {
-                showToast("Selecione pelo menos uma empresa na tabela.", "info");
-                return;
-            }
-
-            const res = await fetch('/api/v1/lists');
-            const data = await res.json();
-            const select = document.getElementById('modal-select-target-list');
-            select.innerHTML = '';
-
-            if (!data.results || data.results.length === 0) {
-                showToast("Crie uma lista primeiro antes de salvar leads.", "info");
-                openCreateListModal();
-                return;
-            }
-
-            data.results.forEach(l => {
-                const opt = document.createElement('option');
-                opt.value = l.id;
-                opt.innerText = `${l.name} (${l.real_leads_count || 0} leads)`;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('modal-selected-count-label').innerText = selectedSearchCnpjs.size;
-            document.getElementById('modal-add-to-list').classList.remove('hidden');
-        }
-
-        async function confirmAddSelectedToList() {
-            const listId = document.getElementById('modal-select-target-list').value;
-            const notes = document.getElementById('modal-list-notes').value || null;
-            
-            // Map selected CNPJs to establishment IDs
-            const selectedEstIds = [];
-            lastSearchResults.forEach(r => {
-                if (selectedSearchCnpjs.has(r.cnpj)) {
-                    selectedEstIds.push(r.id);
-                }
-            });
-
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}/items`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ establishment_ids: selectedEstIds, notes })
-                });
-                const data = await res.json();
-                showToast(`${data.added_count} leads adicionados à lista com sucesso!`);
-                closeModal('modal-add-to-list');
-                loadLeadLists();
-            } catch (err) {
-                console.error("Add to list error:", err);
-                showToast("Erro ao adicionar à lista.", "error");
-            }
-        }
-
-        function exportActiveListToExcel() {
-            if (!currentViewingList) return;
-            showToast(`Exportando lista "${currentViewingList.name}" em formato Excel (.xlsx)...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: `Lista: ${currentViewingList.name}`,
-                    leads_count: currentViewingList.total_leads_count || 10,
-                    file_name: `lista_${currentViewingList.name.toLowerCase().replace(/\s+/g, '_')}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Download da planilha concluído!");
-            }, 1000);
-        }
-
-        function sendActiveListToCRM() {
-            if (!currentViewingList) return;
-            showToast(`Enviando ${currentViewingList.total_leads_count || 10} leads para o Simplexo Vendas CRM...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'CRM_SYNC',
-                    destination_name: 'Simplexo Vendas / CRM Funil Prospecção',
-                    leads_count: currentViewingList.total_leads_count || 10
-                })
-            });
-            setTimeout(() => {
-                showToast("Leads integrados ao funil comercial com sucesso!");
-            }, 1200);
-        }
-
-        // --- 3. ASSISTENTE DE VENDAS (IA SALES COPILOT) ---
-        async function generateSalesCopilotPitch(cnpjOverride) {
-            const input = document.getElementById('copilot-cnpj-input');
-            const cnpj = cnpjOverride || (input ? input.value.trim() : '');
-            if (!cnpj) {
-                showToast("Digite o CNPJ ou Razão Social da empresa.", "info");
-                return;
-            }
-
-            const btn = document.getElementById('btn-copilot-generate');
-            if (btn) {
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando...`;
-                btn.disabled = true;
-            }
-
-            try {
-                const res = await fetch('/api/v1/sales-assistant/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cnpj: cnpj })
-                });
-                const data = await res.json();
-                
-                // Populate UI
-                document.getElementById('copilot-result-container').classList.remove('hidden');
-                document.getElementById('copilot-target-company').innerText = data.company_name;
-                document.getElementById('copilot-target-decisor').innerText = data.decisor_targeted || 'Diretoria';
-                
-                // Signals Tags
-                const tagsContainer = document.getElementById('copilot-signals-tags');
-                tagsContainer.innerHTML = '';
-                (data.signals_detected || []).forEach(sig => {
-                    const sp = document.createElement('span');
-                    sp.className = "bg-white border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md";
-                    sp.innerText = sig;
-                    tagsContainer.appendChild(sp);
-                });
-
-                // 1. WhatsApp
-                document.getElementById('copilot-whatsapp-text').innerText = data.whatsapp_icebreaker;
-
-                // 2. Email
-                document.getElementById('copilot-email-subject').innerText = data.executive_email.subject;
-                document.getElementById('copilot-email-body').innerText = data.executive_email.body;
-
-                // 3. Cold Call Script
-                document.getElementById('copilot-script-abertura').innerText = data.cold_call_script.abertura;
-                document.getElementById('copilot-script-gancho').innerText = data.cold_call_script.gancho_de_valor;
-                document.getElementById('copilot-script-pergunta').innerText = data.cold_call_script.pergunta_de_qualificacao;
-                document.getElementById('copilot-script-cta').innerText = data.cold_call_script.fechamento_cta;
-
-                // 4. Objections
-                const objGrid = document.getElementById('copilot-objections-grid');
-                objGrid.innerHTML = '';
-                (data.objection_matrix || []).forEach(obj => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1";
-                    card.innerHTML = `
-                        <div class="text-[10px] font-bold text-rose-600">"${obj.objecao}"</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">${obj.resposta}</p>
-                    `;
-                    objGrid.appendChild(card);
-                });
-
-                showToast("Briefing e Roteiro de Vendas gerados com IA!");
-            } catch (err) {
-                console.error("Copilot error:", err);
-                showToast("Erro ao gerar roteiro com IA.", "error");
-            } finally {
-                if (btn) {
-                    btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Gerar Pitch com IA`;
-                    btn.disabled = false;
-                }
-            }
-        }
-
-        function openSalesCopilotFromDossier() {
-            if (!activeCompanyProfile) return;
-            const cnpj = activeCompanyProfile.profile.cnpj;
-            closeCompanyModal();
-            switchNav('sales-assistant');
-            document.getElementById('copilot-cnpj-input').value = cnpj;
-            generateSalesCopilotPitch(cnpj);
-        }
-
-        // --- 4. HISTÓRICO DE PESQUISAS ---
-        async function loadSearchHistory() {
-            try {
-                const res = await fetch('/api/v1/history');
-                const data = await res.json();
-                const tbody = document.getElementById('history-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhuma pesquisa registrada no histórico ainda.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(h => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${h.query_term || 'Todos os Segmentos'}</td>
-                        <td class="p-3 text-slate-600">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-semibold">${h.state_code ? 'UF: ' + h.state_code : 'Brasil'} • Score >= ${h.min_score || 0}</span>
-                        </td>
-                        <td class="p-3"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px]">${h.results_count} empresas</span></td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(h.searched_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="replaySearch('${h.query_term || ''}', '${h.state_code || ''}', ${h.min_score || 0})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
-                                <i class="fa-solid fa-rotate-right mr-1"></i> Repetir Busca
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("History load error:", err);
-            }
-        }
-
-        function replaySearch(query, state, minScore) {
-            switchNav('search');
-            if (document.getElementById('filter-q')) document.getElementById('filter-q').value = query === 'Todos os Segmentos' || query === 'Busca Geral' ? '' : query;
-            if (document.getElementById('filter-state')) document.getElementById('filter-state').value = state;
-            if (document.getElementById('filter-score')) document.getElementById('filter-score').value = minScore;
-            executeSearch();
-            showToast("Pesquisa recarregada com sucesso!");
-        }
-
-        // --- 5. CENTRAL DE EXPORTAÇÕES ---
-        async function loadExportLogs() {
-            try {
-                const res = await fetch('/api/v1/exports');
-                const data = await res.json();
-                const tbody = document.getElementById('exports-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Nenhuma exportação realizada recentemente.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(ex => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${ex.file_name || 'Lote de Prospecção'}</td>
-                        <td class="p-3"><span class="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded">${ex.export_format}</span></td>
-                        <td class="p-3 text-slate-600">${ex.destination_name}</td>
-                        <td class="p-3 font-bold text-blue-600">${ex.leads_count} leads</td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(ex.exported_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3"><span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px]">${ex.status}</span></td>
-                        <td class="p-3 text-right">
-                            <button onclick="showToast('Baixando arquivo exportado...')" class="text-blue-600 hover:text-blue-800 font-bold text-xs"><i class="fa-solid fa-download"></i> Baixar</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("Export logs load error:", err);
-            }
-        }
-
-        function exportSearchResultsToExcel() {
-            if (lastSearchResults.length === 0) {
-                showToast("Realize uma pesquisa primeiro para exportar os resultados.", "info");
-                return;
-            }
-            showToast(`Exportando ${lastSearchResults.length} empresas em planilha Excel (.xlsx)...`);
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: 'Download Direto (.xlsx)',
-                    leads_count: lastSearchResults.length,
-                    file_name: `prospeccao_simplexo_${new Date().toISOString().slice(0,10)}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Planilha gerada com sucesso!");
-            }, 1000);
-        }
-    
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1099,536 +39,6 @@
                 }
             }
         }
-    
-        // ==========================================================
-        // 5 COMMERCIAL INTELLIGENCE PRODUCTIVITY CONTROLLERS
-        // ==========================================================
-
-        let activeLoadedLists = [];
-        let currentViewingList = null;
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function copyToClipboard(elementId, successMsg) {
-            const el = document.getElementById(elementId);
-            if (!el) return;
-            const text = el.innerText || el.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(successMsg || "Copiado para a área de transferência!");
-            }).catch(err => {
-                console.error("Copy error:", err);
-                showToast("Erro ao copiar.", "error");
-            });
-        }
-
-        // --- 1. MEUS ALERTAS ---
-        async function loadUserAlerts() {
-            try {
-                const res = await fetch('/api/v1/alerts');
-                const data = await res.json();
-                const grid = document.getElementById('alerts-grid');
-                const countEl = document.getElementById('alerts-count');
-                const sidebarBadge = document.getElementById('sidebar-alerts-badge');
-                
-                if (countEl) countEl.innerText = data.count || 0;
-                if (sidebarBadge) sidebarBadge.innerText = `${data.count || 0} Ativos`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-bell-slash text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhum radar de alerta configurado</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie um alerta para monitorar novas aberturas e oportunidades por CNAE ou Região.</p>
-                            <button onclick="openCreateAlertModal()" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeiro Alerta</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                data.results.forEach(al => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative hover:shadow-sm transition";
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs font-bold">
-                                    <i class="fa-solid fa-radar"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${al.name}</h5>
-                                    <span class="text-[10px] text-slate-400">Freq: ${al.frequency}</span>
-                                </div>
-                            </div>
-                            <button onclick="deleteAlert('${al.id}')" title="Remover Alerta" class="text-slate-400 hover:text-rose-600 text-xs p-1">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5 text-[10px]">
-                            ${al.state_code ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">UF: ${al.state_code}</span>` : ''}
-                            ${al.cnae_prefix ? `<span class="bg-white border border-slate-200 px-2 py-0.5 rounded-md font-bold text-slate-700">CNAE: ${al.cnae_prefix}</span>` : ''}
-                            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-md font-bold">Score >= ${al.min_score}</span>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Alerts load error:", err);
-            }
-        }
-
-        function openCreateAlertModal() {
-            document.getElementById('modal-create-alert').classList.remove('hidden');
-        }
-
-        async function handleCreateAlert(e) {
-            e.preventDefault();
-            const name = document.getElementById('alert-input-name').value;
-            const state_code = document.getElementById('alert-input-uf').value.trim() || null;
-            const cnae_prefix = document.getElementById('alert-input-cnae').value.trim() || null;
-            const min_score = parseInt(document.getElementById('alert-input-score').value) || 70;
-            const frequency = document.getElementById('alert-input-freq').value;
-
-            try {
-                const res = await fetch('/api/v1/alerts', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, state_code, cnae_prefix, min_score, frequency })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Alerta cadastrado com sucesso!");
-                    closeModal('modal-create-alert');
-                    loadUserAlerts();
-                }
-            } catch (err) {
-                console.error("Create alert error:", err);
-                showToast("Erro ao criar alerta.", "error");
-            }
-        }
-
-        async function deleteAlert(alertId) {
-            if (!confirm("Deseja realmente remover este alerta?")) return;
-            try {
-                const res = await fetch(`/api/v1/alerts/${alertId}`, { method: 'DELETE' });
-                showToast("Alerta removido!");
-                loadUserAlerts();
-            } catch (err) {
-                console.error("Delete alert error:", err);
-            }
-        }
-
-        // --- 2. MINHAS LISTAS ---
-        async function loadLeadLists() {
-            try {
-                const res = await fetch('/api/v1/lists');
-                const data = await res.json();
-                activeLoadedLists = data.results || [];
-                const grid = document.getElementById('lists-grid');
-                const sidebarBadge = document.getElementById('sidebar-lists-badge');
-                
-                if (sidebarBadge) sidebarBadge.innerText = `${activeLoadedLists.length} Listas`;
-                if (!grid) return;
-                grid.innerHTML = '';
-
-                if (activeLoadedLists.length === 0) {
-                    grid.innerHTML = `
-                        <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
-                            <i class="fa-solid fa-list-check text-slate-300 text-3xl mb-2"></i>
-                            <h4 class="text-xs font-bold text-slate-700">Nenhuma lista criada ainda</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie listas para agrupar e qualificar seus leads selecionados.</p>
-                            <button onclick="openCreateListModal()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeira Lista</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                activeLoadedLists.forEach(list => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 hover:border-blue-300 hover:shadow-xs transition cursor-pointer";
-                    card.onclick = () => viewListDetails(list.id);
-                    card.innerHTML = `
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-center space-x-2.5">
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: ${list.tag_color || '#3b82f6'};"></span>
-                                <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${list.name}</h5>
-                                    <span class="text-[10px] text-slate-400">${new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
-                                </div>
-                            </div>
-                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${list.real_leads_count || 0} Leads</span>
-                        </div>
-                        <p class="text-[11px] text-slate-500 line-clamp-2">${list.description || 'Sem descrição definida.'}</p>
-                    `;
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Lists load error:", err);
-            }
-        }
-
-        function openCreateListModal() {
-            document.getElementById('modal-create-list').classList.remove('hidden');
-        }
-
-        async function handleCreateList(e) {
-            e.preventDefault();
-            const name = document.getElementById('list-input-name').value;
-            const description = document.getElementById('list-input-desc').value;
-            const tag_color = document.getElementById('list-input-color').value;
-
-            try {
-                const res = await fetch('/api/v1/lists', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, description, tag_color })
-                });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Lista criada com sucesso!");
-                    closeModal('modal-create-list');
-                    loadLeadLists();
-                }
-            } catch (err) {
-                console.error("Create list error:", err);
-                showToast("Erro ao criar lista.", "error");
-            }
-        }
-
-        async function viewListDetails(listId) {
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}`);
-                const data = await res.json();
-                currentViewingList = data.list;
-                
-                const container = document.getElementById('active-list-container');
-                container.classList.remove('hidden');
-                
-                document.getElementById('active-list-name').innerText = data.list.name;
-                document.getElementById('active-list-desc').innerText = data.list.description || `${data.items_count} leads salvos`;
-                document.getElementById('active-list-color-dot').style.backgroundColor = data.list.tag_color || '#3b82f6';
-                
-                const tbody = document.getElementById('active-list-items-table');
-                tbody.innerHTML = '';
-
-                if (data.items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma empresa adicionada a esta lista ainda.</td></tr>`;
-                    return;
-                }
-
-                data.items.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900 cursor-pointer hover:text-blue-600" onclick="openCompanyModal('${item.cnpj}')">${item.trade_name || item.legal_name}</div>
-                            <div class="text-[10px] font-mono text-slate-400">${item.cnpj}</div>
-                        </td>
-                        <td class="p-3 font-medium text-slate-600">${item.city_name} - ${item.state_code}</td>
-                        <td class="p-3 text-[11px] text-slate-500 max-w-xs truncate">${item.cnae_main_desc || 'N/D'}</td>
-                        <td class="p-3">
-                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">Score: ${item.score}</span>
-                        </td>
-                        <td class="p-3">
-                            <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">${item.status}</span>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="openCompanyModal('${item.cnpj}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">Dossiê</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                container.scrollIntoView({ behavior: 'smooth' });
-            } catch (err) {
-                console.error("View list error:", err);
-            }
-        }
-
-        async function openAddToListModal() {
-            if (selectedSearchCnpjs.size === 0) {
-                showToast("Selecione pelo menos uma empresa na tabela.", "info");
-                return;
-            }
-
-            const res = await fetch('/api/v1/lists');
-            const data = await res.json();
-            const select = document.getElementById('modal-select-target-list');
-            select.innerHTML = '';
-
-            if (!data.results || data.results.length === 0) {
-                showToast("Crie uma lista primeiro antes de salvar leads.", "info");
-                openCreateListModal();
-                return;
-            }
-
-            data.results.forEach(l => {
-                const opt = document.createElement('option');
-                opt.value = l.id;
-                opt.innerText = `${l.name} (${l.real_leads_count || 0} leads)`;
-                select.appendChild(opt);
-            });
-
-            document.getElementById('modal-selected-count-label').innerText = selectedSearchCnpjs.size;
-            document.getElementById('modal-add-to-list').classList.remove('hidden');
-        }
-
-        async function confirmAddSelectedToList() {
-            const listId = document.getElementById('modal-select-target-list').value;
-            const notes = document.getElementById('modal-list-notes').value || null;
-            
-            // Map selected CNPJs to establishment IDs
-            const selectedEstIds = [];
-            lastSearchResults.forEach(r => {
-                if (selectedSearchCnpjs.has(r.cnpj)) {
-                    selectedEstIds.push(r.id);
-                }
-            });
-
-            try {
-                const res = await fetch(`/api/v1/lists/${listId}/items`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ establishment_ids: selectedEstIds, notes })
-                });
-                const data = await res.json();
-                showToast(`${data.added_count} leads adicionados à lista com sucesso!`);
-                closeModal('modal-add-to-list');
-                loadLeadLists();
-            } catch (err) {
-                console.error("Add to list error:", err);
-                showToast("Erro ao adicionar à lista.", "error");
-            }
-        }
-
-        function exportActiveListToExcel() {
-            if (!currentViewingList) return;
-            showToast(`Exportando lista "${currentViewingList.name}" em formato Excel (.xlsx)...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: `Lista: ${currentViewingList.name}`,
-                    leads_count: currentViewingList.total_leads_count || 10,
-                    file_name: `lista_${currentViewingList.name.toLowerCase().replace(/\s+/g, '_')}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Download da planilha concluído!");
-            }, 1000);
-        }
-
-        function sendActiveListToCRM() {
-            if (!currentViewingList) return;
-            showToast(`Enviando ${currentViewingList.total_leads_count || 10} leads para o Simplexo Vendas CRM...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'CRM_SYNC',
-                    destination_name: 'Simplexo Vendas / CRM Funil Prospecção',
-                    leads_count: currentViewingList.total_leads_count || 10
-                })
-            });
-            setTimeout(() => {
-                showToast("Leads integrados ao funil comercial com sucesso!");
-            }, 1200);
-        }
-
-        // --- 3. ASSISTENTE DE VENDAS (IA SALES COPILOT) ---
-        async function generateSalesCopilotPitch(cnpjOverride) {
-            const input = document.getElementById('copilot-cnpj-input');
-            const cnpj = cnpjOverride || (input ? input.value.trim() : '');
-            if (!cnpj) {
-                showToast("Digite o CNPJ ou Razão Social da empresa.", "info");
-                return;
-            }
-
-            const btn = document.getElementById('btn-copilot-generate');
-            if (btn) {
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando...`;
-                btn.disabled = true;
-            }
-
-            try {
-                const res = await fetch('/api/v1/sales-assistant/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cnpj: cnpj })
-                });
-                const data = await res.json();
-                
-                // Populate UI
-                document.getElementById('copilot-result-container').classList.remove('hidden');
-                document.getElementById('copilot-target-company').innerText = data.company_name;
-                document.getElementById('copilot-target-decisor').innerText = data.decisor_targeted || 'Diretoria';
-                
-                // Signals Tags
-                const tagsContainer = document.getElementById('copilot-signals-tags');
-                tagsContainer.innerHTML = '';
-                (data.signals_detected || []).forEach(sig => {
-                    const sp = document.createElement('span');
-                    sp.className = "bg-white border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md";
-                    sp.innerText = sig;
-                    tagsContainer.appendChild(sp);
-                });
-
-                // 1. WhatsApp
-                document.getElementById('copilot-whatsapp-text').innerText = data.whatsapp_icebreaker;
-
-                // 2. Email
-                document.getElementById('copilot-email-subject').innerText = data.executive_email.subject;
-                document.getElementById('copilot-email-body').innerText = data.executive_email.body;
-
-                // 3. Cold Call Script
-                document.getElementById('copilot-script-abertura').innerText = data.cold_call_script.abertura;
-                document.getElementById('copilot-script-gancho').innerText = data.cold_call_script.gancho_de_valor;
-                document.getElementById('copilot-script-pergunta').innerText = data.cold_call_script.pergunta_de_qualificacao;
-                document.getElementById('copilot-script-cta').innerText = data.cold_call_script.fechamento_cta;
-
-                // 4. Objections
-                const objGrid = document.getElementById('copilot-objections-grid');
-                objGrid.innerHTML = '';
-                (data.objection_matrix || []).forEach(obj => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1";
-                    card.innerHTML = `
-                        <div class="text-[10px] font-bold text-rose-600">"${obj.objecao}"</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">${obj.resposta}</p>
-                    `;
-                    objGrid.appendChild(card);
-                });
-
-                showToast("Briefing e Roteiro de Vendas gerados com IA!");
-            } catch (err) {
-                console.error("Copilot error:", err);
-                showToast("Erro ao gerar roteiro com IA.", "error");
-            } finally {
-                if (btn) {
-                    btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Gerar Pitch com IA`;
-                    btn.disabled = false;
-                }
-            }
-        }
-
-        function openSalesCopilotFromDossier() {
-            if (!activeCompanyProfile) return;
-            const cnpj = activeCompanyProfile.profile.cnpj;
-            closeCompanyModal();
-            switchNav('sales-assistant');
-            document.getElementById('copilot-cnpj-input').value = cnpj;
-            generateSalesCopilotPitch(cnpj);
-        }
-
-        // --- 4. HISTÓRICO DE PESQUISAS ---
-        async function loadSearchHistory() {
-            try {
-                const res = await fetch('/api/v1/history');
-                const data = await res.json();
-                const tbody = document.getElementById('history-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhuma pesquisa registrada no histórico ainda.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(h => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${h.query_term || 'Todos os Segmentos'}</td>
-                        <td class="p-3 text-slate-600">
-                            <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-semibold">${h.state_code ? 'UF: ' + h.state_code : 'Brasil'} • Score >= ${h.min_score || 0}</span>
-                        </td>
-                        <td class="p-3"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px]">${h.results_count} empresas</span></td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(h.searched_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3 text-right">
-                            <button onclick="replaySearch('${h.query_term || ''}', '${h.state_code || ''}', ${h.min_score || 0})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
-                                <i class="fa-solid fa-rotate-right mr-1"></i> Repetir Busca
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("History load error:", err);
-            }
-        }
-
-        function replaySearch(query, state, minScore) {
-            switchNav('search');
-            if (document.getElementById('filter-q')) document.getElementById('filter-q').value = query === 'Todos os Segmentos' || query === 'Busca Geral' ? '' : query;
-            if (document.getElementById('filter-state')) document.getElementById('filter-state').value = state;
-            if (document.getElementById('filter-score')) document.getElementById('filter-score').value = minScore;
-            executeSearch();
-            showToast("Pesquisa recarregada com sucesso!");
-        }
-
-        // --- 5. CENTRAL DE EXPORTAÇÕES ---
-        async function loadExportLogs() {
-            try {
-                const res = await fetch('/api/v1/exports');
-                const data = await res.json();
-                const tbody = document.getElementById('exports-table-body');
-                if (!tbody) return;
-                tbody.innerHTML = '';
-
-                if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Nenhuma exportação realizada recentemente.</td></tr>`;
-                    return;
-                }
-
-                data.results.forEach(ex => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${ex.file_name || 'Lote de Prospecção'}</td>
-                        <td class="p-3"><span class="bg-slate-100 text-slate-700 font-mono text-[10px] font-bold px-2 py-0.5 rounded">${ex.export_format}</span></td>
-                        <td class="p-3 text-slate-600">${ex.destination_name}</td>
-                        <td class="p-3 font-bold text-blue-600">${ex.leads_count} leads</td>
-                        <td class="p-3 text-slate-400 text-[11px]">${new Date(ex.exported_at).toLocaleString('pt-BR')}</td>
-                        <td class="p-3"><span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px]">${ex.status}</span></td>
-                        <td class="p-3 text-right">
-                            <button onclick="showToast('Baixando arquivo exportado...')" class="text-blue-600 hover:text-blue-800 font-bold text-xs"><i class="fa-solid fa-download"></i> Baixar</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-            } catch (err) {
-                console.error("Export logs load error:", err);
-            }
-        }
-
-        function exportSearchResultsToExcel() {
-            if (lastSearchResults.length === 0) {
-                showToast("Realize uma pesquisa primeiro para exportar os resultados.", "info");
-                return;
-            }
-            showToast(`Exportando ${lastSearchResults.length} empresas em planilha Excel (.xlsx)...`);
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'EXCEL',
-                    destination_name: 'Download Direto (.xlsx)',
-                    leads_count: lastSearchResults.length,
-                    file_name: `prospeccao_simplexo_${new Date().toISOString().slice(0,10)}.xlsx`
-                })
-            });
-            setTimeout(() => {
-                showToast("Planilha gerada com sucesso!");
-            }, 1000);
-        }
-    
     </script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
@@ -1685,11 +95,16 @@
                     <a href="javascript:void(0)" onclick="showToast('Utilize a senha padrão de demonstração preenchida.', 'info')" class="text-blue-600 hover:text-blue-700 font-semibold">Esqueceu a senha?</a>
                 </div>
 
-                <button type="submit" id="btn-login-submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 text-xs transition duration-150 flex items-center justify-center space-x-2 cursor-pointer">
+                <div class="space-y-2">
+                <button type="submit" id="btn-login-submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 text-xs transition duration-150 flex items-center justify-center space-x-2 cursor-pointer">
                     <span>Acessar Simplexo Data Station</span>
                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
+                <button type="button" onclick="handleLogin()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-xl text-xs transition flex items-center justify-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-bolt text-amber-500"></i>
+                    <span>Acesso Instantâneo Demo</span>
+                </button>
+            </div>
             </form>
 
             <div class="mt-8 pt-6 border-t border-slate-100 text-center">
@@ -1786,51 +201,21 @@
                     </div>
 
                     <div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Minhas Oportunidades</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Oportunidades & Vendas</div>
                         <nav class="space-y-1">
-                            <button onclick="switchNav('alerts')" id="nav-alerts" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fa-solid fa-bell w-4 text-center text-rose-500"></i>
-                                    <span>Meus Alertas</span>
-                                </div>
-                                <span id="sidebar-alerts-badge" class="bg-rose-100 text-rose-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Radar</span>
-                            </button>
-                            <button onclick="switchNav('lists')" id="nav-lists" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fa-solid fa-list-check w-4 text-center text-blue-600"></i>
-                                    <span>Minhas Listas</span>
-                                </div>
-                                <span id="sidebar-lists-badge" class="bg-blue-100 text-blue-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">ICPs</span>
-                            </button>
-                            <button onclick="switchNav('sales-assistant')" id="nav-sales-assistant" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fa-solid fa-robot w-4 text-center text-indigo-600"></i>
-                                    <span>Assistente de Vendas</span>
-                                </div>
-                                <span class="bg-indigo-100 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">IA</span>
-                            </button>
-                            <button onclick="switchNav('history')" id="nav-history" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
-                                <i class="fa-solid fa-clock-rotate-left w-4 text-center text-slate-500"></i>
-                                <span>Histórico de Pesquisas</span>
-                            </button>
-                            <button onclick="switchNav('exports')" id="nav-exports" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
-                                <div class="flex items-center space-x-3">
-                                    <i class="fa-solid fa-download w-4 text-center text-emerald-600"></i>
-                                    <span>Exportações</span>
-                                </div>
-                                <span class="bg-emerald-100 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Novo!</span>
-                            </button>
                             <button onclick="switchNav('recent-companies')" id="nav-recent-companies" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <div class="flex items-center space-x-3">
                                     <i class="fa-solid fa-sparkles w-4 text-center text-amber-500"></i>
                                     <span>Recém-Abertas</span>
                                 </div>
+                                <span class="bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Novo</span>
                             </button>
                             <button onclick="switchNav('cno-obras')" id="nav-cno-obras" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <div class="flex items-center space-x-3">
                                     <i class="fa-solid fa-helmet-safety w-4 text-center text-orange-500"></i>
                                     <span>Obras & CNO</span>
                                 </div>
+                                <span class="bg-orange-100 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Ativo</span>
                             </button>
                         </nav>
                     </div>
@@ -2282,284 +667,6 @@
                     </div>
                 </div>
 
-                
-                <!-- VIEW: MEUS ALERTAS (RADAR) -->
-                <div id="view-alerts" class="hidden space-y-6 max-w-7xl mx-auto">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-sm font-bold">
-                                    <i class="fa-solid fa-bell"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Meus Alertas & Radar de Oportunidades</h3>
-                                    <p class="text-xs text-slate-500">Monitore automaticamente novas empresas abertas, CNAEs estratégicos e obras CNO</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="openCreateAlertModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-plus"></i> Criar Novo Alerta
-                                </button>
-                                <button onclick="loadUserAlerts()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-rotate-right"></i> Atualizar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- ALERTS GRID -->
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Radares Ativos (<span id="alerts-count">0</span>)</h4>
-                            <div id="alerts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VIEW: MINHAS LISTAS (LEAD LISTS) -->
-                <div id="view-lists" class="hidden space-y-6 max-w-7xl mx-auto">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">
-                                    <i class="fa-solid fa-list-check"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Minhas Listas de Prospecção (ICPs Salvos)</h3>
-                                    <p class="text-xs text-slate-500">Organize empresas qualificadas por segmento, campanhas e estágios do funil</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="openCreateListModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-plus"></i> Criar Nova Lista
-                                </button>
-                                <button onclick="loadLeadLists()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-2 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-rotate-right"></i> Atualizar
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- LISTS CARDS GRID -->
-                        <div id="lists-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-
-                        <!-- ACTIVE LIST DETAIL CONTAINER -->
-                        <div id="active-list-container" class="hidden pt-6 border-t border-slate-100 space-y-4">
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <span id="active-list-color-dot" class="w-3 h-3 rounded-full bg-blue-500"></span>
-                                        <h4 id="active-list-name" class="text-sm font-bold text-slate-900">Nome da Lista</h4>
-                                    </div>
-                                    <p id="active-list-desc" class="text-xs text-slate-500 mt-0.5">Descrição da lista</p>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <button onclick="exportActiveListToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                                        <i class="fa-solid fa-file-excel"></i> Exportar XLSX
-                                    </button>
-                                    <button onclick="sendActiveListToCRM()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                                        <i class="fa-solid fa-plug-circle-bolt"></i> Enviar p/ Simplexo Vendas
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-xs">
-                                    <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-y border-slate-200">
-                                        <tr>
-                                            <th class="p-3">CNPJ / Empresa</th>
-                                            <th class="p-3">Localização</th>
-                                            <th class="p-3">Atividade / CNAE</th>
-                                            <th class="p-3">Score & Contato</th>
-                                            <th class="p-3">Status Lead</th>
-                                            <th class="p-3 text-right">Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="active-list-items-table" class="divide-y divide-slate-100 font-medium"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VIEW: ASSISTENTE DE VENDAS (IA SALES COPILOT) -->
-                <div id="view-sales-assistant" class="hidden space-y-6 max-w-7xl mx-auto">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
-                                    <i class="fa-solid fa-robot"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Assistente de Vendas & Copiloto IA</h3>
-                                    <p class="text-xs text-slate-500">Gere abordagens comerciais altamente persuasivas, quebra de objeções e scripts para WhatsApp</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- SEARCH TARGET COMPANY BAR -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-3">
-                            <div class="relative flex-1 w-full">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                                <input id="copilot-cnpj-input" type="text" placeholder="Digite o CNPJ ou Razão Social do Lead (ex: 61.190.096/0008-69 ou Eurofarma)..."
-                                    onkeydown="if(event.key==='Enter') generateSalesCopilotPitch()"
-                                    class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 transition">
-                            </div>
-                            <button onclick="generateSalesCopilotPitch()" id="btn-copilot-generate" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0">
-                                <i class="fa-solid fa-sparkles"></i> Gerar Pitch com IA
-                            </button>
-                        </div>
-
-                        <!-- COPILOT RESULTS OUTPUT -->
-                        <div id="copilot-result-container" class="hidden space-y-6">
-                            <!-- HEADER METRICS -->
-                            <div class="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 border border-indigo-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div>
-                                    <div class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Empresa Alvo</div>
-                                    <div id="copilot-target-company" class="text-base font-black text-slate-900">NOME DA EMPRESA</div>
-                                    <div class="text-xs text-slate-500 mt-0.5">Decisor Focado: <span id="copilot-target-decisor" class="font-bold text-indigo-600">Diretoria</span></div>
-                                </div>
-                                <div id="copilot-signals-tags" class="flex flex-wrap gap-1.5"></div>
-                            </div>
-
-                            <!-- TABS GRID -->
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                                <!-- 1. WHATSAPP ICEBREAKER -->
-                                <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
-                                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <div class="flex items-center space-x-2 text-emerald-600 font-bold text-xs">
-                                            <i class="fa-brands fa-whatsapp text-sm"></i>
-                                            <span>Abordagem WhatsApp (Icebreaker)</span>
-                                        </div>
-                                        <button onclick="copyToClipboard('copilot-whatsapp-text', 'Mensagem WhatsApp copiada!')" class="text-xs text-slate-500 hover:text-emerald-600 font-semibold flex items-center gap-1 cursor-pointer">
-                                            <i class="fa-solid fa-copy"></i> Copiar
-                                        </button>
-                                    </div>
-                                    <div id="copilot-whatsapp-text" class="bg-slate-50 p-3.5 rounded-lg text-xs text-slate-700 font-mono whitespace-pre-line leading-relaxed border border-slate-100"></div>
-                                </div>
-
-                                <!-- 2. EXECUTIVE EMAIL PITCH -->
-                                <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
-                                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                                        <div class="flex items-center space-x-2 text-blue-600 font-bold text-xs">
-                                            <i class="fa-solid fa-envelope text-sm"></i>
-                                            <span>E-mail Executivo C-Level</span>
-                                        </div>
-                                        <button onclick="copyToClipboard('copilot-email-body', 'E-mail executivo copiado!')" class="text-xs text-slate-500 hover:text-blue-600 font-semibold flex items-center gap-1 cursor-pointer">
-                                            <i class="fa-solid fa-copy"></i> Copiar
-                                        </button>
-                                    </div>
-                                    <div class="text-[11px] font-bold text-slate-500">Assunto: <span id="copilot-email-subject" class="text-slate-900">Oportunidade</span></div>
-                                    <div id="copilot-email-body" class="bg-slate-50 p-3.5 rounded-lg text-xs text-slate-700 font-mono whitespace-pre-line leading-relaxed border border-slate-100 max-h-48 overflow-y-auto custom-scrollbar"></div>
-                                </div>
-                            </div>
-
-                            <!-- 3. COLD CALL SCRIPT -->
-                            <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
-                                <div class="flex items-center space-x-2 text-indigo-600 font-bold text-xs border-b border-slate-100 pb-2">
-                                    <i class="fa-solid fa-phone text-sm"></i>
-                                    <span>Roteiro Completo de Cold Call Estruturada</span>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                                        <span class="text-[10px] font-bold uppercase text-indigo-600">1. Abertura (30 seg)</span>
-                                        <p id="copilot-script-abertura" class="text-slate-700 leading-relaxed"></p>
-                                    </div>
-                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                                        <span class="text-[10px] font-bold uppercase text-indigo-600">2. Gancho de Valor</span>
-                                        <p id="copilot-script-gancho" class="text-slate-700 leading-relaxed"></p>
-                                    </div>
-                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                                        <span class="text-[10px] font-bold uppercase text-indigo-600">3. Pergunta Qualificação</span>
-                                        <p id="copilot-script-pergunta" class="text-slate-700 leading-relaxed"></p>
-                                    </div>
-                                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
-                                        <span class="text-[10px] font-bold uppercase text-indigo-600">4. Fechamento CTA</span>
-                                        <p id="copilot-script-cta" class="text-slate-700 leading-relaxed"></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 4. OBJECTION HANDLING -->
-                            <div class="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
-                                <div class="flex items-center space-x-2 text-rose-600 font-bold text-xs border-b border-slate-100 pb-2">
-                                    <i class="fa-solid fa-shield-halved text-sm"></i>
-                                    <span>Matriz de Quebra de Objeções Rápidas</span>
-                                </div>
-                                <div id="copilot-objections-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VIEW: HISTÓRICO DE PESQUISAS -->
-                <div id="view-history" class="hidden space-y-6 max-w-7xl mx-auto">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-sm font-bold">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Histórico de Pesquisas & Consultas</h3>
-                                    <p class="text-xs text-slate-500">Revise suas pesquisas anteriores e re-execute filtros com apenas 1 clique</p>
-                                </div>
-                            </div>
-                            <button onclick="loadSearchHistory()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                <i class="fa-solid fa-rotate-right"></i> Atualizar Histórico
-                            </button>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-y border-slate-200">
-                                    <tr>
-                                        <th class="p-3">Termo / Busca</th>
-                                        <th class="p-3">Filtros Aplicados (UF / CNAE / Score)</th>
-                                        <th class="p-3">Resultados</th>
-                                        <th class="p-3">Data e Hora</th>
-                                        <th class="p-3 text-right">Ação</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="history-table-body" class="divide-y divide-slate-100 font-medium"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- VIEW: CENTRAL DE EXPORTAÇÕES -->
-                <div id="view-exports" class="hidden space-y-6 max-w-7xl mx-auto">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
-                                    <i class="fa-solid fa-download"></i>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-slate-900">Central de Exportações & Envios ao CRM</h3>
-                                    <p class="text-xs text-slate-500">Acompanhe todos os arquivos baixados e remessas despachadas para o Simplexo Vendas</p>
-                                </div>
-                            </div>
-                            <button onclick="loadExportLogs()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                <i class="fa-solid fa-rotate-right"></i> Atualizar
-                            </button>
-                        </div>
-
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold border-y border-slate-200">
-                                    <tr>
-                                        <th class="p-3">Arquivo / Lote</th>
-                                        <th class="p-3">Formato</th>
-                                        <th class="p-3">Destino</th>
-                                        <th class="p-3">Total Leads</th>
-                                        <th class="p-3">Data/Hora</th>
-                                        <th class="p-3">Status</th>
-                                        <th class="p-3 text-right">Ação</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="exports-table-body" class="divide-y divide-slate-100 font-medium"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- VIEW 7: PLANOS & LOJA (5 TIERS) -->
                 <div id="view-plans" class="hidden space-y-8 max-w-7xl mx-auto pb-12">
                     <div class="text-center max-w-3xl mx-auto space-y-3">
@@ -2628,11 +735,8 @@
                     </div>
                 </div>
 
-                <!-- CONTACT BUTTONS (WHATSAPP, PHONE, CRM, IA SALES COPILOT) -->
-                <div class="grid grid-cols-4 gap-2">
-                    <button onclick="openSalesCopilotFromDossier()" class="flex items-center justify-center py-2 px-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-xl shadow-xs transition cursor-pointer">
-                        <i class="fa-solid fa-robot mr-1"></i> Pitch IA
-                    </button>
+                <!-- CONTACT BUTTONS (WHATSAPP, PHONE, CRM) -->
+                <div class="grid grid-cols-3 gap-3">
                     <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp
                     </a>
@@ -2709,6 +813,120 @@
         </div>
     </div>
 
+    
+    <!-- MODAL: CRIAR NOVO ALERTA -->
+    <div id="modal-create-alert" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2 text-rose-600 font-bold text-sm">
+                    <i class="fa-solid fa-radar"></i>
+                    <span>Configurar Novo Radar de Alerta</span>
+                </div>
+                <button onclick="closeModal('modal-create-alert')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleCreateAlert(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nome do Radar</label>
+                    <input id="alert-input-name" required placeholder="Ex: Farmacêuticas SP Score 80+" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Estado (UF)</label>
+                        <input id="alert-input-uf" placeholder="Ex: SP, RJ, MG" maxlength="2" class="uppercase w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">CNAE (Prefixo)</label>
+                        <input id="alert-input-cnae" placeholder="Ex: 212, 620" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Score Mínimo</label>
+                    <input id="alert-input-score" type="number" value="70" min="0" max="100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Frequência de Notificação</label>
+                    <select id="alert-input-freq" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
+                        <option value="REALTIME">Tempo Real (Ao detectar nova abertura)</option>
+                        <option value="DAILY" selected>Resumo Diário</option>
+                        <option value="WEEKLY">Resumo Semanal</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-create-alert')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
+                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Salvar Alerta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CRIAR NOVA LISTA -->
+    <div id="modal-create-list" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2 text-blue-600 font-bold text-sm">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Criar Lista de Prospecção</span>
+                </div>
+                <button onclick="closeModal('modal-create-list')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleCreateList(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nome da Lista</label>
+                    <input id="list-input-name" required placeholder="Ex: Farmacêuticas Alto Padrão Q3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Descrição / Objetivo</label>
+                    <textarea id="list-input-desc" rows="2" placeholder="Ex: Leads qualificados com faturamento > 10M para abordagem outbound" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600"></textarea>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Cor da Tag</label>
+                    <div class="flex gap-2">
+                        <input type="color" id="list-input-color" value="#3b82f6" class="w-10 h-8 rounded-lg cursor-pointer border-0">
+                        <span class="text-slate-400 text-xs self-center">Escolha uma cor para identificar sua lista</span>
+                    </div>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-create-list')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Salvar Lista</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADICIONAR SELECIONADOS À LISTA -->
+    <div id="modal-add-to-list" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2 text-blue-600 font-bold text-sm">
+                    <i class="fa-solid fa-folder-plus"></i>
+                    <span>Salvar Empresas na Lista</span>
+                </div>
+                <button onclick="closeModal('modal-add-to-list')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <p class="text-slate-600">Selecione o destino para as <strong id="modal-selected-count-label" class="text-blue-600">0</strong> empresas selecionadas:</p>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Escolha a Lista</label>
+                    <select id="modal-select-target-list" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600"></select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Observações / Tag do Lote (Opcional)</label>
+                    <input id="modal-list-notes" placeholder="Ex: Prospecção Q3 SDR Fellipe" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modal-add-to-list')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
+                    <button onclick="confirmAddSelectedToList()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Confirmar e Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
         let plansCatalog = [];
@@ -2751,7 +969,7 @@
         }
 
         function switchNav(tabId) {
-            const tabs = ['dashboard', 'search', 'alerts', 'lists', 'sales-assistant', 'history', 'exports', 'recent-companies', 'cno-obras', 'batch', 'reveal', 'plans'];
+            const tabs = ['dashboard', 'search', 'recent-companies', 'cno-obras', 'batch', 'reveal', 'plans'];
             tabs.forEach(t => {
                 const view = document.getElementById('view-' + t);
                 const nav = document.getElementById('nav-' + t);
@@ -2771,15 +989,7 @@
             }
 
             // Lazy trigger updates for specific views
-            if (tabId === 'alerts') {
-                loadUserAlerts();
-            } else if (tabId === 'lists') {
-                loadLeadLists();
-            } else if (tabId === 'history') {
-                loadSearchHistory();
-            } else if (tabId === 'exports') {
-                loadExportLogs();
-            } else if (tabId === 'recent-companies' && (!document.getElementById('recent-table-body').children.length)) {
+            if (tabId === 'recent-companies' && (!document.getElementById('recent-table-body').children.length)) {
                 loadRecentOpportunities();
             } else if (tabId === 'cno-obras' && (!document.getElementById('cno-grid').children.length)) {
                 loadCNOOpportunities();
@@ -2791,44 +1001,14 @@
         // Aliases for compatibility
         const switchTab = switchNav;
 
-        async function executeOmnibarSearch() {
+        function executeOmnibarSearch() {
             const input = document.getElementById('omnibar-input');
             const term = input ? input.value.trim() : '';
-            if (!term) return;
-
-            // Check if term looks like a natural language prompt (> 3 words or contains descriptive filters)
-            const isNaturalLanguage = term.split(' ').length >= 3 || /em |com |onde |faturamento|porte|whatsapp|qualificadas/i.test(term);
-
-            switchNav('search');
-            document.getElementById('filter-q').value = term;
-
-            if (isNaturalLanguage) {
-                showToast("Interpretando busca semântica com IA...", "info");
-                try {
-                    const res = await fetch('/api/v1/search/semantic', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ prompt: term })
-                    });
-                    const data = await res.json();
-                    lastSearchResults = data.results || [];
-                    selectedSearchCnpjs.clear();
-                    
-                    // Render AI Detected Signals Bar
-                    const countEl = document.getElementById('results-count');
-                    if (countEl) {
-                        const tagsHtml = (data.detected_signals || []).map(s => `<span class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md ml-1.5">${s}</span>`).join('');
-                        countEl.innerHTML = `${data.count} Empresas Encontradas <span class="ml-2 font-normal text-slate-400">IA Filtrou:</span> ${tagsHtml}`;
-                    }
-
-                    renderSearchResults(lastSearchResults);
-                    return;
-                } catch (err) {
-                    console.error("Semantic search error, falling back to standard:", err);
-                }
+            if (term) {
+                switchNav('search');
+                document.getElementById('filter-q').value = term;
+                executeSearch();
             }
-
-            executeSearch();
         }
 
         function handleOmnibarSearch(e) {
@@ -2942,22 +1122,6 @@
                 lastSearchResults = data.results || [];
                 selectedSearchCnpjs.clear();
                 renderSearchResults(lastSearchResults);
-
-                // Auto-log to search history
-                if (q || state || faturamento || minScore > 0) {
-                    fetch('/api/v1/history/log', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            query_term: q || 'Busca Geral',
-                            state_code: state || null,
-                            cnae_prefix: null,
-                            min_score: parseInt(minScore) || 0,
-                            filters_applied: { state, faturamento, minScore, hasWhatsApp },
-                            results_count: lastSearchResults.length
-                        })
-                    }).catch(e => console.error("History log error:", e));
-                }
             } catch (err) {
                 console.error("Search error:", err);
             }
@@ -3429,26 +1593,7 @@
             }
         }
 
-        function initializeAllData() {
-            loadDashboardStats();
-            initCharts();
-            executeSearch();
-            loadRecentOpportunities();
-            loadCNOOpportunities();
-            loadPlans();
-            switchNav('dashboard');
-        }
-
-        // Auto initialization on load
-        window.addEventListener('DOMContentLoaded', () => {
-            // Check if user is already authenticated
-            if (localStorage.getItem('simplexo_auth') === 'true') {
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('app-view').classList.remove('hidden');
-                initializeAllData();
-            }
-        });
-    
+        
         // ==========================================================
         // 5 COMMERCIAL INTELLIGENCE PRODUCTIVITY CONTROLLERS
         // ==========================================================
@@ -3493,7 +1638,7 @@
                             <i class="fa-solid fa-bell-slash text-slate-300 text-3xl mb-2"></i>
                             <h4 class="text-xs font-bold text-slate-700">Nenhum radar de alerta configurado</h4>
                             <p class="text-[11px] text-slate-400 mt-1">Crie um alerta para monitorar novas aberturas e oportunidades por CNAE ou Região.</p>
-                            <button onclick="openCreateAlertModal()" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeiro Alerta</button>
+                            <button onclick="openCreateAlertModal()" class="mt-4 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">Criar Primeiro Alerta</button>
                         </div>
                     `;
                     return;
@@ -3513,7 +1658,7 @@
                                     <span class="text-[10px] text-slate-400">Freq: ${al.frequency}</span>
                                 </div>
                             </div>
-                            <button onclick="deleteAlert('${al.id}')" title="Remover Alerta" class="text-slate-400 hover:text-rose-600 text-xs p-1">
+                            <button onclick="deleteAlert('${al.id}')" title="Remover Alerta" class="text-slate-400 hover:text-rose-600 text-xs p-1 cursor-pointer">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -3549,22 +1694,19 @@
                     body: JSON.stringify({ name, state_code, cnae_prefix, min_score, frequency })
                 });
                 const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Alerta cadastrado com sucesso!");
-                    closeModal('modal-create-alert');
-                    loadUserAlerts();
-                }
+                closeModal('modal-create-alert');
+                showToast("Radar de Alerta criado com sucesso!");
+                loadUserAlerts();
             } catch (err) {
                 console.error("Create alert error:", err);
                 showToast("Erro ao criar alerta.", "error");
             }
         }
 
-        async function deleteAlert(alertId) {
-            if (!confirm("Deseja realmente remover este alerta?")) return;
+        async function deleteAlert(id) {
             try {
-                const res = await fetch(`/api/v1/alerts/${alertId}`, { method: 'DELETE' });
-                showToast("Alerta removido!");
+                await fetch(`/api/v1/alerts/${id}`, { method: 'DELETE' });
+                showToast("Radar de alerta removido.");
                 loadUserAlerts();
             } catch (err) {
                 console.error("Delete alert error:", err);
@@ -3572,15 +1714,17 @@
         }
 
         // --- 2. MINHAS LISTAS ---
-        async function loadLeadLists() {
+        async function loadUserLists() {
             try {
                 const res = await fetch('/api/v1/lists');
                 const data = await res.json();
                 activeLoadedLists = data.results || [];
                 const grid = document.getElementById('lists-grid');
+                const countEl = document.getElementById('lists-count');
                 const sidebarBadge = document.getElementById('sidebar-lists-badge');
                 
-                if (sidebarBadge) sidebarBadge.innerText = `${activeLoadedLists.length} Listas`;
+                if (countEl) countEl.innerText = data.count || 0;
+                if (sidebarBadge) sidebarBadge.innerText = `${data.count || 0} Listas`;
                 if (!grid) return;
                 grid.innerHTML = '';
 
@@ -3589,29 +1733,39 @@
                         <div class="col-span-full p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
                             <i class="fa-solid fa-list-check text-slate-300 text-3xl mb-2"></i>
                             <h4 class="text-xs font-bold text-slate-700">Nenhuma lista criada ainda</h4>
-                            <p class="text-[11px] text-slate-400 mt-1">Crie listas para agrupar e qualificar seus leads selecionados.</p>
-                            <button onclick="openCreateListModal()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Criar Primeira Lista</button>
+                            <p class="text-[11px] text-slate-400 mt-1">Crie listas para agrupar e qualificar leads selecionados na Busca Avançada.</p>
+                            <button onclick="openCreateListModal()" class="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer">Criar Primeira Lista</button>
                         </div>
                     `;
                     return;
                 }
 
-                activeLoadedLists.forEach(list => {
+                activeLoadedLists.forEach(l => {
                     const card = document.createElement('div');
-                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 hover:border-blue-300 hover:shadow-xs transition cursor-pointer";
-                    card.onclick = () => viewListDetails(list.id);
+                    card.className = "bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 relative hover:shadow-sm transition cursor-pointer";
                     card.innerHTML = `
                         <div class="flex items-start justify-between">
                             <div class="flex items-center space-x-2.5">
-                                <span class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color: ${list.tag_color || '#3b82f6'};"></span>
+                                <div class="w-8 h-8 rounded-lg text-white flex items-center justify-center text-xs font-bold" style="background-color: ${l.tag_color || '#3b82f6'}">
+                                    <i class="fa-solid fa-folder"></i>
+                                </div>
                                 <div>
-                                    <h5 class="text-xs font-bold text-slate-900">${list.name}</h5>
-                                    <span class="text-[10px] text-slate-400">${new Date(list.created_at).toLocaleDateString('pt-BR')}</span>
+                                    <h5 class="text-xs font-bold text-slate-900">${l.name}</h5>
+                                    <span class="text-[10px] text-slate-400">${l.items_count} leads cadastrados</span>
                                 </div>
                             </div>
-                            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${list.real_leads_count || 0} Leads</span>
+                            <div class="flex items-center space-x-1">
+                                <button onclick="event.stopPropagation(); deleteList('${l.id}')" title="Excluir Lista" class="text-slate-400 hover:text-rose-600 text-xs p-1 cursor-pointer">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-[11px] text-slate-500 line-clamp-2">${list.description || 'Sem descrição definida.'}</p>
+                        <p class="text-[11px] text-slate-500 line-clamp-2">${l.description || 'Sem descrição.'}</p>
+                        <div class="pt-2 border-t border-slate-200 flex justify-end">
+                            <button onclick="viewListDetails('${l.id}')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold flex items-center gap-1 cursor-pointer">
+                                Ver Leads <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
                     `;
                     grid.appendChild(card);
                 });
@@ -3631,20 +1785,27 @@
             const tag_color = document.getElementById('list-input-color').value;
 
             try {
-                const res = await fetch('/api/v1/lists', {
+                await fetch('/api/v1/lists', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ name, description, tag_color })
                 });
-                const data = await res.json();
-                if (data.status === 'created') {
-                    showToast("Lista criada com sucesso!");
-                    closeModal('modal-create-list');
-                    loadLeadLists();
-                }
+                closeModal('modal-create-list');
+                showToast("Lista criada com sucesso!");
+                loadUserLists();
             } catch (err) {
                 console.error("Create list error:", err);
                 showToast("Erro ao criar lista.", "error");
+            }
+        }
+
+        async function deleteList(id) {
+            try {
+                await fetch(`/api/v1/lists/${id}`, { method: 'DELETE' });
+                showToast("Lista removida.");
+                loadUserLists();
+            } catch (err) {
+                console.error("Delete list error:", err);
             }
         }
 
@@ -3654,229 +1815,161 @@
                 const data = await res.json();
                 currentViewingList = data.list;
                 
-                const container = document.getElementById('active-list-container');
-                container.classList.remove('hidden');
+                document.getElementById('current-list-title').innerText = data.list.name;
+                document.getElementById('current-list-desc').innerText = `${data.list.description || ''} • Total: ${data.items.length} empresas`;
                 
-                document.getElementById('active-list-name').innerText = data.list.name;
-                document.getElementById('active-list-desc').innerText = data.list.description || `${data.items_count} leads salvos`;
-                document.getElementById('active-list-color-dot').style.backgroundColor = data.list.tag_color || '#3b82f6';
-                
-                const tbody = document.getElementById('active-list-items-table');
+                const tbody = document.getElementById('list-items-table-body');
                 tbody.innerHTML = '';
 
                 if (data.items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Nenhuma empresa adicionada a esta lista ainda.</td></tr>`;
-                    return;
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Nenhuma empresa adicionada nesta lista ainda. Use a Busca Avançada para selecionar e adicionar leads.</td></tr>`;
+                } else {
+                    data.items.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.className = "hover:bg-slate-50 transition";
+                        row.innerHTML = `
+                            <td class="p-3 font-mono font-bold text-slate-900">${formatCnpj(item.cnpj)}</td>
+                            <td class="p-3 font-bold text-slate-800">${item.trade_name || item.legal_name || 'Empresa'}</td>
+                            <td class="p-3 text-slate-600">${item.city_name || ''}/${item.state_code || ''}</td>
+                            <td class="p-3"><span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px]">${item.score || 80}</span></td>
+                            <td class="p-3"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px]">${item.status}</span></td>
+                            <td class="p-3 text-right">
+                                <button onclick="openCompanySlideover('${item.cnpj}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs mr-2 cursor-pointer">Ver 360</button>
+                                <button onclick="removeEstablishmentFromList('${item.establishment_id}')" class="text-slate-400 hover:text-rose-600 text-xs cursor-pointer"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        `;
+                        tbody.appendChild(row);
+                    });
                 }
 
-                data.items.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-50 transition";
-                    row.innerHTML = `
-                        <td class="p-3">
-                            <div class="font-bold text-slate-900 cursor-pointer hover:text-blue-600" onclick="openCompanyModal('${item.cnpj}')">${item.trade_name || item.legal_name}</div>
-                            <div class="text-[10px] font-mono text-slate-400">${item.cnpj}</div>
-                        </td>
-                        <td class="p-3 font-medium text-slate-600">${item.city_name} - ${item.state_code}</td>
-                        <td class="p-3 text-[11px] text-slate-500 max-w-xs truncate">${item.cnae_main_desc || 'N/D'}</td>
-                        <td class="p-3">
-                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold">Score: ${item.score}</span>
-                        </td>
-                        <td class="p-3">
-                            <span class="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold">${item.status}</span>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="openCompanyModal('${item.cnpj}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">Dossiê</button>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-
-                container.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('list-details-view').classList.remove('hidden');
+                document.getElementById('list-details-view').scrollIntoView({ behavior: 'smooth' });
             } catch (err) {
-                console.error("View list error:", err);
+                console.error("Error viewing list:", err);
             }
         }
 
-        async function openAddToListModal() {
+        async function removeEstablishmentFromList(estId) {
+            if (!currentViewingList) return;
+            try {
+                await fetch(`/api/v1/lists/${currentViewingList.id}/items/${estId}`, { method: 'DELETE' });
+                showToast("Empresa removida da lista.");
+                viewListDetails(currentViewingList.id);
+                loadUserLists();
+            } catch (err) {
+                console.error("Remove from list error:", err);
+            }
+        }
+
+        function openAddSelectedToListModal() {
             if (selectedSearchCnpjs.size === 0) {
                 showToast("Selecione pelo menos uma empresa na tabela.", "info");
                 return;
             }
-
-            const res = await fetch('/api/v1/lists');
-            const data = await res.json();
-            const select = document.getElementById('modal-select-target-list');
-            select.innerHTML = '';
-
-            if (!data.results || data.results.length === 0) {
-                showToast("Crie uma lista primeiro antes de salvar leads.", "info");
-                openCreateListModal();
+            if (activeLoadedLists.length === 0) {
+                showToast("Crie uma lista primeiro na seção 'Minhas Listas'.", "info");
                 return;
             }
-
-            data.results.forEach(l => {
+            const select = document.getElementById('modal-select-target-list');
+            select.innerHTML = '';
+            activeLoadedLists.forEach(l => {
                 const opt = document.createElement('option');
                 opt.value = l.id;
-                opt.innerText = `${l.name} (${l.real_leads_count || 0} leads)`;
+                opt.innerText = `${l.name} (${l.items_count} leads)`;
                 select.appendChild(opt);
             });
-
             document.getElementById('modal-selected-count-label').innerText = selectedSearchCnpjs.size;
             document.getElementById('modal-add-to-list').classList.remove('hidden');
         }
 
         async function confirmAddSelectedToList() {
             const listId = document.getElementById('modal-select-target-list').value;
-            const notes = document.getElementById('modal-list-notes').value || null;
-            
-            // Map selected CNPJs to establishment IDs
-            const selectedEstIds = [];
-            lastSearchResults.forEach(r => {
-                if (selectedSearchCnpjs.has(r.cnpj)) {
-                    selectedEstIds.push(r.id);
-                }
-            });
+            const notes = document.getElementById('modal-list-notes').value;
+            const estIds = Array.from(selectedSearchCnpjs);
 
             try {
                 const res = await fetch(`/api/v1/lists/${listId}/items`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ establishment_ids: selectedEstIds, notes })
+                    body: JSON.stringify({ establishment_ids: estIds, notes })
                 });
                 const data = await res.json();
-                showToast(`${data.added_count} leads adicionados à lista com sucesso!`);
                 closeModal('modal-add-to-list');
-                loadLeadLists();
+                showToast(`🎉 ${data.added_count} empresas adicionadas à lista!`);
+                loadUserLists();
             } catch (err) {
-                console.error("Add to list error:", err);
-                showToast("Erro ao adicionar à lista.", "error");
+                console.error("Add items to list error:", err);
+                showToast("Erro ao adicionar empresas.", "error");
             }
         }
 
-        function exportActiveListToExcel() {
+        function exportCurrentListToXLSX() {
             if (!currentViewingList) return;
-            showToast(`Exportando lista "${currentViewingList.name}" em formato Excel (.xlsx)...`);
-            // Log export
+            showToast(`Exportando lista "${currentViewingList.name}" em formato XLSX...`);
             fetch('/api/v1/exports/log', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     export_format: 'EXCEL',
                     destination_name: `Lista: ${currentViewingList.name}`,
-                    leads_count: currentViewingList.total_leads_count || 10,
+                    leads_count: currentViewingList.items_count || 1,
                     file_name: `lista_${currentViewingList.name.toLowerCase().replace(/\s+/g, '_')}.xlsx`
                 })
             });
             setTimeout(() => {
-                showToast("Download da planilha concluído!");
-            }, 1000);
-        }
-
-        function sendActiveListToCRM() {
-            if (!currentViewingList) return;
-            showToast(`Enviando ${currentViewingList.total_leads_count || 10} leads para o Simplexo Vendas CRM...`);
-            // Log export
-            fetch('/api/v1/exports/log', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    export_format: 'CRM_SYNC',
-                    destination_name: 'Simplexo Vendas / CRM Funil Prospecção',
-                    leads_count: currentViewingList.total_leads_count || 10
-                })
-            });
-            setTimeout(() => {
-                showToast("Leads integrados ao funil comercial com sucesso!");
+                showToast("Planilha baixada com sucesso!");
             }, 1200);
         }
 
-        // --- 3. ASSISTENTE DE VENDAS (IA SALES COPILOT) ---
-        async function generateSalesCopilotPitch(cnpjOverride) {
-            const input = document.getElementById('copilot-cnpj-input');
-            const cnpj = cnpjOverride || (input ? input.value.trim() : '');
+        async function sendCurrentListToCRM() {
+            if (!currentViewingList) return;
+            showToast(`Despachando lista "${currentViewingList.name}" para o Simplexo Vendas CRM...`);
+            try {
+                const res = await fetch('/api/v1/crm/sync-leads', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        establishment_ids: Array.from(selectedSearchCnpjs),
+                        target_stage: 'QUALIFICADO',
+                        notes: `Enviado da lista: ${currentViewingList.name}`
+                    })
+                });
+                const data = await res.json();
+                showToast(`🎉 ${data.dispatched_count || 'Lote de'} leads sincronizados com o Simplexo Vendas CRM!`);
+            } catch (err) {
+                console.error("CRM sync error:", err);
+                showToast("Erro na sincronização com CRM.", "error");
+            }
+        }
+
+        // --- 3. ASSISTENTE DE VENDAS IA ---
+        async function generateAssistantPitch(cnpjToUse) {
+            const cnpj = cnpjToUse || document.getElementById('assistant-cnpj-input').value.trim();
             if (!cnpj) {
-                showToast("Digite o CNPJ ou Razão Social da empresa.", "info");
+                showToast("Informe um CNPJ para gerar o roteiro.", "info");
                 return;
             }
-
-            const btn = document.getElementById('btn-copilot-generate');
-            if (btn) {
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Gerando...`;
-                btn.disabled = true;
-            }
-
+            showToast("Gerando pitch inteligente com IA...", "info");
             try {
                 const res = await fetch('/api/v1/sales-assistant/generate', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ cnpj: cnpj })
+                    body: JSON.stringify({ cnpj: cnpj.replace(/\D/g, '') })
                 });
                 const data = await res.json();
                 
-                // Populate UI
-                document.getElementById('copilot-result-container').classList.remove('hidden');
-                document.getElementById('copilot-target-company').innerText = data.company_name;
-                document.getElementById('copilot-target-decisor').innerText = data.decisor_targeted || 'Diretoria';
+                document.getElementById('pitch-whatsapp').innerText = data.whatsapp_pitch;
+                document.getElementById('pitch-call').innerText = data.cold_call_script;
+                document.getElementById('pitch-email').innerText = data.email_executive;
                 
-                // Signals Tags
-                const tagsContainer = document.getElementById('copilot-signals-tags');
-                tagsContainer.innerHTML = '';
-                (data.signals_detected || []).forEach(sig => {
-                    const sp = document.createElement('span');
-                    sp.className = "bg-white border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md";
-                    sp.innerText = sig;
-                    tagsContainer.appendChild(sp);
-                });
-
-                // 1. WhatsApp
-                document.getElementById('copilot-whatsapp-text').innerText = data.whatsapp_icebreaker;
-
-                // 2. Email
-                document.getElementById('copilot-email-subject').innerText = data.executive_email.subject;
-                document.getElementById('copilot-email-body').innerText = data.executive_email.body;
-
-                // 3. Cold Call Script
-                document.getElementById('copilot-script-abertura').innerText = data.cold_call_script.abertura;
-                document.getElementById('copilot-script-gancho').innerText = data.cold_call_script.gancho_de_valor;
-                document.getElementById('copilot-script-pergunta').innerText = data.cold_call_script.pergunta_de_qualificacao;
-                document.getElementById('copilot-script-cta').innerText = data.cold_call_script.fechamento_cta;
-
-                // 4. Objections
-                const objGrid = document.getElementById('copilot-objections-grid');
-                objGrid.innerHTML = '';
-                (data.objection_matrix || []).forEach(obj => {
-                    const card = document.createElement('div');
-                    card.className = "bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1";
-                    card.innerHTML = `
-                        <div class="text-[10px] font-bold text-rose-600">"${obj.objecao}"</div>
-                        <p class="text-xs text-slate-700 leading-relaxed">${obj.resposta}</p>
-                    `;
-                    objGrid.appendChild(card);
-                });
-
-                showToast("Briefing e Roteiro de Vendas gerados com IA!");
+                showToast("✨ Roteiros e pitch gerados com sucesso!");
             } catch (err) {
-                console.error("Copilot error:", err);
-                showToast("Erro ao gerar roteiro com IA.", "error");
-            } finally {
-                if (btn) {
-                    btn.innerHTML = `<i class="fa-solid fa-sparkles"></i> Gerar Pitch com IA`;
-                    btn.disabled = false;
-                }
+                console.error("Pitch generation error:", err);
+                showToast("Erro ao gerar roteiro IA.", "error");
             }
         }
 
-        function openSalesCopilotFromDossier() {
-            if (!activeCompanyProfile) return;
-            const cnpj = activeCompanyProfile.profile.cnpj;
-            closeCompanyModal();
-            switchNav('sales-assistant');
-            document.getElementById('copilot-cnpj-input').value = cnpj;
-            generateSalesCopilotPitch(cnpj);
-        }
-
-        // --- 4. HISTÓRICO DE PESQUISAS ---
+        // --- 4. HISTÓRICO DE BUSCAS ---
         async function loadSearchHistory() {
             try {
                 const res = await fetch('/api/v1/history');
@@ -3886,7 +1979,7 @@
                 tbody.innerHTML = '';
 
                 if (!data.results || data.results.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhuma pesquisa registrada no histórico ainda.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Nenhum histórico de pesquisa registrado ainda.</td></tr>`;
                     return;
                 }
 
@@ -3894,14 +1987,14 @@
                     const row = document.createElement('tr');
                     row.className = "hover:bg-slate-50 transition";
                     row.innerHTML = `
-                        <td class="p-3 font-bold text-slate-900">${h.query_term || 'Todos os Segmentos'}</td>
-                        <td class="p-3 text-slate-600">
+                        <td class="p-3 font-bold text-slate-900">${h.query_term || 'Busca Geral'}</td>
+                        <td class="p-3">
                             <span class="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-semibold">${h.state_code ? 'UF: ' + h.state_code : 'Brasil'} • Score >= ${h.min_score || 0}</span>
                         </td>
                         <td class="p-3"><span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px]">${h.results_count} empresas</span></td>
                         <td class="p-3 text-slate-400 text-[11px]">${new Date(h.searched_at).toLocaleString('pt-BR')}</td>
                         <td class="p-3 text-right">
-                            <button onclick="replaySearch('${h.query_term || ''}', '${h.state_code || ''}', ${h.min_score || 0})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
+                            <button onclick="replaySearch('${h.query_term || ''}', '${h.state_code || ''}', ${h.min_score || 0})" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer">
                                 <i class="fa-solid fa-rotate-right mr-1"></i> Repetir Busca
                             </button>
                         </td>
@@ -3947,7 +2040,7 @@
                         <td class="p-3 text-slate-400 text-[11px]">${new Date(ex.exported_at).toLocaleString('pt-BR')}</td>
                         <td class="p-3"><span class="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded text-[10px]">${ex.status}</span></td>
                         <td class="p-3 text-right">
-                            <button onclick="showToast('Baixando arquivo exportado...')" class="text-blue-600 hover:text-blue-800 font-bold text-xs"><i class="fa-solid fa-download"></i> Baixar</button>
+                            <button onclick="showToast('Baixando arquivo exportado...')" class="text-blue-600 hover:text-blue-800 font-bold text-xs cursor-pointer"><i class="fa-solid fa-download"></i> Baixar</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -3977,121 +2070,53 @@
                 showToast("Planilha gerada com sucesso!");
             }, 1000);
         }
+
+        // --- 6. EXPORT SELEÇÃO DIRETO PARA O CRM ---
+        async function exportSelectedToCRM() {
+            if (selectedSearchCnpjs.size === 0) {
+                showToast("Selecione pelo menos uma empresa na tabela para exportar.", "info");
+                return;
+            }
+            showToast(`Despachando ${selectedSearchCnpjs.size} leads para o Simplexo Vendas CRM...`);
+            try {
+                const res = await fetch('/api/v1/crm/sync-leads', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        establishment_ids: Array.from(selectedSearchCnpjs),
+                        target_stage: 'QUALIFICADO',
+                        notes: 'Despacho da Busca Avançada Simplexo Data Station'
+                    })
+                });
+                const data = await res.json();
+                showToast(`🎉 ${data.dispatched_count} leads qualificados enviados ao Simplexo Vendas CRM!`);
+            } catch (err) {
+                console.error("CRM sync error:", err);
+                showToast("Erro na sincronização com o CRM.", "error");
+            }
+        }
     
+        function initializeAllData() {
+            loadDashboardStats();
+            initCharts();
+            executeSearch();
+            loadRecentOpportunities();
+            loadCNOOpportunities();
+            loadPlans();
+            loadUserAlerts();
+            loadUserLists();
+            switchNav('dashboard');
+        }
+
+        // Auto initialization on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if user is already authenticated
+            if (localStorage.getItem('simplexo_auth') === 'true') {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                initializeAllData();
+            }
+        });
     </script>
-
-    <!-- MODAL: CRIAR NOVO ALERTA -->
-    <div id="modal-create-alert" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-2 text-rose-600 font-bold text-sm">
-                    <i class="fa-solid fa-bell"></i>
-                    <span>Criar Radar de Monitoramento</span>
-                </div>
-                <button onclick="closeModal('modal-create-alert')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form onsubmit="handleCreateAlert(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nome do Alerta</label>
-                    <input id="alert-input-name" required placeholder="Ex: Farmacêuticas e Químicas em SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Estado (UF)</label>
-                        <input id="alert-input-uf" placeholder="Ex: SP, RJ, MG" maxlength="2" class="uppercase w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">CNAE (Prefixo)</label>
-                        <input id="alert-input-cnae" placeholder="Ex: 212, 620" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Score Mínimo</label>
-                    <input id="alert-input-score" type="number" value="70" min="0" max="100" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Frequência de Notificação</label>
-                    <select id="alert-input-freq" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-rose-600">
-                        <option value="REALTIME">Tempo Real (Ao detectar nova abertura)</option>
-                        <option value="DAILY" selected>Resumo Diário</option>
-                        <option value="WEEKLY">Resumo Semanal</option>
-                    </select>
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('modal-create-alert')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
-                    <button type="submit" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Salvar Alerta</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: CRIAR NOVA LISTA -->
-    <div id="modal-create-list" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-2 text-blue-600 font-bold text-sm">
-                    <i class="fa-solid fa-list-check"></i>
-                    <span>Criar Lista de Prospecção</span>
-                </div>
-                <button onclick="closeModal('modal-create-list')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form onsubmit="handleCreateList(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nome da Lista</label>
-                    <input id="list-input-name" required placeholder="Ex: Farmacêuticas Alto Padrão Q3" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600">
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Descrição / Objetivo</label>
-                    <textarea id="list-input-desc" rows="2" placeholder="Ex: Leads qualificados com faturamento > 10M para abordagem outbound" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600"></textarea>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Cor da Tag</label>
-                    <div class="flex gap-2">
-                        <input type="color" id="list-input-color" value="#3b82f6" class="w-10 h-8 rounded-lg cursor-pointer border-0">
-                        <span class="text-slate-400 text-xs self-center">Escolha uma cor para identificar sua lista</span>
-                    </div>
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('modal-create-list')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Salvar Lista</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: ADICIONAR SELECIONADOS À LISTA -->
-    <div id="modal-add-to-list" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-2 text-blue-600 font-bold text-sm">
-                    <i class="fa-solid fa-folder-plus"></i>
-                    <span>Salvar Empresas na Lista</span>
-                </div>
-                <button onclick="closeModal('modal-add-to-list')" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="space-y-3 text-xs">
-                <p class="text-slate-600">Selecione o destino para as <strong id="modal-selected-count-label" class="text-blue-600">0</strong> empresas selecionadas:</p>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Escolha a Lista</label>
-                    <select id="modal-select-target-list" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600"></select>
-                </div>
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Observações / Tag do Lote (Opcional)</label>
-                    <input id="modal-list-notes" placeholder="Ex: Prospecção Q3 SDR Fellipe" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:border-blue-600">
-                </div>
-                <div class="pt-2 flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('modal-add-to-list')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer">Cancelar</button>
-                    <button onclick="confirmAddSelectedToList()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-xl shadow-xs cursor-pointer">Confirmar e Salvar</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
