@@ -1,11 +1,13 @@
-<!DOCTYPE html>
+import os
+
+html_code = """<!DOCTYPE html>
 <html lang="pt-BR" class="h-full bg-slate-950 text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simplexo Data — Plataforma de Inteligência B2B & Oportunidades</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M8 22L16 10l8 12H8z' fill='%23fff'/%3E%3C/svg%3E">
-    <link rel="icon" href="/favicon.ico">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Chart.js for High-End Analytics -->
@@ -14,7 +16,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tailwind.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -51,7 +75,7 @@
                     <label class="block text-xs font-semibold text-slate-300 mb-1.5">E-mail Corporativo</label>
                     <div class="relative">
                         <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                        <input id="login-email" name="username" autocomplete="username" type="email" required value="admin@simplexo.com.br"
+                        <input id="login-email" type="email" required value="admin@simplexo.com.br"
                             class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
                     </div>
                 </div>
@@ -957,9 +981,9 @@
                 showToast("Nenhum resultado para exportar.", "error");
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Estado,Cidade,CNAE,Score,Faturamento_Estimado\n";
+            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Estado,Cidade,CNAE,Score,Faturamento_Estimado\\n";
             lastSearchResults.forEach(r => {
-                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.state_code}","${r.city_name}","${r.cnae_main}","${r.score}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\n`;
+                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.state_code}","${r.city_name}","${r.cnae_main}","${r.score}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -1005,9 +1029,9 @@
 
         function downloadBatchResults() {
             if (!currentBatchData.length) return;
-            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Score,Grade,WhatsApp,Faturamento_Estimado\n";
+            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Score,Grade,WhatsApp,Faturamento_Estimado\\n";
             currentBatchData.forEach(r => {
-                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.score}","${r.score_grade}","${r.has_whatsapp ? 'SIM' : 'NAO'}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\n`;
+                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.score}","${r.score_grade}","${r.has_whatsapp ? 'SIM' : 'NAO'}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -1161,4 +1185,10 @@
         }
     </script>
 </body>
-</html>
+</html>"""
+
+with open("gateway/app/templates/index.html", "w", encoding="utf-8") as f:
+    f.write(html_code)
+
+print("SUCCESS: index.html written successfully.")
+
