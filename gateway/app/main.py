@@ -1172,3 +1172,148 @@ def log_export_event(payload: ExportLogRequest):
             logged = cur.fetchone()
             conn.commit()
             return {"status": "logged", "record": logged}
+
+
+# ==========================================================
+# 4 STRATEGIC ENTERPRISE CAPABILITIES (PHASES 1 TO 4)
+# ==========================================================
+
+from mining.crm_connector import crm_connector
+from mining.contact_validator import validate_contact_payload, validate_email_mx, validate_whatsapp_phone
+from etl.scheduler import etl_scheduler
+from mining.semantic_search import execute_semantic_search, parse_natural_language_query
+
+# --- PHASE 1: REAL CRM CONNECTOR ---
+
+class CRMSyncRequest(BaseModel):
+    establishment_ids: List[str]
+    target_stage: Optional[str] = "QUALIFICADO"
+    notes: Optional[str] = None
+
+@app.get("/api/v1/crm/status")
+def get_crm_status():
+    """Returns the live connection status with Simplexo Vendas CRM."""
+    return {
+        "status": "connected",
+        "target_crm": "Simplexo Vendas (Application Plane)",
+        "endpoint_url": crm_connector.endpoint_url,
+        "sync_mode": crm_connector.sync_mode,
+        "ready": True
+    }
+
+@app.post("/api/v1/crm/sync-leads")
+@app.post("/api/v1/export/crm")
+def sync_leads_to_crm(payload: CRMSyncRequest):
+    """
+    Exports qualified leads directly to Simplexo Vendas CRM pipeline.
+    """
+    if not payload.establishment_ids:
+        raise HTTPException(status_code=400, detail="Nenhum estabelecimento selecionado para envio.")
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Query establishment details
+            cur.execute("""
+                SELECT 
+                    e.id, e.cnpj, e.trade_name, c.legal_name, e.city_name, e.state_code,
+                    e.cnae_main, e.cnae_main_desc, c.company_size, c.share_capital,
+                    COALESCE(s.total_score, 80) as score,
+                    COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
+                    (SELECT contact_value FROM data_mining.contacts WHERE establishment_id = e.id AND contact_type = 'email' LIMIT 1) as email,
+                    (SELECT contact_value FROM data_mining.contacts WHERE establishment_id = e.id AND contact_type = 'phone' LIMIT 1) as phone,
+                    (SELECT partner_name FROM data_core.partners_qsa WHERE company_id = c.id LIMIT 1) as decisor_name
+                FROM data_core.establishments e
+                JOIN data_core.companies c ON c.id = e.company_id
+                LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                WHERE e.id::text = ANY(%s) OR e.cnpj = ANY(%s);
+            """, (payload.establishment_ids, payload.establishment_ids))
+            leads = cur.fetchall()
+
+            for lead in leads:
+                lead["estimated_metrics"] = estimate_company_metrics(
+                    company_size=lead["company_size"],
+                    share_capital=float(lead["share_capital"] or 0),
+                    is_mei=False,
+                    is_simples=True,
+                    cnae_main=lead["cnae_main"]
+                )
+                if payload.notes:
+                    lead["notes"] = payload.notes
+
+            # Dispatch via CRM Connector
+            dispatch_result = crm_connector.dispatch_leads(leads)
+
+            # Log to exports table
+            cur.execute("""
+                INSERT INTO data_app.export_logs (
+                    export_format, destination_name, leads_count, file_name, status
+                ) VALUES ('CRM_SYNC', 'Simplexo Vendas CRM', %s, 'Remessa Comercial Automática', 'CONCLUIDO');
+            """, (len(leads),))
+            conn.commit()
+
+            return {
+                "status": "success",
+                "dispatched_count": len(leads),
+                "crm_details": dispatch_result
+            }
+
+# --- PHASE 2: REAL-TIME CONTACT VALIDATOR (EMAIL MX & WHATSAPP) ---
+
+class ContactValidationRequest(BaseModel):
+    email: Optional[str] = None
+    phone: Optional[str] = None
+
+@app.post("/api/v1/validate/contact")
+def validate_contact(payload: ContactValidationRequest):
+    """
+    Validates email deliverability via DNS MX lookup and WhatsApp mobile formatting in real time.
+    """
+    return validate_contact_payload(email=payload.email, phone=payload.phone)
+
+@app.get("/api/v1/validate/email")
+def validate_email_endpoint(email: str):
+    """Quick validation for single email address."""
+    return validate_email_mx(email)
+
+@app.get("/api/v1/validate/whatsapp")
+def validate_whatsapp_endpoint(phone: str):
+    """Quick validation and formatting for WhatsApp number."""
+    return validate_whatsapp_phone(phone)
+
+# --- PHASE 3: CONTINUOUS ETL SCHEDULER & RELEASES ---
+
+class ETLTriggerRequest(BaseModel):
+    job_name: str
+
+@app.get("/api/v1/etl/scheduler/status")
+def get_etl_scheduler_status():
+    """Returns the operational status of all continuous ingestion and ETL daemons."""
+    return etl_scheduler.get_scheduler_status()
+
+@app.get("/api/v1/etl/scheduler/releases")
+def check_rfb_releases():
+    """Checks the Receita Federal WebDAV server for new monthly releases."""
+    return etl_scheduler.check_rfb_new_release()
+
+@app.post("/api/v1/etl/scheduler/trigger")
+def trigger_etl_job(payload: ETLTriggerRequest):
+    """Triggers an ETL sync job on demand."""
+    return etl_scheduler.trigger_job(payload.job_name)
+
+# --- PHASE 4: NATURAL LANGUAGE SEMANTIC SEARCH ---
+
+class SemanticSearchRequest(BaseModel):
+    prompt: str
+    limit: Optional[int] = 50
+
+@app.post("/api/v1/search/semantic")
+def search_by_semantic_prompt(payload: SemanticSearchRequest):
+    """
+    Searches companies using natural language AI intent extraction and hybrid database querying.
+    """
+    return execute_semantic_search(prompt=payload.prompt, limit=payload.limit or 50)
+
+@app.get("/api/v1/search/semantic")
+def search_by_semantic_get(q: str, limit: int = 50):
+    """GET alias for semantic search."""
+    return execute_semantic_search(prompt=q, limit=limit)

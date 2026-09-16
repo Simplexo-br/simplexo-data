@@ -271,6 +271,18 @@ def seed_all_multisource_enrichments():
         cur.close()
         conn.close()
 
+class MultiSourceEnrichmentEngine:
+    """Multi-source enrichment manager."""
+    def seed_all(self):
+        seed_cno_construction_sites()
+        seed_all_multisource_enrichments()
+
+    def get_cno_sites(self, limit: int = 100):
+        with get_db() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM data_mining.construction_sites_cno LIMIT %s;", (limit,))
+                return cur.fetchall()
+
 if __name__ == "__main__":
     seed_cno_construction_sites()
     seed_all_multisource_enrichments()

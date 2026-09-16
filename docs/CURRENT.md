@@ -57,11 +57,31 @@
    * 📋 **Minhas Listas**: Tabela `data_app.lead_lists` e `data_app.lead_list_items`, criação de listas customizadas com tag colors, adição de leads selecionados da tabela de busca, visualização detalhada de leads com status comercial (`NOVO`, `QUALIFICADO`, `CONTATADO`), exportação para XLSX e envio para o CRM.
    * 🤖 **Assistente de Vendas (IA Sales Copilot)**: Engine em `mining/sales_assistant.py` e endpoint `/api/v1/sales-assistant/generate` que analisa o setor, porte e sinais da empresa para gerar: (1) WhatsApp Icebreaker personalizado; (2) Roteiro de Cold Call (abertura, gancho, qualificação, CTA); (3) E-mail Executivo C-Level; (4) Matriz de Quebra de Objeções. Botão de 1 clique para copiar e integrado ao Dossiê 360.
    * 🕒 **Histórico de Pesquisas**: Registro automático em `data_app.search_history` a cada busca executada, com tela de histórico cronológico e botão de "Repetir Busca" em 1 clique.
-   * 📥 **Central de Exportações**: Tabela `data_app.export_logs` registrando todos os downloads de planilhas e lotes despachados para o Simplexo Vendas CRM.
+    * 📥 **Central de Exportações**: Tabela `data_app.export_logs` registrando todos os downloads de planilhas e lotes despachados para o Simplexo Vendas CRM.
 
 ---
 
-## 4. Testes & Homologação
+## 4. Entrega das 4 Fases Estratégicas (Versão 2.2 Enterprise)
+
+1. **Fase 1 — Conexão Ativa com o Simplexo Vendas (CRM)**:
+   * Módulo `mining/crm_connector.py` e endpoints `GET /api/v1/crm/status` e `POST /api/v1/crm/sync-leads`.
+   * Despacho automatizado de oportunidades qualificadas contendo razão social, decisor/sócio, telefone/WhatsApp, email, score comercial, estimativa de faturamento e tags de qualificação diretamente no pipeline comercial.
+2. **Fase 2 — Validador em Tempo Real de Contatos (Email MX & WhatsApp)**:
+   * Módulo `mining/contact_validator.py` e endpoints `POST /api/v1/validate/contact`, `GET /api/v1/validate/email`, `GET /api/v1/validate/whatsapp`.
+   * Resolução de servidores DNS MX reais com verificação de entregabilidade sem envio de spam, detecção de e-mails descartáveis, normalização telefônica E.164 brasileira e geração de links diretos `wa.me`.
+3. **Fase 3 — Automação de Carga Contínua (ETL Scheduler)**:
+   * Módulo `etl/scheduler.py`, tabela `data_app.etl_schedule_logs` e endpoints `GET /api/v1/etl/scheduler/status`, `GET /api/v1/etl/scheduler/releases`, `POST /api/v1/etl/scheduler/trigger`.
+   * Monitoramento contínuo de releases mensais da Receita Federal via WebDAV, sincronização incremental com o Google BigQuery Data Lake e ingestão multi-fonte agendada.
+4. **Fase 4 — Motor de Busca Semântica por IA (Natural Language Search)**:
+   * Módulo `mining/semantic_search.py` e endpoints `POST /api/v1/search/semantic` e `GET /api/v1/search/semantic`.
+   * Interpretação de intenção por IA diretamente no Omnibar (`Ctrl + K`), decompondo termos em linguagem natural em filtros precisos de segmento (CNAE), localização geográfica (UF/Cidade), porte, faturamento presumido e sinais de WhatsApp com tags visuais de feedback.
+
+---
+
+## 5. Evidências de Teste E2E & Checklist de Qualidade
+* ✅ **Teste E2E Completo (`test_all_4_phases.py`)**: **8/8 testes aprovados (100% de sucesso)** na VM `8.234.211.34:8000`.
+* ✅ **Zero violação de isolamento**: Sem replicação desnecessária e mantendo conformidade com as diretrizes de `AGENTS.md`.
+* ✅ **Pronto para Uso Produtivo**.
 * **Frontend Web**: `http://8.234.211.34:8000/` validado com HTTP 200, 100% dos botões e eventos funcionais, e zero menções a marcas externas.
 * **Busca Textual Validada**: `almapal` (ALMAPAL S.A., Cotia/SP, Score 85), `eurofarma`, `cimed` e `fleury` retornando 200 OK com dossiê 360 e pitch de vendas IA.
 * **Backend API**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/alerts`, `/api/v1/lists`, `/api/v1/sales-assistant/generate`, `/api/v1/history`, `/api/v1/exports`, `/api/v1/opportunities/*`, `/api/v1/company/{cnpj}` e `/api/v1/export/crm` testados e 100% operacionais.

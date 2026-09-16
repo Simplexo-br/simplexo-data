@@ -1,7 +1,7 @@
 # .simplexo/state.yaml — Estado consolidado do Simplexo Data
 
-version: "2.1.0"
-updated_at: "2026-09-16T00:05:00-03:00"
+version: "2.2.0"
+updated_at: "2026-09-16T20:10:00-03:00"
 environment:
   vm_host: "8.234.211.34"
   gcp_project: "odoo-server-vm2"
@@ -30,7 +30,7 @@ components:
     status: "HEALTHY"
   gateway_api:
     type: "FastAPI + Uvicorn"
-    version: "2.1.0"
+    version: "2.2.0"
     port: 8000
     status: "HEALTHY"
     endpoints:
@@ -50,9 +50,18 @@ components:
       - "/api/v1/opportunities/cno"
       - "/api/v1/bigquery/status"
       - "/api/v1/plans"
+      - "/api/v1/crm/status"
+      - "/api/v1/crm/sync-leads"
+      - "/api/v1/validate/contact"
+      - "/api/v1/validate/email"
+      - "/api/v1/validate/whatsapp"
+      - "/api/v1/etl/scheduler/status"
+      - "/api/v1/etl/scheduler/releases"
+      - "/api/v1/etl/scheduler/trigger"
+      - "/api/v1/search/semantic"
   mining_worker:
     type: "Python 3.12 Crawler + Scorer + Technographics (Playwright/Crawl4AI)"
-    version: "2.1.0"
+    version: "2.2.0"
     status: "RUNNING"
   receita_federal_etl:
     type: "WebDAV RFB Ingestion + Live On-Demand Fallback"

@@ -2791,14 +2791,44 @@
         // Aliases for compatibility
         const switchTab = switchNav;
 
-        function executeOmnibarSearch() {
+        async function executeOmnibarSearch() {
             const input = document.getElementById('omnibar-input');
             const term = input ? input.value.trim() : '';
-            if (term) {
-                switchNav('search');
-                document.getElementById('filter-q').value = term;
-                executeSearch();
+            if (!term) return;
+
+            // Check if term looks like a natural language prompt (> 3 words or contains descriptive filters)
+            const isNaturalLanguage = term.split(' ').length >= 3 || /em |com |onde |faturamento|porte|whatsapp|qualificadas/i.test(term);
+
+            switchNav('search');
+            document.getElementById('filter-q').value = term;
+
+            if (isNaturalLanguage) {
+                showToast("Interpretando busca semântica com IA...", "info");
+                try {
+                    const res = await fetch('/api/v1/search/semantic', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ prompt: term })
+                    });
+                    const data = await res.json();
+                    lastSearchResults = data.results || [];
+                    selectedSearchCnpjs.clear();
+                    
+                    // Render AI Detected Signals Bar
+                    const countEl = document.getElementById('results-count');
+                    if (countEl) {
+                        const tagsHtml = (data.detected_signals || []).map(s => `<span class="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md ml-1.5">${s}</span>`).join('');
+                        countEl.innerHTML = `${data.count} Empresas Encontradas <span class="ml-2 font-normal text-slate-400">IA Filtrou:</span> ${tagsHtml}`;
+                    }
+
+                    renderSearchResults(lastSearchResults);
+                    return;
+                } catch (err) {
+                    console.error("Semantic search error, falling back to standard:", err);
+                }
             }
+
+            executeSearch();
         }
 
         function handleOmnibarSearch(e) {
