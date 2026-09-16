@@ -172,7 +172,7 @@ PLANS_CATALOG = [
             "Tudo do Plano Ouro",
             "50.000 exportações / leads por mês",
             "Technographics (Detecção de ERPs, E-commerce, CRMs)",
-            "Integração Direta com Odoo 18 / CRM Webhooks",
+            "Integração Direta com Simplexo Vendas / CRM Webhooks",
             "Multi-usuários para equipes de SDR",
             "Suporte Prioritário VIP"
         ],
@@ -426,12 +426,13 @@ class CRMExportRequest(BaseModel):
     expected_revenue: Optional[float] = 0.0
     notes: Optional[str] = None
 
+@app.post("/api/v1/export/crm")
 @app.post("/api/v1/export/crm-odoo")
 def export_lead_to_crm(lead: CRMExportRequest):
     """
-    Exports an enriched company / decisor to CRM / Odoo 18 (crm.lead model) with full data isolation.
+    Exports an enriched company / decisor to CRM / Simplexo Vendas with full data isolation.
     """
-    odoo_lead_payload = {
+    crm_lead_payload = {
         "model": "crm.lead",
         "values": {
             "name": f"[Simplexo Data] Oportunidade - {lead.company_name}",
@@ -446,8 +447,8 @@ def export_lead_to_crm(lead: CRMExportRequest):
     }
     return {
         "status": "success",
-        "message": f"Lead '{lead.company_name}' exportado com sucesso para o Odoo 18 / CRM!",
-        "odoo_payload": odoo_lead_payload
+        "message": f"Lead '{lead.company_name}' exportado com sucesso para o Simplexo Vendas / CRM!",
+        "crm_payload": crm_lead_payload
     }
 
 @app.get("/api/v1/search")

@@ -38,14 +38,13 @@
 3. **Radar de Oportunidades Recentes & Obras CNO**:
    * Monitoramento de novas aberturas nos últimos 30 dias com botão de qualificação instantânea.
    * Feeds de Obras CNO com valor de investimento estimado, área em m² e atalho direto para WhatsApp do responsável.
-4. **Exportação & Conexão Odoo 18 / CRM**:
-   * Exportação seletiva de leads para o CRM do Odoo 18 e downloads diretos em CSV/Excel.
+4. **Exportação & Conexão Simplexo Vendas / CRM**:
+   * Exportação seletiva de leads para o funil comercial do Simplexo Vendas e downloads diretos em CSV/Excel.
 5. **Dossiê Company 360 Slide-over**:
    * Visão integrada com QSA, sócios, links para LinkedIn, technographics, e-mail validado e badges WhatsApp.
 
 ---
 
 ## 4. Testes & Homologação
-* **Frontend Web**: `http://8.234.211.34:8000/` validado com HTTP 200 e assets compilados.
-* **Backend API**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/plans`, `/api/v1/dashboard/charts`, `/api/v1/opportunities/*`, `/api/v1/company/{cnpj}` e `/api/v1/export/crm-odoo` testados e operacionais.
-
+* **Frontend Web**: `http://8.234.211.34:8000/` validado com HTTP 200, 100% dos botões e eventos funcionais, e zero menções a marcas externas.
+* **Backend API**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/plans`, `/api/v1/dashboard/charts`, `/api/v1/opportunities/*`, `/api/v1/company/{cnpj}` e `/api/v1/export/crm` testados e operacionais.

@@ -1,6 +1,4 @@
-import os
-
-html_code = """<!DOCTYPE html>
+import os\n\nui_html = """<!DOCTYPE html>
 <html lang="pt-BR" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
@@ -12,7 +10,7 @@ html_code = """<!DOCTYPE html>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Chart.js for High-End Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -48,8 +46,7 @@ html_code = """<!DOCTYPE html>
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .sidebar-item-active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right: 3px solid #2563eb; }
-        .tab-btn-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .sidebar-item-active { background-color: #eff6ff !important; color: #2563eb !important; font-weight: 700 !important; }
     </style>
 </head>
 <body class="h-full bg-slate-50 text-slate-800 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
@@ -59,7 +56,6 @@ html_code = """<!DOCTYPE html>
 
     <!-- 1. LOGIN SCREEN -->
     <div id="login-view" class="min-h-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-100 via-white to-blue-50/40">
-        <!-- Background Ambient Shapes -->
         <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -93,14 +89,14 @@ html_code = """<!DOCTYPE html>
 
                 <div class="flex items-center justify-between text-[11px] pt-1">
                     <label class="flex items-center text-slate-600 cursor-pointer">
-                        <input type="checkbox" checked class="rounded bg-slate-100 border-slate-300 text-blue-600 focus:ring-0 mr-1.5">
+                        <input type="checkbox" id="remember-me-checkbox" checked class="rounded bg-slate-100 border-slate-300 text-blue-600 focus:ring-0 mr-1.5">
                         Lembrar sessão
                     </label>
-                    <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold">Esqueceu a senha?</a>
+                    <a href="javascript:void(0)" onclick="showToast('Utilize a senha padrão de demonstração preenchida.', 'info')" class="text-blue-600 hover:text-blue-700 font-semibold">Esqueceu a senha?</a>
                 </div>
 
-                <button type="submit"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 text-xs transition duration-150 flex items-center justify-center space-x-2">
+                <button type="submit" id="btn-login-submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 text-xs transition duration-150 flex items-center justify-center space-x-2 cursor-pointer">
                     <span>Acessar Simplexo Data Station</span>
                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
@@ -115,7 +111,8 @@ html_code = """<!DOCTYPE html>
             </div>
         </div>
     </div>
-    <!-- 2. MAIN APPLICATION INTERFACE (HIDDEN BY DEFAULT UNTIL LOGIN) -->
+
+    <!-- 2. MAIN APPLICATION INTERFACE -->
     <div id="app-view" class="hidden min-h-full flex flex-col bg-slate-50">
         
         <!-- TOP NAVBAR -->
@@ -138,8 +135,8 @@ html_code = """<!DOCTYPE html>
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
                     <input id="omnibar-input" type="text" placeholder="Buscar por CNPJ, Razão Social ou Domínio... (Ctrl + K)"
                         onkeydown="if(event.key==='Enter') executeOmnibarSearch()"
-                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-14 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition">
-                    <button onclick="executeOmnibarSearch()" class="absolute right-2 top-1.5 bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-blue-700 transition">
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-16 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition">
+                    <button onclick="executeOmnibarSearch()" class="absolute right-1.5 top-1.5 bg-blue-600 text-white px-2.5 py-1 rounded-lg text-[10px] font-semibold hover:bg-blue-700 transition cursor-pointer">
                         Buscar
                     </button>
                 </div>
@@ -171,7 +168,7 @@ html_code = """<!DOCTYPE html>
                         <div class="text-xs font-bold text-slate-800 leading-tight">Fellipe Ramalho</div>
                         <div class="text-[10px] text-slate-400 font-medium">Administrador</div>
                     </div>
-                    <button onclick="handleLogout()" title="Sair do sistema" class="text-slate-400 hover:text-rose-600 text-xs p-1.5 rounded-lg hover:bg-slate-100 transition">
+                    <button onclick="handleLogout()" title="Sair do sistema" class="text-slate-400 hover:text-rose-600 text-xs p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -187,11 +184,11 @@ html_code = """<!DOCTYPE html>
                     <div>
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Visão Geral</div>
                         <nav class="space-y-1">
-                            <button onclick="switchNav('dashboard')" id="nav-dashboard" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('dashboard')" id="nav-dashboard" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-chart-pie w-4 text-center"></i>
                                 <span>Painel & Indicadores</span>
                             </button>
-                            <button onclick="switchNav('search')" id="nav-search" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('search')" id="nav-search" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-filter-list w-4 text-center"></i>
                                 <span>Prospecção ICP & Filtros</span>
                             </button>
@@ -201,14 +198,14 @@ html_code = """<!DOCTYPE html>
                     <div>
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Oportunidades & Vendas</div>
                         <nav class="space-y-1">
-                            <button onclick="switchNav('recent-companies')" id="nav-recent-companies" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('recent-companies')" id="nav-recent-companies" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <div class="flex items-center space-x-3">
                                     <i class="fa-solid fa-sparkles w-4 text-center text-amber-500"></i>
                                     <span>Recém-Abertas</span>
                                 </div>
                                 <span class="bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Novo</span>
                             </button>
-                            <button onclick="switchNav('cno-obras')" id="nav-cno-obras" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('cno-obras')" id="nav-cno-obras" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <div class="flex items-center space-x-3">
                                     <i class="fa-solid fa-helmet-safety w-4 text-center text-orange-500"></i>
                                     <span>Obras & CNO</span>
@@ -221,15 +218,15 @@ html_code = """<!DOCTYPE html>
                     <div>
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Enriquecimento & Ferramentas</div>
                         <nav class="space-y-1">
-                            <button onclick="switchNav('batch')" id="nav-batch" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('batch')" id="nav-batch" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-file-excel w-4 text-center text-emerald-600"></i>
                                 <span>Enriquecimento em Lote</span>
                             </button>
-                            <button onclick="switchNav('reveal')" id="nav-reveal" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('reveal')" id="nav-reveal" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-radar w-4 text-center text-indigo-500"></i>
                                 <span>Simplexo Reveal (Pixel)</span>
                             </button>
-                            <button onclick="switchNav('plans')" id="nav-plans" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                            <button onclick="switchNav('plans')" id="nav-plans" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer">
                                 <i class="fa-solid fa-store w-4 text-center text-blue-600"></i>
                                 <span>Planos & Assinaturas</span>
                             </button>
@@ -237,11 +234,11 @@ html_code = """<!DOCTYPE html>
                     </div>
                 </div>
 
-                <!-- ODOO 18 CRM CARD -->
+                <!-- SIMPLEXO VENDAS CRM CARD -->
                 <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3.5 space-y-2">
                     <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs">
                         <i class="fa-solid fa-plug-circle-check"></i>
-                        <span>Odoo 18 / CRM Conectado</span>
+                        <span>Simplexo Vendas / CRM Conectado</span>
                     </div>
                     <p class="text-[11px] text-slate-500">Envie leads selecionados direto para o funil de vendas com 1 clique.</p>
                 </div>
@@ -345,13 +342,13 @@ html_code = """<!DOCTYPE html>
                                 <h3 class="text-sm font-bold text-slate-900">Principais Segmentos Econômicos para Prospecção</h3>
                                 <p class="text-xs text-slate-500">Selecione um segmento para abrir filtros pré-configurados</p>
                             </div>
-                            <button onclick="switchNav('search')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                            <button onclick="switchNav('search')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer">
                                 Ver todos os filtros <i class="fa-solid fa-arrow-right text-[10px]"></i>
                             </button>
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
-                            <button onclick="quickFilterSector('47')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('47')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-cart-shopping"></i>
                                 </div>
@@ -359,7 +356,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">12.8M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('62')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('62')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-code"></i>
                                 </div>
@@ -367,7 +364,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">2.8M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('41')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('41')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-helmet-safety"></i>
                                 </div>
@@ -375,7 +372,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">4.9M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('86')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('86')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-heart-pulse"></i>
                                 </div>
@@ -383,7 +380,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">2.3M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('56')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('56')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-utensils"></i>
                                 </div>
@@ -391,7 +388,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">4.1M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('70')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('70')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-briefcase"></i>
                                 </div>
@@ -399,7 +396,7 @@ html_code = """<!DOCTYPE html>
                                 <div class="text-[10px] text-slate-400">11.4M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('25')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                            <button onclick="quickFilterSector('25')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-industry"></i>
                                 </div>
@@ -409,291 +406,293 @@ html_code = """<!DOCTYPE html>
                         </div>
                     </div>
                 </div>
-            </section>
 
-            <!-- VIEW 2: PROSPECÇÃO ICP & FILTROS AVANÇADOS -->
-            <div id="view-search" class="hidden space-y-6 max-w-7xl mx-auto">
-                <!-- FILTER FORM CARD -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-sliders"></i>
+                <!-- VIEW 2: PROSPECÇÃO ICP & FILTROS AVANÇADOS -->
+                <div id="view-search" class="hidden space-y-6 max-w-7xl mx-auto">
+                    <!-- FILTER FORM CARD -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-sliders"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Segmentação Avançada de Mercado (ICP)</h3>
+                                    <p class="text-[11px] text-slate-500">Combine múltiplos critérios para extrair listas altamente qualificadas</p>
+                                </div>
+                            </div>
+                            <button onclick="clearSearchFilters()" class="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1 cursor-pointer">
+                                <i class="fa-solid fa-rotate-left"></i> Limpar Filtros
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Razão Social / Nome Fantasia / CNPJ</label>
+                                <input id="filter-q" type="text" placeholder="Ex: Aberama, Farmácia, 12345678000199..."
+                                    onkeydown="if(event.key==='Enter') executeSearch()"
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Estado (UF)</label>
+                                <select id="filter-state" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                    <option value="">Todos os Estados (Brasil)</option>
+                                    <option value="SP">São Paulo (SP)</option>
+                                    <option value="MG">Minas Gerais (MG)</option>
+                                    <option value="RJ">Rio de Janeiro (RJ)</option>
+                                    <option value="PR">Paraná (PR)</option>
+                                    <option value="RS">Rio Grande do Sul (RS)</option>
+                                    <option value="SC">Santa Catarina (SC)</option>
+                                    <option value="BA">Bahia (BA)</option>
+                                    <option value="GO">Goiás (GO)</option>
+                                    <option value="PE">Pernambuco (PE)</option>
+                                    <option value="CE">Ceará (CE)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Faixa de Faturamento Presumido</label>
+                                <select id="filter-faturamento" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                    <option value="">Todas as Faixas</option>
+                                    <option value="ATE_360K">Até R$ 360 mil (ME / MEI)</option>
+                                    <option value="360K_A_4_8M">R$ 360 mil a R$ 4,8 milhões (EPP)</option>
+                                    <option value="4_8M_A_16M">R$ 4,8 milhões a R$ 16 milhões (Médio Porte)</option>
+                                    <option value="16M_A_90M">R$ 16 milhões a R$ 90 milhões (Grande Porte)</option>
+                                    <option value="ACIMA_90M">Acima de R$ 90 milhões (Enterprise)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Score Comercial Mínimo</label>
+                                <select id="filter-score" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                    <option value="0">Qualquer Score (0 a 100)</option>
+                                    <option value="40">Score &ge; 40 (Médio Potencial)</option>
+                                    <option value="60">Score &ge; 60 (Bom Potencial)</option>
+                                    <option value="75">Score &ge; 75 (Alta Conversão ICP)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                            <div class="flex items-center space-x-6">
+                                <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
+                                    <input id="filter-whatsapp" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <i class="fa-brands fa-whatsapp text-emerald-600 mr-1.5"></i> Apenas com WhatsApp Validado
+                                </label>
+                                <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
+                                    <input id="filter-active-only" type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <span>Apenas Ativas na RFB</span>
+                                </label>
+                            </div>
+
+                            <button onclick="executeSearch()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-magnifying-glass"></i> Filtrar Base Oficial
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SEARCH RESULTS TABLE CARD -->
+                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                            <div>
+                                <span class="text-xs font-bold text-slate-800" id="results-count">Resultados da Prospecção</span>
+                                <span class="text-[11px] text-slate-500 block sm:inline sm:ml-2">Listando empresas em tempo real</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="exportSearchResults('csv')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-file-csv text-emerald-600"></i> Exportar CSV
+                                </button>
+                                <button onclick="exportSearchResults('xlsx')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel (.xlsx)
+                                </button>
+                                <button onclick="exportSelectedToCRM()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-paper-plane"></i> Enviar ao Simplexo Vendas
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
+                                    <tr>
+                                        <th class="p-3.5"><input type="checkbox" id="select-all-search" onchange="toggleSelectAllSearchResults(this)" class="rounded border-slate-300 text-blue-600"></th>
+                                        <th class="p-3.5">Empresa / Razão Social</th>
+                                        <th class="p-3.5">Localização</th>
+                                        <th class="p-3.5">Atividade Principal (CNAE)</th>
+                                        <th class="p-3.5">Faturamento Presumido</th>
+                                        <th class="p-3.5">Score Comercial</th>
+                                        <th class="p-3.5 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="search-table-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: EMPRESAS RECÉM-ABERTAS -->
+                <div id="view-recent-companies" class="hidden space-y-6 max-w-7xl mx-auto">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-sparkles"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Radar de Empresas Recém-Abertas</h3>
+                                    <p class="text-xs text-slate-500">Aborde empresas abertas nos últimos 30 dias antes dos seus concorrentes</p>
+                                </div>
+                            </div>
+                            <button onclick="loadRecentOpportunities()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+                                <i class="fa-solid fa-rotate-right"></i> Atualizar Radar
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-xs text-slate-600">
+                                <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
+                                    <tr>
+                                        <th class="p-3.5">Empresa</th>
+                                        <th class="p-3.5">Localização</th>
+                                        <th class="p-3.5">Segmento</th>
+                                        <th class="p-3.5">Data Abertura</th>
+                                        <th class="p-3.5">Porte</th>
+                                        <th class="p-3.5">Score</th>
+                                        <th class="p-3.5 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-table-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: OBRAS & CNO -->
+                <div id="view-cno-obras" class="hidden space-y-6 max-w-7xl mx-auto">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-helmet-safety"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Cadastro Nacional de Obras (CNO / RFB)</h3>
+                                    <p class="text-xs text-slate-500">Mapeamento de obras civis ativas, reformas e empreendimentos com decisores</p>
+                                </div>
+                            </div>
+                            <button onclick="loadCNOOpportunities()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+                                <i class="fa-solid fa-rotate-right"></i> Recarregar Obras
+                            </button>
+                        </div>
+
+                        <!-- CNO CARDS GRID -->
+                        <div id="cno-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- VIEW 5: ENRIQUECIMENTO EM LOTE (CSV) -->
+                <div id="view-batch" class="hidden space-y-6 max-w-7xl mx-auto">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                        <div class="border-b border-slate-100 pb-4 flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-file-excel"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-bold text-slate-900">Segmentação Avançada de Mercado (ICP)</h3>
-                                <p class="text-[11px] text-slate-500">Combine múltiplos critérios para extrair listas altamente qualificadas</p>
+                                <h3 class="text-sm font-bold text-slate-900">Enriquecimento de Mailing em Lote</h3>
+                                <p class="text-xs text-slate-500">Faça upload de uma planilha com CNPJs para qualificar contatos, decisores e WhatsApp</p>
                             </div>
                         </div>
-                        <button onclick="clearSearchFilters()" class="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1">
-                            <i class="fa-solid fa-rotate-left"></i> Limpar Filtros
-                        </button>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Razão Social / Nome Fantasia / CNPJ</label>
-                            <input id="filter-q" type="text" placeholder="Ex: Aberama, Farmácia, 12345678000199..."
-                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-300 transition cursor-pointer" onclick="document.getElementById('csv-file-input').click()">
+                            <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="handleCSVSelect(event)">
+                            <div class="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 text-xl mx-auto mb-3">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Clique para selecionar seu arquivo CSV</h4>
+                            <p class="text-xs text-slate-400 mt-1">O arquivo deve conter uma coluna com cabeçalho <code class="text-blue-600 font-mono">cnpj</code></p>
+                            <div id="file-name-label" class="text-xs font-bold text-emerald-600 mt-3"></div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Estado (UF)</label>
-                            <select id="filter-state" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
-                                <option value="">Todos os Estados (Brasil)</option>
-                                <option value="SP">São Paulo (SP)</option>
-                                <option value="MG">Minas Gerais (MG)</option>
-                                <option value="RJ">Rio de Janeiro (RJ)</option>
-                                <option value="PR">Paraná (PR)</option>
-                                <option value="RS">Rio Grande do Sul (RS)</option>
-                                <option value="SC">Santa Catarina (SC)</option>
-                                <option value="BA">Bahia (BA)</option>
-                                <option value="GO">Goiás (GO)</option>
-                                <option value="PE">Pernambuco (PE)</option>
-                                <option value="CE">Ceará (CE)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Faixa de Faturamento Presumido</label>
-                            <select id="filter-faturamento" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
-                                <option value="">Todas as Faixas</option>
-                                <option value="ATE_360K">Até R$ 360 mil (ME / MEI)</option>
-                                <option value="360K_A_4_8M">R$ 360 mil a R$ 4,8 milhões (EPP)</option>
-                                <option value="4_8M_A_16M">R$ 4,8 milhões a R$ 16 milhões (Médio Porte)</option>
-                                <option value="16M_A_90M">R$ 16 milhões a R$ 90 milhões (Grande Porte)</option>
-                                <option value="ACIMA_90M">Acima de R$ 90 milhões (Enterprise)</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Score Comercial Mínimo</label>
-                            <select id="filter-score" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
-                                <option value="0">Qualquer Score (0 a 100)</option>
-                                <option value="40">Score &ge; 40 (Médio Potencial)</option>
-                                <option value="60">Score &ge; 60 (Bom Potencial)</option>
-                                <option value="75">Score &ge; 75 (Alta Conversão ICP)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
-                        <div class="flex items-center space-x-6">
-                            <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
-                                <input id="filter-whatsapp" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
-                                <i class="fa-brands fa-whatsapp text-emerald-600 mr-1.5"></i> Apenas com WhatsApp Validado
-                            </label>
-                            <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
-                                <input id="filter-active-only" type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
-                                <span>Apenas Ativas na RFB</span>
-                            </label>
-                        </div>
-
-                        <button onclick="executeSearch()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-magnifying-glass"></i> Filtrar Base Oficial
-                        </button>
-                    </div>
-                </div>
-
-                <!-- SEARCH RESULTS TABLE CARD -->
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
-                        <div>
-                            <span class="text-xs font-bold text-slate-800" id="results-count">Resultados da Prospecção</span>
-                            <span class="text-[11px] text-slate-500 block sm:inline sm:ml-2">Listando empresas em tempo real</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="exportSearchResults('csv')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-file-csv text-emerald-600"></i> Exportar CSV
-                            </button>
-                            <button onclick="exportSearchResults('xlsx')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel (.xlsx)
-                            </button>
-                            <button onclick="exportSelectedToOdooCRM()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-paper-plane"></i> Enviar ao Odoo 18
+                        <div class="flex justify-end">
+                            <button id="btn-process-batch" onclick="processBatchUpload()" disabled class="bg-blue-600 disabled:bg-slate-300 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-bolt"></i> Iniciar Enriquecimento em Lote
                             </button>
                         </div>
-                    </div>
 
-                    <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-600">
-                            <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
-                                <tr>
-                                    <th class="p-3.5"><input type="checkbox" id="select-all-search" onchange="toggleSelectAllSearchResults(this)" class="rounded border-slate-300 text-blue-600"></th>
-                                    <th class="p-3.5">Empresa / Razão Social</th>
-                                    <th class="p-3.5">Localização</th>
-                                    <th class="p-3.5">Atividade Principal (CNAE)</th>
-                                    <th class="p-3.5">Faturamento Presumido</th>
-                                    <th class="p-3.5">Score Comercial</th>
-                                    <th class="p-3.5 text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody id="search-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW 3: EMPRESAS RECÉM-ABERTAS -->
-            <div id="view-recent-companies" class="hidden space-y-6 max-w-7xl mx-auto">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
-                                <i class="fa-solid fa-sparkles"></i>
+                        <!-- BATCH RESULTS AREA -->
+                        <div id="batch-results-area" class="hidden space-y-4 pt-4 border-t border-slate-100">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-800">Resultados do Enriquecimento (<span id="batch-processed-count">0</span> empresas)</h4>
+                                <button onclick="downloadBatchResults()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-download"></i> Baixar Planilha Qualificada
+                                </button>
                             </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900">Radar de Empresas Recém-Abertas</h3>
-                                <p class="text-xs text-slate-500">Aborde empresas abertas nos últimos 30 dias antes dos seus concorrentes</p>
-                            </div>
-                        </div>
-                        <button onclick="loadRecentOpportunities()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto">
-                            <i class="fa-solid fa-rotate-right"></i> Atualizar Feed
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-600">
-                            <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
-                                <tr>
-                                    <th class="p-3.5">CNPJ & Razão Social</th>
-                                    <th class="p-3.5">Cidade - UF</th>
-                                    <th class="p-3.5">Atividade Econômica</th>
-                                    <th class="p-3.5">Data Abertura</th>
-                                    <th class="p-3.5">Porte</th>
-                                    <th class="p-3.5">Score</th>
-                                    <th class="p-3.5 text-right">Ação Rápida</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recent-table-body" class="divide-y divide-slate-100"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW 4: OBRAS & CNO -->
-            <div id="view-cno-obras" class="hidden space-y-6 max-w-7xl mx-auto">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold">
-                                <i class="fa-solid fa-helmet-safety"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900">Cadastro Nacional de Obras (CNO) & Canteiros Ativos</h3>
-                                <p class="text-xs text-slate-500">Oportunidades imediatas para fornecedores da construção civil, reformas e serviços</p>
-                            </div>
-                        </div>
-                        <span class="bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-lg text-xs font-semibold self-start sm:self-auto">
-                            Receita Federal CNO
-                        </span>
-                    </div>
-
-                    <div id="cno-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                </div>
-            </div>
-
-            <!-- VIEW 5: ENRIQUECIMENTO EM LOTE (BATCH) -->
-            <div id="view-batch" class="hidden space-y-6 max-w-4xl mx-auto">
-                <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6">
-                    <div class="text-center space-y-2 max-w-md mx-auto">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
-                            <i class="fa-solid fa-file-excel"></i>
-                        </div>
-                        <h3 class="text-lg font-bold text-slate-900">Enriquecimento em Lote de CNPJs</h3>
-                        <p class="text-xs text-slate-500">Envie uma lista com centenas ou milhares de CNPJs e receba a planilha completa com telefones validados, WhatsApp, e-mails, sócios e faturamento.</p>
-                    </div>
-
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer transition bg-slate-50/50 hover:bg-blue-50/30"
-                        onclick="document.getElementById('csv-file-input').click()">
-                        <input id="csv-file-input" type="file" accept=".csv,.txt" class="hidden" onchange="handleCSVSelect(event)">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3"></i>
-                        <p id="file-name-label" class="text-xs font-bold text-slate-700">Clique para selecionar ou arraste o arquivo CSV / TXT</p>
-                        <p class="text-[11px] text-slate-400 mt-1">Formato: 1 CNPJ por linha ou planilha com coluna 'cnpj'</p>
-                    </div>
-
-                    <button id="btn-process-batch" onclick="processBatchUpload()" disabled
-                        class="w-full py-3 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-bolt"></i> Processar Enriquecimento em Alta Velocidade
-                    </button>
-
-                    <div id="batch-results-area" class="hidden space-y-4 pt-4 border-t border-slate-200">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-slate-800"><span id="batch-processed-count">0</span> CNPJs Enriquecidos com Sucesso</span>
-                            <button onclick="downloadBatchResults()" class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-download"></i> Baixar Planilha Completa
-                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- VIEW 6: SIMPLEXO REVEAL PIXEL -->
-            <div id="view-reveal" class="hidden space-y-6 max-w-4xl mx-auto">
-                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                        <div class="flex items-center space-x-3">
+                <!-- VIEW 6: SIMPLEXO REVEAL (PIXEL) -->
+                <div id="view-reveal" class="hidden space-y-6 max-w-7xl mx-auto">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                        <div class="border-b border-slate-100 pb-4 flex items-center space-x-3">
                             <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
                                 <i class="fa-solid fa-radar"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-bold text-slate-900">Simplexo Reveal — Identificação de Visitantes B2B</h3>
-                                <p class="text-xs text-slate-500">Desanonimize as empresas que visitam seu site em tempo real via IP reverso e ASN</p>
+                                <h3 class="text-sm font-bold text-slate-900">Simplexo Reveal — De-anonimizador B2B</h3>
+                                <p class="text-xs text-slate-500">Identifique quais empresas visitam seu website antes mesmo de preencherem formulários</p>
                             </div>
                         </div>
-                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Live Stream
-                        </span>
-                    </div>
 
-                    <div class="bg-slate-900 p-4 rounded-xl text-slate-300 font-mono text-xs space-y-2">
-                        <div class="flex justify-between items-center text-slate-400 text-[11px] pb-2 border-b border-slate-800">
-                            <span>Instale este script na tag &lt;head&gt; do seu website:</span>
-                            <button onclick="copyRevealSnippet()" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
-                                <i class="fa-solid fa-copy"></i> Copiar Código
+                        <div class="bg-slate-900 p-4 rounded-xl text-slate-300 font-mono text-xs space-y-2">
+                            <div class="flex justify-between items-center text-slate-400 text-[11px] pb-2 border-b border-slate-800">
+                                <span>Instale este script na tag &lt;head&gt; do seu website:</span>
+                                <button onclick="copyRevealSnippet()" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1 cursor-pointer">
+                                    <i class="fa-solid fa-copy"></i> Copiar Código
+                                </button>
+                            </div>
+                            <code id="reveal-snippet" class="text-emerald-400">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800 space-y-1">
+                            <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Como funciona:</div>
+                            <p class="text-[11px] text-blue-700">Quando um tomador de decisão navega pelas páginas de planos ou produtos do seu site, o pixel Simplexo identifica a empresa pelo bloco IP corporativo e notifica sua equipe comercial no Simplexo Vendas CRM imediatamente.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 7: PLANOS & LOJA (5 TIERS) -->
+                <div id="view-plans" class="hidden space-y-8 max-w-7xl mx-auto pb-12">
+                    <div class="text-center max-w-3xl mx-auto space-y-3">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <i class="fa-solid fa-sparkles mr-1.5"></i> Planos & Créditos Comerciais
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Planos flexíveis para qualquer tamanho de operação comercial</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Tenha acesso ilimitado à base nacional, telefones, WhatsApp verificado, decisores QSA e exportação para o Simplexo Vendas CRM.</p>
+                        
+                        <!-- BILLING TOGGLE (MONTHLY VS ANNUAL) -->
+                        <div class="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl mt-4 shadow-xs">
+                            <button id="btn-billing-monthly" onclick="setBillingCycle('monthly')" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs cursor-pointer">
+                                Cobrança Mensal
+                            </button>
+                            <button id="btn-billing-annual" onclick="setBillingCycle('annual')" class="px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center cursor-pointer">
+                                Cobrança Anual
+                                <span class="ml-2 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full">33% OFF + 2x Créditos</span>
                             </button>
                         </div>
-                        <code id="reveal-snippet" class="text-emerald-400">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
                     </div>
 
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800 space-y-1">
-                        <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Como funciona:</div>
-                        <p class="text-[11px] text-blue-700">Quando um tomador de decisão navega pelas páginas de planos ou produtos do seu site, o pixel Simplexo identifica a empresa pelo bloco IP corporativo e notifica sua equipe comercial no CRM Odoo 18 imediatamente.</p>
-                    </div>
+                    <!-- 5 TIERS GRID -->
+                    <div id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
                 </div>
-            </div>
-
-            <!-- VIEW 7: PLANOS & LOJA (5 TIERS) -->
-            <div id="view-plans" class="hidden space-y-8 max-w-7xl mx-auto pb-12">
-                <div class="text-center max-w-3xl mx-auto space-y-3">
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                        <i class="fa-solid fa-sparkles mr-1.5"></i> Planos & Créditos Comerciais
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Planos flexíveis para qualquer tamanho de operação comercial</h2>
-                    <p class="text-xs sm:text-sm text-slate-500">Tenha acesso ilimitado à base nacional, telefones, WhatsApp verificado, decisores QSA e exportação para Odoo 18.</p>
-                    
-                    <!-- BILLING TOGGLE (MONTHLY VS ANNUAL) -->
-                    <div class="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl mt-4 shadow-xs">
-                        <button id="btn-billing-monthly" onclick="setBillingCycle('monthly')" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs">
-                            Cobrança Mensal
-                        </button>
-                        <button id="btn-billing-annual" onclick="setBillingCycle('annual')" class="px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center">
-                            Cobrança Anual
-                            <span class="ml-2 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full">33% OFF + 2x Créditos</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 5 TIERS GRID -->
-                <div id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
-            </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- DRAWER: COMPANY 360 (SLIDE-OVER DOSSIER) -->
     <div id="company-modal" class="hidden fixed inset-0 z-50 overflow-hidden">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" onclick="closeCompanyModal()"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity cursor-pointer" onclick="closeCompanyModal()"></div>
         <div class="absolute inset-y-0 right-0 max-w-xl w-full bg-white border-l border-slate-200 shadow-2xl flex flex-col">
             <!-- HEADER -->
             <div class="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/50">
@@ -702,7 +701,7 @@ html_code = """<!DOCTYPE html>
                     <h2 id="modal-trade-name" class="text-lg font-bold text-slate-900 mt-0.5">Nome Fantasia</h2>
                     <p id="modal-legal-name" class="text-xs text-slate-500 font-medium">Razão Social Completa</p>
                 </div>
-                <button onclick="closeCompanyModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg text-base">
+                <button onclick="closeCompanyModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg text-base cursor-pointer">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -733,14 +732,14 @@ html_code = """<!DOCTYPE html>
 
                 <!-- CONTACT BUTTONS (WHATSAPP, PHONE, CRM) -->
                 <div class="grid grid-cols-3 gap-3">
-                    <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                    <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
                         <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp
                     </a>
-                    <a id="modal-btn-call" href="#" class="flex items-center justify-center py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-xs transition">
+                    <a id="modal-btn-call" href="#" class="flex items-center justify-center py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-xs transition cursor-pointer">
                         <i class="fa-solid fa-phone text-xs mr-1.5 text-blue-600"></i> Ligar
                     </a>
-                    <button id="modal-btn-crm" onclick="exportCurrentToCRM()" class="flex items-center justify-center py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                        <i class="fa-solid fa-paper-plane mr-1.5"></i> CRM / Odoo
+                    <button id="modal-btn-crm" onclick="exportCurrentToCRM()" class="flex items-center justify-center py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
+                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Simplexo Vendas
                     </button>
                 </div>
 
@@ -757,7 +756,7 @@ html_code = """<!DOCTYPE html>
 
     <!-- MODAL: CHECKOUT & SUBSCRIPTION -->
     <div id="subscribe-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onclick="closeSubscribeModal()"></div>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs cursor-pointer" onclick="closeSubscribeModal()"></div>
         <div class="relative bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div class="flex items-center space-x-3">
@@ -769,7 +768,7 @@ html_code = """<!DOCTYPE html>
                         <p id="sub-modal-price" class="text-xs text-blue-600 font-bold">R$ 149 / mês</p>
                     </div>
                 </div>
-                <button onclick="closeSubscribeModal()" class="text-slate-400 hover:text-slate-700">
+                <button onclick="closeSubscribeModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
@@ -798,34 +797,32 @@ html_code = """<!DOCTYPE html>
                 </div>
             </div>
 
-            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2.5 text-xs text-emerald-800">
-                <i class="fa-solid fa-shield-check text-base text-emerald-600"></i>
-                <span>Garantia incondicional de 8 dias com liberação imediata de créditos.</span>
-            </div>
-
-            <div class="flex space-x-3 pt-2">
-                <button onclick="closeSubscribeModal()" class="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition">
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+                <button onclick="closeSubscribeModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer">
                     Cancelar
                 </button>
-                <button id="btn-confirm-sub" onclick="confirmSubscription()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center">
+                <button id="btn-confirm-sub" onclick="confirmSubscription()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center cursor-pointer">
                     <i class="fa-solid fa-check mr-1.5"></i> Confirmar Assinatura
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- CLIENT SCRIPT -->
+    <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
-        let currentBatchData = [];
         let plansCatalog = [];
         let currentBillingCycle = 'monthly';
         let selectedPlanId = null;
         let activeCompanyProfile = null;
         let lastSearchResults = [];
         let selectedSearchCnpjs = new Set();
+        let currentBatchData = [];
+        let geoChartInstance = null;
+        let revChartInstance = null;
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
+            if (!container) return;
             const toast = document.createElement('div');
             const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-rose-600' : 'bg-blue-600');
             toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-0 opacity-100 pointer-events-auto`;
@@ -838,31 +835,28 @@ html_code = """<!DOCTYPE html>
         }
 
         function handleLogin(e) {
-            e.preventDefault();
+            if (e) e.preventDefault();
             document.getElementById('login-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
-            loadDashboardStats();
-            initCharts();
-            executeSearch();
-            loadRecentOpportunities();
-            loadCNOOpportunities();
-            loadPlans();
+            localStorage.setItem('simplexo_auth', 'true');
+            initializeAllData();
             showToast("Bem-vindo à Simplexo Data Station!");
         }
 
         function handleLogout() {
+            localStorage.removeItem('simplexo_auth');
             document.getElementById('app-view').classList.add('hidden');
             document.getElementById('login-view').classList.remove('hidden');
         }
 
-        function switchTab(tabId) {
+        function switchNav(tabId) {
             const tabs = ['dashboard', 'search', 'recent-companies', 'cno-obras', 'batch', 'reveal', 'plans'];
             tabs.forEach(t => {
                 const view = document.getElementById('view-' + t);
                 const nav = document.getElementById('nav-' + t);
                 if (view) view.classList.add('hidden');
                 if (nav) {
-                    nav.classList.remove('active', 'bg-blue-50', 'text-blue-700', 'font-bold');
+                    nav.classList.remove('sidebar-item-active', 'bg-blue-50', 'text-blue-700', 'font-bold');
                     nav.classList.add('text-slate-600', 'font-medium');
                 }
             });
@@ -871,43 +865,61 @@ html_code = """<!DOCTYPE html>
             const targetNav = document.getElementById('nav-' + tabId);
             if (targetView) targetView.classList.remove('hidden');
             if (targetNav) {
-                targetNav.classList.add('active', 'bg-blue-50', 'text-blue-700', 'font-bold');
+                targetNav.classList.add('sidebar-item-active', 'bg-blue-50', 'text-blue-700', 'font-bold');
                 targetNav.classList.remove('text-slate-600', 'font-medium');
+            }
+
+            // Lazy trigger updates for specific views
+            if (tabId === 'recent-companies' && (!document.getElementById('recent-table-body').children.length)) {
+                loadRecentOpportunities();
+            } else if (tabId === 'cno-obras' && (!document.getElementById('cno-grid').children.length)) {
+                loadCNOOpportunities();
+            } else if (tabId === 'plans' && (!plansCatalog.length)) {
+                loadPlans();
+            }
+        }
+
+        // Aliases for compatibility
+        const switchTab = switchNav;
+
+        function executeOmnibarSearch() {
+            const input = document.getElementById('omnibar-input');
+            const term = input ? input.value.trim() : '';
+            if (term) {
+                switchNav('search');
+                document.getElementById('filter-q').value = term;
+                executeSearch();
             }
         }
 
         function handleOmnibarSearch(e) {
             if (e.key === 'Enter') {
-                const term = e.target.value.trim();
-                if (term) {
-                    switchTab('search');
-                    document.getElementById('filter-q').value = term;
-                    executeSearch();
-                }
+                executeOmnibarSearch();
             }
         }
 
-        function quickSearchSector(cnaeQuery) {
-            switchTab('search');
+        function quickFilterSector(cnaeQuery) {
+            switchNav('search');
             document.getElementById('filter-q').value = cnaeQuery;
             executeSearch();
         }
+
+        const quickSearchSector = quickFilterSector;
 
         async function loadDashboardStats() {
             try {
                 const res = await fetch('/api/v1/stats');
                 const data = await res.json();
                 if (data.total_companies) {
-                    document.getElementById('dash-total-companies').innerText = Number(data.total_companies || 50396768).toLocaleString('pt-BR');
-                    document.getElementById('dash-total-meis').innerText = Number(data.total_meis || 17523665).toLocaleString('pt-BR');
+                    const elComp = document.getElementById('kpi-total-companies');
+                    const elSimp = document.getElementById('kpi-total-simples');
+                    if (elComp) elComp.innerText = Number(data.total_companies || 50396768).toLocaleString('pt-BR');
+                    if (elSimp) elSimp.innerText = Number(data.total_meis || 17523665).toLocaleString('pt-BR');
                 }
             } catch (err) {
                 console.error("Stats load error:", err);
             }
         }
-
-        let geoChartInstance = null;
-        let revChartInstance = null;
 
         async function initCharts() {
             try {
@@ -915,17 +927,17 @@ html_code = """<!DOCTYPE html>
                 const data = await res.json();
 
                 // Geo Chart
-                const geoCanvas = document.getElementById('chart-geo');
+                const geoCanvas = document.getElementById('geoDistributionChart');
                 if (geoCanvas) {
                     const geoCtx = geoCanvas.getContext('2d');
                     if (geoChartInstance) geoChartInstance.destroy();
                     geoChartInstance = new Chart(geoCtx, {
                         type: 'bar',
                         data: {
-                            labels: data.geo_distribution.map(d => d.uf),
+                            labels: (data.geo_distribution || []).map(d => d.uf),
                             datasets: [{
                                 label: 'Empresas Ativas (Milhões)',
-                                data: data.geo_distribution.map(d => (d.count / 1000000).toFixed(2)),
+                                data: (data.geo_distribution || []).map(d => (d.count / 1000000).toFixed(2)),
                                 backgroundColor: '#2563eb',
                                 borderRadius: 6
                             }]
@@ -943,7 +955,7 @@ html_code = """<!DOCTYPE html>
                 }
 
                 // Revenue Doughnut
-                const revCanvas = document.getElementById('chart-revenue');
+                const revCanvas = document.getElementById('revenueDistributionChart');
                 if (revCanvas) {
                     const revCtx = revCanvas.getContext('2d');
                     if (revChartInstance) revChartInstance.destroy();
@@ -973,11 +985,11 @@ html_code = """<!DOCTYPE html>
         }
 
         async function executeSearch() {
-            const q = document.getElementById('filter-q').value;
-            const state = document.getElementById('filter-state').value;
-            const faturamento = document.getElementById('filter-faturamento').value;
-            const minScore = document.getElementById('filter-score').value;
-            const hasWhatsApp = document.getElementById('filter-whatsapp').checked;
+            const q = document.getElementById('filter-q') ? document.getElementById('filter-q').value : '';
+            const state = document.getElementById('filter-state') ? document.getElementById('filter-state').value : '';
+            const faturamento = document.getElementById('filter-faturamento') ? document.getElementById('filter-faturamento').value : '';
+            const minScore = document.getElementById('filter-score') ? document.getElementById('filter-score').value : '0';
+            const hasWhatsApp = document.getElementById('filter-whatsapp') ? document.getElementById('filter-whatsapp').checked : false;
 
             let url = `/api/v1/search?limit=50&min_score=${minScore}`;
             if (q) url += `&q=${encodeURIComponent(q)}`;
@@ -997,11 +1009,11 @@ html_code = """<!DOCTYPE html>
         }
 
         function clearSearchFilters() {
-            document.getElementById('filter-q').value = '';
-            document.getElementById('filter-state').value = '';
-            document.getElementById('filter-faturamento').value = '';
-            document.getElementById('filter-score').value = '0';
-            document.getElementById('filter-whatsapp').checked = false;
+            if (document.getElementById('filter-q')) document.getElementById('filter-q').value = '';
+            if (document.getElementById('filter-state')) document.getElementById('filter-state').value = '';
+            if (document.getElementById('filter-faturamento')) document.getElementById('filter-faturamento').value = '';
+            if (document.getElementById('filter-score')) document.getElementById('filter-score').value = '0';
+            if (document.getElementById('filter-whatsapp')) document.getElementById('filter-whatsapp').checked = false;
             executeSearch();
         }
 
@@ -1026,8 +1038,10 @@ html_code = """<!DOCTYPE html>
         }
 
         function renderSearchResults(items) {
-            document.getElementById('results-count').innerText = `${items.length} Empresas Encontradas`;
+            const countEl = document.getElementById('results-count');
+            if (countEl) countEl.innerText = `${items.length} Empresas Encontradas`;
             const tbody = document.getElementById('search-table-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             if (items.length === 0) {
@@ -1065,7 +1079,7 @@ html_code = """<!DOCTYPE html>
                         </div>
                     </td>
                     <td class="p-3.5 text-right space-x-1.5">
-                        <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg text-xs font-semibold transition shadow-xs">
+                        <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg text-xs font-semibold transition shadow-xs cursor-pointer">
                             Ver Dossiê 360
                         </button>
                     </td>
@@ -1079,6 +1093,7 @@ html_code = """<!DOCTYPE html>
                 const res = await fetch('/api/v1/opportunities/recent-companies');
                 const data = await res.json();
                 const tbody = document.getElementById('recent-table-body');
+                if (!tbody) return;
                 tbody.innerHTML = '';
 
                 (data.opportunities || []).forEach(emp => {
@@ -1095,7 +1110,7 @@ html_code = """<!DOCTYPE html>
                         <td class="p-3.5 text-slate-700 font-medium">${emp.company_size || 'EPP'}</td>
                         <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Score: ${emp.score}</span></td>
                         <td class="p-3.5 text-right">
-                            <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs">
+                            <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer">
                                 Qualificar Lead
                             </button>
                         </td>
@@ -1112,6 +1127,7 @@ html_code = """<!DOCTYPE html>
                 const res = await fetch('/api/v1/opportunities/cno-obras');
                 const data = await res.json();
                 const grid = document.getElementById('cno-grid');
+                if (!grid) return;
                 grid.innerHTML = '';
 
                 (data.obras || []).forEach(o => {
@@ -1135,7 +1151,7 @@ html_code = """<!DOCTYPE html>
                         </div>
                         <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
                             <span class="text-[10px] font-mono text-slate-400">${o.cnpj_executora}</span>
-                            <a href="https://wa.me/55${o.whatsapp_contato}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center shadow-xs">
+                            <a href="https://wa.me/55${o.whatsapp_contato}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center shadow-xs cursor-pointer">
                                 <i class="fa-brands fa-whatsapp mr-1.5"></i> Falar no WhatsApp
                             </a>
                         </div>
@@ -1190,7 +1206,7 @@ html_code = """<!DOCTYPE html>
                                     <span class="font-bold text-slate-900">${d.name}</span>
                                     <p class="text-[11px] text-slate-500">${d.formal_role} &bull; <span class="text-blue-600 font-semibold">${d.seniority}</span></p>
                                 </div>
-                                <a href="${d.linkedin_search_url}" target="_blank" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition">
+                                <a href="${d.linkedin_search_url}" target="_blank" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition cursor-pointer">
                                     <i class="fa-brands fa-linkedin mr-1"></i> LinkedIn
                                 </a>
                             </div>
@@ -1214,7 +1230,7 @@ html_code = """<!DOCTYPE html>
             if (!activeCompanyProfile) return;
             const p = activeCompanyProfile.profile;
             try {
-                const res = await fetch('/api/v1/export/crm-odoo', {
+                const res = await fetch('/api/v1/export/crm', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1226,24 +1242,24 @@ html_code = """<!DOCTYPE html>
                     })
                 });
                 const data = await res.json();
-                showToast(data.message || "Lead exportado com sucesso para o Odoo 18 / CRM!");
+                showToast(data.message || "Lead exportado com sucesso para o Simplexo Vendas!");
             } catch (err) {
                 console.error("CRM export error:", err);
             }
         }
 
-        async function exportSelectedToOdooCRM() {
+        async function exportSelectedToCRM() {
             if (selectedSearchCnpjs.size === 0 && lastSearchResults.length === 0) {
-                showToast("Selecione ao menos uma empresa para enviar ao CRM.", "error");
+                showToast("Selecione ao menos uma empresa para enviar ao Simplexo Vendas.", "error");
                 return;
             }
             const targetCnpjs = selectedSearchCnpjs.size > 0 
                 ? Array.from(selectedSearchCnpjs)
                 : lastSearchResults.slice(0, 10).map(r => r.cnpj);
 
-            showToast(`Exportando ${targetCnpjs.length} leads para o Odoo 18 CRM...`);
+            showToast(`Exportando ${targetCnpjs.length} leads para o Simplexo Vendas...`);
             setTimeout(() => {
-                showToast(`🎉 ${targetCnpjs.length} leads cadastrados com sucesso no pipeline comercial do Odoo 18!`);
+                showToast(`🎉 ${targetCnpjs.length} leads cadastrados com sucesso no pipeline comercial do Simplexo Vendas!`);
             }, 800);
         }
 
@@ -1252,9 +1268,9 @@ html_code = """<!DOCTYPE html>
                 showToast("Nenhum resultado para exportar.", "error");
                 return;
             }
-            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Estado,Cidade,CNAE,Score,Faturamento_Estimado\\n";
+            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Estado,Cidade,CNAE,Score,Faturamento_Estimado\n";
             lastSearchResults.forEach(r => {
-                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.state_code}","${r.city_name}","${r.cnae_main}","${r.score}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\\n`;
+                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.state_code}","${r.city_name}","${r.cnae_main}","${r.score}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -1300,9 +1316,9 @@ html_code = """<!DOCTYPE html>
 
         function downloadBatchResults() {
             if (!currentBatchData.length) return;
-            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Score,Grade,WhatsApp,Faturamento_Estimado\\n";
+            let csvContent = "data:text/csv;charset=utf-8,CNPJ,Razao_Social,Nome_Fantasia,Score,Grade,WhatsApp,Faturamento_Estimado\n";
             currentBatchData.forEach(r => {
-                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.score}","${r.score_grade}","${r.has_whatsapp ? 'SIM' : 'NAO'}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\\n`;
+                csvContent += `"${r.cnpj}","${r.legal_name}","${r.trade_name || ''}","${r.score}","${r.score_grade}","${r.has_whatsapp ? 'SIM' : 'NAO'}","${r.estimated_metrics ? r.estimated_metrics.revenue_label : ''}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
@@ -1335,11 +1351,11 @@ html_code = """<!DOCTYPE html>
             const btnA = document.getElementById('btn-billing-annual');
 
             if (cycle === 'monthly') {
-                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs";
-                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center";
+                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs cursor-pointer";
+                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center cursor-pointer";
             } else {
-                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900";
-                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center";
+                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 cursor-pointer";
+                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center cursor-pointer";
             }
             renderPlans();
         }
@@ -1401,7 +1417,7 @@ html_code = """<!DOCTYPE html>
                     </div>
 
                     <div class="pt-6 mt-4 border-t border-slate-100">
-                        <button onclick="openSubscribeModal('${p.id}')" class="w-full py-2.5 rounded-xl text-xs font-bold transition ${p.is_popular ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'}">
+                        <button onclick="openSubscribeModal('${p.id}')" class="w-full py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${p.is_popular ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'}">
                             Assinar Agora
                         </button>
                     </div>
@@ -1445,7 +1461,8 @@ html_code = """<!DOCTYPE html>
                     })
                 });
                 const data = await res.json();
-                document.getElementById('header-user-credits').innerText = `${Number(data.allocated_credits).toLocaleString('pt-BR')} Créditos`;
+                const credDisplay = document.getElementById('user-credits-display');
+                if (credDisplay) credDisplay.innerText = Number(data.allocated_credits).toLocaleString('pt-BR');
                 closeSubscribeModal();
                 showToast(`🎉 Assinatura do ${plan.name} confirmada! +${Number(data.allocated_credits).toLocaleString('pt-BR')} créditos liberados.`);
             } catch (err) {
@@ -1456,12 +1473,26 @@ html_code = """<!DOCTYPE html>
                 btn.disabled = false;
             }
         }
+
+        function initializeAllData() {
+            loadDashboardStats();
+            initCharts();
+            executeSearch();
+            loadRecentOpportunities();
+            loadCNOOpportunities();
+            loadPlans();
+            switchNav('dashboard');
+        }
+
+        // Auto initialization on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if user is already authenticated
+            if (localStorage.getItem('simplexo_auth') === 'true') {
+                document.getElementById('login-view').classList.add('hidden');
+                document.getElementById('app-view').classList.remove('hidden');
+                initializeAllData();
+            }
+        });
     </script>
 </body>
-</html>"""
-
-with open("gateway/app/templates/index.html", "w", encoding="utf-8") as f:
-    f.write(html_code)
-
-print("SUCCESS: index.html written successfully.")
-
+</html>"""\n\nwith open("gateway/app/templates/index.html", "w", encoding="utf-8") as f:\n    f.write(ui_html)\n\nprint("SUCCESS: scripts/build_ui.py generated gateway/app/templates/index.html")\n
