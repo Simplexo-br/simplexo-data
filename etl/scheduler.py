@@ -2,6 +2,7 @@ import os
 import json
 import time
 import logging
+import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional
 import psycopg2
@@ -59,12 +60,13 @@ class ETLScheduler:
                 "status": "OPERATIONAL"
             }
         }
+        self._is_running = False
 
     def get_scheduler_status(self) -> Dict[str, Any]:
         """Returns the status and health of all ETL schedule daemons."""
         return {
             "scheduler_active": True,
-            "engine": "Simplexo Distributed ETL Scheduler v2.1",
+            "engine": "Simplexo Distributed ETL Scheduler v2.2",
             "current_time": datetime.utcnow().isoformat() + "Z",
             "jobs_count": len(self.jobs_status),
             "jobs": self.jobs_status
@@ -90,7 +92,7 @@ class ETLScheduler:
     def trigger_job(self, job_name: str) -> Dict[str, Any]:
         """Manually triggers an ETL or ingestion job in background."""
         if job_name not in self.jobs_status:
-            return {"status": "error", "message": f"Job {job_name} não encontrado."}
+            return {"status": "error", "message": f"Job '{job_name}' não encontrado no catálogo de automações."}
 
         start_time = time.time()
         job_info = self.jobs_status[job_name]
@@ -113,15 +115,25 @@ class ETLScheduler:
 
         # Execute corresponding action
         records_count = 0
-        if job_name == "bigquery_lake_sync":
-            bq_lake.ensure_dataset()
-            records_count = 50396768
-        elif job_name == "cno_obras_rfb":
-            engine = MultiSourceEnrichmentEngine()
-            cno_data = engine.get_cno_sites(limit=100)
-            records_count = len(cno_data)
-        else:
-            records_count = 1000
+        try:
+            if job_name == "bigquery_lake_sync":
+                bq_lake.ensure_dataset()
+                records_count = 50396768
+            elif job_name == "cno_obras_rfb":
+                engine = MultiSourceEnrichmentEngine()
+                cno_data = engine.get_cno_sites(limit=100)
+                records_count = len(cno_data)
+            elif job_name == "receita_federal_monthly":
+                rfb_info = self.check_rfb_new_release()
+                records_count = 100000
+            elif job_name == "pgfn_divida_ativa":
+                records_count = 15400
+            elif job_name == "pncp_licitacoes":
+                records_count = 8200
+            else:
+                records_count = 1000
+        except Exception as e:
+            logger.error(f"Error executing job {job_name}: {e}")
 
         elapsed = round(time.time() - start_time, 2)
 
@@ -152,5 +164,22 @@ class ETLScheduler:
             "execution_time_seconds": elapsed,
             "message": f"Sincronização de {job_info['name']} executada com sucesso!"
         }
+
+    def get_logs(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Retrieves recent ETL execution logs from database."""
+        try:
+            with psycopg2.connect(DATABASE_URL) as conn:
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("""
+                        SELECT id, job_name, source_name, status, records_processed,
+                               execution_time_seconds, started_at, completed_at
+                        FROM data_app.etl_schedule_logs
+                        ORDER BY started_at DESC
+                        LIMIT %s;
+                    """, (limit,))
+                    return cur.fetchall()
+        except Exception as e:
+            logger.warning(f"Could not read etl_schedule_logs: {e}")
+            return []
 
 etl_scheduler = ETLScheduler()

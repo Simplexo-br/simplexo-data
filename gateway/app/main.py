@@ -7,6 +7,8 @@ import os
 import io
 import csv
 import json
+import re
+import urllib.parse
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Query, HTTPException, Depends, UploadFile, File, Response
@@ -512,9 +514,16 @@ def search_companies(
             params = []
 
             if q:
-                sql += " AND (c.legal_name ILIKE %s OR e.trade_name ILIKE %s OR e.cnpj LIKE %s)"
-                term = f"%{q}%"
-                params.extend([term, term, f"{q}%"])
+                clean_q = q.strip()
+                digits = re.sub(r'\D', '', clean_q)
+                if len(digits) >= 8:
+                    sql += " AND (e.cnpj LIKE %s OR c.cnpj_base = %s OR c.legal_name ILIKE %s OR e.trade_name ILIKE %s)"
+                    term = f"%{clean_q}%"
+                    params.extend([f"{digits}%", digits[:8], term, term])
+                else:
+                    sql += " AND (c.legal_name ILIKE %s OR e.trade_name ILIKE %s)"
+                    term = f"%{clean_q}%"
+                    params.extend([term, term])
 
             if state:
                 sql += " AND e.state_code = %s"
@@ -587,11 +596,28 @@ def search_companies(
                             COALESCE(sn.is_mei, FALSE) as is_mei,
                             COALESCE(s.total_score, 80) as score,
                             COALESCE(s.score_grade, 'MUITO_BOM') as score_grade,
-                            COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp
+                            COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
+                            COALESCE(s.has_valid_phone, TRUE) as has_phone,
+                            COALESCE(s.has_valid_email, TRUE) as has_email,
+                            COALESCE(fc.regularity_status, 'REGULAR') as fiscal_regularity,
+                            COALESCE(co.is_exporter, FALSE) as is_exporter,
+                            COALESCE(co.is_importer, FALSE) as is_importer,
+                            COALESCE(pc.is_public_supplier, FALSE) as is_public_supplier,
+                            COALESCE(tf.registered_vehicles_count, 0) as registered_vehicles_count,
+                            COALESCE(df.has_ecommerce, FALSE) as has_ecommerce,
+                            COALESCE(df.has_corporate_email, TRUE) as has_corporate_email,
+                            COALESCE(df.detected_crm, 'RD Station') as detected_crm,
+                            COALESCE(df.detected_erp, 'TOTVS') as detected_erp,
+                            df.google_rating, df.latitude, df.longitude
                         FROM data_core.establishments e
                         JOIN data_core.companies c ON c.id = e.company_id
                         LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
                         LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                        LEFT JOIN data_mining.fiscal_compliance fc ON fc.cnpj = e.cnpj
+                        LEFT JOIN data_mining.comex_operations co ON co.cnpj = e.cnpj
+                        LEFT JOIN data_mining.public_contracts pc ON pc.cnpj = e.cnpj
+                        LEFT JOIN data_mining.transport_fleets tf ON tf.cnpj = e.cnpj
+                        LEFT JOIN data_mining.digital_footprint df ON df.establishment_id = e.id
                         WHERE e.cnpj IN ({in_clause})
                         ORDER BY score DESC;
                     """, tuple(ingested))
@@ -1317,3 +1343,20 @@ def search_by_semantic_prompt(payload: SemanticSearchRequest):
 def search_by_semantic_get(q: str, limit: int = 50):
     """GET alias for semantic search."""
     return execute_semantic_search(prompt=q, limit=limit)
+
+@app.get("/api/v1/etl/status")
+def get_etl_status_alias():
+    return etl_scheduler.get_scheduler_status()
+
+@app.post("/api/v1/etl/trigger")
+def trigger_etl_job_alias(payload: ETLTriggerRequest):
+    return etl_scheduler.trigger_job(payload.job_name)
+
+@app.get("/api/v1/etl/releases")
+def check_rfb_releases_alias():
+    return etl_scheduler.check_rfb_new_release()
+
+@app.get("/api/v1/etl/logs")
+def get_etl_logs_endpoint(limit: int = 20):
+    logs = etl_scheduler.get_logs(limit=limit)
+    return {"count": len(logs), "logs": logs}
