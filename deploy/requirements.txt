@@ -17,3 +17,7 @@ redis>=5.0.3
 celery>=5.3.6
 python-dotenv>=1.0.1
 tqdm>=4.66.2
+google-cloud-bigquery>=3.17.0
+google-cloud-storage>=2.14.0
+db-dtypes>=1.2.0
+pyarrow>=14.0.0

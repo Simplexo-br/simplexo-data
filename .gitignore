@@ -15,5 +15,6 @@ build/
 *.parquet
 *.dump
 *.sql
+!deploy/init-db/*.sql
 secrets/
 credentials*.json

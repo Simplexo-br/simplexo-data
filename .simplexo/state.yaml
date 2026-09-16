@@ -1,7 +1,7 @@
 # .simplexo/state.yaml — Estado consolidado do Simplexo Data
 
-version: "2.0.0"
-updated_at: "2026-09-15T19:49:30-03:00"
+version: "2.1.0"
+updated_at: "2026-09-16T00:05:00-03:00"
 environment:
   vm_host: "8.234.211.34"
   gcp_project: "odoo-server-vm2"
@@ -13,6 +13,7 @@ data_metrics:
   simples_nacional_records: 50396768
   mei_records: 17523665
   cnae_definitions: 1359
+  bigquery_lake_connected: true
 
 components:
   database:
@@ -29,7 +30,7 @@ components:
     status: "HEALTHY"
   gateway_api:
     type: "FastAPI + Uvicorn"
-    version: "2.0.0"
+    version: "2.1.0"
     port: 8000
     status: "HEALTHY"
     endpoints:
@@ -40,12 +41,21 @@ components:
       - "/api/v1/enrich/batch"
       - "/api/v1/reveal/pixel.js"
       - "/api/v1/reveal/identify"
+      - "/api/v1/alerts"
+      - "/api/v1/lists"
+      - "/api/v1/sales-assistant/generate"
+      - "/api/v1/history"
+      - "/api/v1/exports"
+      - "/api/v1/opportunities/recent"
+      - "/api/v1/opportunities/cno"
+      - "/api/v1/bigquery/status"
+      - "/api/v1/plans"
   mining_worker:
     type: "Python 3.12 Crawler + Scorer + Technographics (Playwright/Crawl4AI)"
-    version: "2.0.0"
+    version: "2.1.0"
     status: "RUNNING"
   receita_federal_etl:
-    type: "WebDAV RFB Ingestion"
+    type: "WebDAV RFB Ingestion + Live On-Demand Fallback"
     latest_month_discovered: "2026-09"
     total_files: 37
     status: "OPERATIONAL"

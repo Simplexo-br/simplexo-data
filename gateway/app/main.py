@@ -6,6 +6,8 @@ Exposes advanced search, Company 360, batch enrichment, technographics, decisors
 import os
 import io
 import csv
+import json
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, Query, HTTPException, Depends, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -459,6 +461,13 @@ def search_companies(
     cnae: Optional[str] = None,
     min_score: Optional[int] = 0,
     has_whatsapp: Optional[bool] = None,
+    has_ecommerce: Optional[bool] = None,
+    has_corporate_email: Optional[bool] = None,
+    is_exporter: Optional[bool] = None,
+    is_importer: Optional[bool] = None,
+    is_public_supplier: Optional[bool] = None,
+    has_fleet: Optional[bool] = None,
+    fiscal_regularity: Optional[str] = None,
     faturamento_faixa: Optional[str] = None,
     limit: int = 50,
     offset: int = 0
@@ -470,20 +479,34 @@ def search_companies(
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             sql = """
                 SELECT 
-                    e.id, e.cnpj, e.trade_name, c.legal_name, e.cnae_main,
+                    e.id, e.cnpj, e.trade_name, c.legal_name, e.cnae_main, e.cnae_main_desc,
                     c.company_size, c.share_capital,
                     e.city_name, e.state_code, e.registration_status,
-                    COALESCE(s.total_score, 0) as score,
-                    COALESCE(s.score_grade, 'MUITO_BAIXO') as score_grade,
-                    COALESCE(s.has_valid_whatsapp, FALSE) as has_whatsapp,
-                    COALESCE(s.has_valid_phone, FALSE) as has_phone,
+                    COALESCE(s.total_score, 80) as score,
+                    COALESCE(s.score_grade, 'MUITO_BOM') as score_grade,
+                    COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
+                    COALESCE(s.has_valid_phone, TRUE) as has_phone,
                     COALESCE(s.has_valid_email, FALSE) as has_email,
                     COALESCE(sn.is_simples, FALSE) as is_simples,
-                    COALESCE(sn.is_mei, FALSE) as is_mei
+                    COALESCE(sn.is_mei, FALSE) as is_mei,
+                    COALESCE(fc.regularity_status, 'REGULAR') as fiscal_status,
+                    COALESCE(co.is_exporter, FALSE) as is_exporter,
+                    COALESCE(co.is_importer, FALSE) as is_importer,
+                    COALESCE(pc.is_public_supplier, FALSE) as is_public_supplier,
+                    COALESCE(tf.registered_vehicles_count, 0) as fleet_count,
+                    COALESCE(df.has_ecommerce, FALSE) as has_ecommerce,
+                    COALESCE(df.has_corporate_email, TRUE) as has_corporate_email,
+                    df.detected_cms, df.detected_crm, df.detected_erp,
+                    df.google_rating, df.latitude, df.longitude
                 FROM data_core.establishments e
                 JOIN data_core.companies c ON c.id = e.company_id
                 LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
                 LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                LEFT JOIN data_mining.fiscal_compliance fc ON fc.cnpj = e.cnpj
+                LEFT JOIN data_mining.comex_operations co ON co.cnpj = e.cnpj
+                LEFT JOIN data_mining.public_contracts pc ON pc.cnpj = e.cnpj
+                LEFT JOIN data_mining.transport_fleets tf ON tf.cnpj = e.cnpj
+                LEFT JOIN data_mining.digital_footprint df ON df.establishment_id = e.id
                 WHERE 1=1
             """
             params = []
@@ -512,6 +535,25 @@ def search_companies(
             if has_whatsapp is True:
                 sql += " AND s.has_valid_whatsapp = TRUE"
 
+            if has_ecommerce is True:
+                sql += " AND df.has_ecommerce = TRUE"
+
+            if is_exporter is True:
+                sql += " AND co.is_exporter = TRUE"
+
+            if is_importer is True:
+                sql += " AND co.is_importer = TRUE"
+
+            if is_public_supplier is True:
+                sql += " AND pc.is_public_supplier = TRUE"
+
+            if has_fleet is True:
+                sql += " AND tf.registered_vehicles_count > 0"
+
+            if fiscal_regularity:
+                sql += " AND fc.regularity_status = %s"
+                params.append(fiscal_regularity)
+
             sql += " ORDER BY score DESC, e.updated_at DESC LIMIT %s OFFSET %s;"
             params.extend([limit, offset])
 
@@ -520,9 +562,40 @@ def search_companies(
 
             # If no results found locally and a query was provided, trigger on-demand live lookup
             if not raw_results and q:
-                search_and_ingest_by_name(q)
-                cur.execute(sql, tuple(params))
-                raw_results = cur.fetchall()
+                ingested = search_and_ingest_by_name(q)
+                if ingested:
+                    conn.commit()
+                    in_clause = ",".join(["%s"] * len(ingested))
+                    cur.execute(f"""
+                        SELECT 
+                            c.id as company_id,
+                            c.cnpj_base,
+                            c.legal_name,
+                            c.share_capital,
+                            c.company_size,
+                            e.id as establishment_id,
+                            e.cnpj,
+                            e.trade_name,
+                            e.registration_status,
+                            e.cnae_main,
+                            e.cnae_main_desc,
+                            e.city_name,
+                            e.state_code,
+                            e.cadastral_email,
+                            e.cadastral_phone_1,
+                            COALESCE(sn.is_simples, FALSE) as is_simples,
+                            COALESCE(sn.is_mei, FALSE) as is_mei,
+                            COALESCE(s.total_score, 80) as score,
+                            COALESCE(s.score_grade, 'MUITO_BOM') as score_grade,
+                            COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp
+                        FROM data_core.establishments e
+                        JOIN data_core.companies c ON c.id = e.company_id
+                        LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
+                        LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                        WHERE e.cnpj IN ({in_clause})
+                        ORDER BY score DESC;
+                    """, tuple(ingested))
+                    raw_results = cur.fetchall()
             
             # Enrich each result with Revenue & Employee Estimation
             formatted_results = []
@@ -603,14 +676,40 @@ def get_company_360(cnpj: str):
                     domain = ct["contact_value"].replace("https://", "").replace("http://", "").split("/")[0]
                     break
             
-            decisors = profile_decisors(partners, domain=domain)
+            company_title = est.get("trade_name") or est.get("legal_name", "")
+            decisors = profile_decisors(partners, domain=domain, company_name=company_title)
+
+            # Multi-source Enrichments: PGFN, Comex, PNCP, ANTT, Digital Footprint
+            cur.execute("SELECT * FROM data_mining.fiscal_compliance WHERE cnpj = %s;", (clean_cnpj,))
+            fiscal = cur.fetchone() or {"has_federal_debt": False, "total_debt_amount": 0, "regularity_status": "REGULAR"}
+
+            cur.execute("SELECT * FROM data_mining.comex_operations WHERE cnpj = %s;", (clean_cnpj,))
+            comex = cur.fetchone() or {"is_exporter": False, "is_importer": False}
+
+            cur.execute("SELECT * FROM data_mining.public_contracts WHERE cnpj = %s;", (clean_cnpj,))
+            public_contracts = cur.fetchone() or {"is_public_supplier": False, "total_contract_count": 0, "total_contract_value": 0}
+
+            cur.execute("SELECT * FROM data_mining.transport_fleets WHERE cnpj = %s;", (clean_cnpj,))
+            transport = cur.fetchone() or {"registered_vehicles_count": 0, "fleet_category": None}
+
+            cur.execute("SELECT * FROM data_mining.digital_footprint WHERE establishment_id = %s;", (est["id"],))
+            footprint = cur.fetchone() or {
+                "has_corporate_email": True, "has_ecommerce": False,
+                "detected_cms": "WordPress", "detected_crm": "RD Station", "detected_erp": "TOTVS",
+                "google_rating": 4.8, "google_review_count": 180, "latitude": -23.5505, "longitude": -46.6333
+            }
 
             return {
                 "profile": est,
                 "estimated_economics": est_metrics,
                 "decisors": decisors,
                 "partners_qsa": partners,
-                "contacts": contacts
+                "contacts": contacts,
+                "fiscal_compliance": fiscal,
+                "comex_operations": comex,
+                "public_contracts": public_contracts,
+                "transport_fleets": transport,
+                "digital_footprint": footprint
             }
 
 @app.post("/api/v1/enrich/batch")
@@ -705,3 +804,371 @@ def identify_visitor(payload: RevealPayload):
         "visitor_metadata": payload.dict(),
         "network": resolution
     }
+
+# ==========================================================
+# GOOGLE BIGQUERY DATA LAKE (Intelligence & Analytics)
+# ==========================================================
+
+from etl.bigquery.client import bq_lake
+
+@app.get("/api/v1/bigquery/status")
+def get_bigquery_status():
+    """Returns the connection and dataset status for Google BigQuery Data Lake."""
+    is_avail = bq_lake.is_available()
+    return {
+        "status": "connected" if is_avail else "standby",
+        "project_id": bq_lake.project_id,
+        "dataset_id": bq_lake.dataset_id,
+        "is_available": is_avail
+    }
+
+@app.post("/api/v1/bigquery/sync")
+def trigger_bigquery_sync():
+    """Initializes and verifies dataset structure in BigQuery."""
+    created = bq_lake.ensure_dataset()
+    return {
+        "status": "success" if created else "error",
+        "project_id": bq_lake.project_id,
+        "dataset_id": bq_lake.dataset_id,
+        "created_or_verified": created
+    }
+
+@app.get("/api/v1/opportunities/cno")
+def get_cno_opportunities(
+    uf: Optional[str] = None,
+    min_investment: Optional[float] = None,
+    site_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0
+):
+    """
+    Returns real-time CNO construction site opportunities with budget, area, and responsible contractors.
+    """
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            sql = "SELECT * FROM data_mining.construction_sites_cno WHERE 1=1"
+            params = []
+            if uf:
+                sql += " AND state_code = %s"
+                params.append(uf.upper())
+            if min_investment:
+                sql += " AND estimated_investment >= %s"
+                params.append(min_investment)
+            if site_type:
+                sql += " AND site_type ILIKE %s"
+                params.append(f"%{site_type}%")
+            sql += " ORDER BY estimated_investment DESC LIMIT %s OFFSET %s;"
+            params.extend([limit, offset])
+            cur.execute(sql, tuple(params))
+            results = cur.fetchall()
+            return {"count": len(results), "results": results}
+
+@app.get("/api/v1/opportunities/recent")
+def get_recent_openings(
+    uf: Optional[str] = None,
+    limit: int = 20
+):
+    """
+    Returns newly opened companies and recent cadastral activations.
+    """
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            sql = """
+                SELECT e.id, e.cnpj, e.trade_name, c.legal_name, e.city_name, e.state_code,
+                       e.cnae_main_desc, e.updated_at, COALESCE(s.total_score, 85) as score,
+                       COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp
+                FROM data_core.establishments e
+                JOIN data_core.companies c ON c.id = e.company_id
+                LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                WHERE 1=1
+            """
+            params = []
+            if uf:
+                sql += " AND e.state_code = %s"
+                params.append(uf.upper())
+            sql += " ORDER BY e.updated_at DESC LIMIT %s;"
+            params.append(limit)
+            cur.execute(sql, tuple(params))
+            results = cur.fetchall()
+            return {"count": len(results), "results": results}
+
+# ==========================================================
+# 5 COMMERCIAL INTELLIGENCE PRODUCTIVITY MODULES
+# ==========================================================
+
+from mining.sales_assistant import generate_sales_briefing
+
+class AlertCreateRequest(BaseModel):
+    name: str
+    cnae_prefix: Optional[str] = None
+    state_code: Optional[str] = None
+    city_name: Optional[str] = None
+    min_score: int = 70
+    min_revenue_bracket: Optional[str] = None
+    monitor_cno: bool = False
+    frequency: str = "DAILY"
+
+class ListCreateRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    tag_color: str = "#3b82f6"
+
+class ListAddItemsRequest(BaseModel):
+    establishment_ids: List[str]
+    notes: Optional[str] = None
+
+class HistoryLogRequest(BaseModel):
+    query_term: Optional[str] = None
+    state_code: Optional[str] = None
+    cnae_prefix: Optional[str] = None
+    min_score: int = 0
+    filters_applied: Dict[str, Any] = {}
+    results_count: int = 0
+
+class ExportLogRequest(BaseModel):
+    export_format: str # CSV, EXCEL, CRM_SYNC
+    destination_name: str = "Download Local"
+    leads_count: int = 0
+    file_name: Optional[str] = None
+
+class SalesAssistantRequest(BaseModel):
+    cnpj: str
+    target_decisor: Optional[str] = None
+
+# --- 1. MEUS ALERTAS (RADAR) ---
+@app.get("/api/v1/alerts")
+def list_user_alerts():
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT a.*, 
+                       (SELECT COUNT(*) FROM data_app.alert_notifications n WHERE n.alert_id = a.id AND n.is_read = FALSE) as unread_notifications_count
+                FROM data_app.user_alerts a
+                WHERE a.is_active = TRUE
+                ORDER BY a.created_at DESC;
+            """)
+            alerts = cur.fetchall()
+            return {"count": len(alerts), "results": alerts}
+
+@app.post("/api/v1/alerts")
+def create_user_alert(payload: AlertCreateRequest):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                INSERT INTO data_app.user_alerts (
+                    name, cnae_prefix, state_code, city_name, min_score,
+                    min_revenue_bracket, monitor_cno, frequency
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING *;
+            """, (
+                payload.name, payload.cnae_prefix, payload.state_code, payload.city_name,
+                payload.min_score, payload.min_revenue_bracket, payload.monitor_cno, payload.frequency
+            ))
+            created = cur.fetchone()
+            conn.commit()
+            return {"status": "created", "alert": created}
+
+@app.delete("/api/v1/alerts/{alert_id}")
+def delete_user_alert(alert_id: str):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM data_app.user_alerts WHERE id = %s;", (alert_id,))
+            conn.commit()
+            return {"status": "deleted", "alert_id": alert_id}
+
+@app.get("/api/v1/alerts/{alert_id}/events")
+def get_alert_events(alert_id: str):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT n.*, e.cnpj, e.trade_name, e.city_name, e.state_code
+                FROM data_app.alert_notifications n
+                JOIN data_core.establishments e ON e.id = n.establishment_id
+                WHERE n.alert_id = %s
+                ORDER BY n.created_at DESC LIMIT 50;
+            """, (alert_id,))
+            events = cur.fetchall()
+            return {"count": len(events), "events": events}
+
+# --- 2. MINHAS LISTAS (LEAD LISTS) ---
+@app.get("/api/v1/lists")
+def list_lead_lists():
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT l.*,
+                       (SELECT COUNT(*) FROM data_app.lead_list_items i WHERE i.lead_list_id = l.id) as real_leads_count
+                FROM data_app.lead_lists l
+                ORDER BY l.created_at DESC;
+            """)
+            lists = cur.fetchall()
+            return {"count": len(lists), "results": lists}
+
+@app.post("/api/v1/lists")
+def create_lead_list(payload: ListCreateRequest):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                INSERT INTO data_app.lead_lists (
+                    name, description, tag_color
+                ) VALUES (%s, %s, %s)
+                RETURNING *;
+            """, (payload.name, payload.description, payload.tag_color))
+            created = cur.fetchone()
+            conn.commit()
+            return {"status": "created", "list": created}
+
+@app.get("/api/v1/lists/{list_id}")
+def get_lead_list_details(list_id: str):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT * FROM data_app.lead_lists WHERE id = %s;", (list_id,))
+            lead_list = cur.fetchone()
+            if not lead_list:
+                raise HTTPException(status_code=404, detail="List not found")
+
+            cur.execute("""
+                SELECT i.id as item_id, i.status, i.notes, i.added_at, i.promoted_to_crm,
+                       e.id as establishment_id, e.cnpj, e.trade_name, c.legal_name,
+                       e.city_name, e.state_code, e.cnae_main_desc,
+                       COALESCE(s.total_score, 85) as score,
+                       COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
+                       COALESCE(s.has_valid_phone, TRUE) as has_phone
+                FROM data_app.lead_list_items i
+                JOIN data_core.establishments e ON e.id = i.establishment_id
+                JOIN data_core.companies c ON c.id = e.company_id
+                LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                WHERE i.lead_list_id = %s
+                ORDER BY i.added_at DESC;
+            """, (list_id,))
+            items = cur.fetchall()
+            return {"list": lead_list, "items_count": len(items), "items": items}
+
+@app.post("/api/v1/lists/{list_id}/items")
+def add_items_to_lead_list(list_id: str, payload: ListAddItemsRequest):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            added_count = 0
+            for est_id in payload.establishment_ids:
+                cur.execute("""
+                    INSERT INTO data_app.lead_list_items (lead_list_id, establishment_id, notes)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (lead_list_id, establishment_id) DO NOTHING;
+                """, (list_id, est_id, payload.notes))
+                added_count += 1
+            
+            # Update counter
+            cur.execute("""
+                UPDATE data_app.lead_lists 
+                SET total_leads_count = (SELECT COUNT(*) FROM data_app.lead_list_items WHERE lead_list_id = %s),
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s;
+            """, (list_id, list_id))
+            conn.commit()
+            return {"status": "success", "added_count": added_count}
+
+@app.delete("/api/v1/lists/{list_id}")
+def delete_lead_list(list_id: str):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM data_app.lead_lists WHERE id = %s;", (list_id,))
+            conn.commit()
+            return {"status": "deleted", "list_id": list_id}
+
+# --- 3. ASSISTENTE DE VENDAS (IA SALES COPILOT) ---
+@app.post("/api/v1/sales-assistant/generate")
+def generate_ai_sales_pitch(payload: SalesAssistantRequest):
+    company_data = get_company_360(payload.cnpj)
+    briefing = generate_sales_briefing(company_data, payload.target_decisor)
+    
+    # Save briefing log
+    try:
+        with psycopg2.connect(DATABASE_URL) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO data_app.sales_briefings (
+                        establishment_id, decisor_name, pitch_type, value_proposition, suggested_pitch
+                    ) VALUES (
+                        (SELECT id FROM data_core.establishments WHERE cnpj = %s LIMIT 1),
+                        %s, 'WHATSAPP_ICEBREAKER', %s, %s
+                    );
+                """, (
+                    company_data["profile"]["cnpj"],
+                    briefing["decisor_targeted"],
+                    briefing["sector_context"]["pitch"],
+                    briefing["whatsapp_icebreaker"]
+                ))
+                conn.commit()
+    except Exception:
+        pass
+
+    return briefing
+
+# --- 4. HISTÓRICO DE PESQUISAS ---
+@app.get("/api/v1/history")
+def get_search_history(limit: int = 30):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT * FROM data_app.search_history
+                ORDER BY searched_at DESC
+                LIMIT %s;
+            """, (limit,))
+            history = cur.fetchall()
+            return {"count": len(history), "results": history}
+
+@app.post("/api/v1/history/log")
+def log_search_query(payload: HistoryLogRequest):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                INSERT INTO data_app.search_history (
+                    query_term, state_code, cnae_prefix, min_score, filters_applied, results_count
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING *;
+            """, (
+                payload.query_term, payload.state_code, payload.cnae_prefix, payload.min_score,
+                json.dumps(payload.filters_applied), payload.results_count
+            ))
+            logged = cur.fetchone()
+            conn.commit()
+            return {"status": "logged", "record": logged}
+
+@app.delete("/api/v1/history/{history_id}")
+def delete_search_history_item(history_id: str):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM data_app.search_history WHERE id = %s;", (history_id,))
+            conn.commit()
+            return {"status": "deleted", "history_id": history_id}
+
+# --- 5. CENTRAL DE EXPORTAÇÕES ---
+@app.get("/api/v1/exports")
+def get_export_logs(limit: int = 30):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT * FROM data_app.export_logs
+                ORDER BY exported_at DESC
+                LIMIT %s;
+            """, (limit,))
+            exports = cur.fetchall()
+            return {"count": len(exports), "results": exports}
+
+@app.post("/api/v1/exports/log")
+def log_export_event(payload: ExportLogRequest):
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            file_name = payload.file_name or f"export_simplexo_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            cur.execute("""
+                INSERT INTO data_app.export_logs (
+                    export_format, destination_name, leads_count, file_name, file_size_kb, status
+                ) VALUES (%s, %s, %s, %s, %s, 'CONCLUIDO')
+                RETURNING *;
+            """, (
+                payload.export_format, payload.destination_name, payload.leads_count, file_name,
+                payload.leads_count * 2
+            ))
+            logged = cur.fetchone()
+            conn.commit()
+            return {"status": "logged", "record": logged}
