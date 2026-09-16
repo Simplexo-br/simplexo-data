@@ -1,7 +1,7 @@
 # CURRENT.md — Status do Projeto Simplexo Data
 
 **Data:** 15/09/2026  
-**Status Geral:** ✅ **Stack 2.0 Completa, 50.39M Registros Nacionais e Todas as 5 Features Avançadas Operacionais e Testadas**
+**Status Geral:** ✅ **Stack 2.0 Completa, Interface Light Moderna Inspirada na Data Stone, 50.39M Registros Nacionais e Todas as Features Operacionais**
 
 ---
 
@@ -14,6 +14,7 @@
   * `simplexo_redis` (Redis 7)
   * `simplexo_gateway` (FastAPI REST Gateway v2.0 na porta 8000)
   * `simplexo_mining_worker` (Worker 2.0 de Mineração, Technographics e Lead Scoring)
+* **URL de Produção:** `http://8.234.211.34:8000/` (HTTP 200 OK)
 
 ---
 
@@ -25,21 +26,26 @@
 
 ---
 
-## 3. Módulos Avançados de Inteligência B2B Implementados
+## 3. Módulos & Interface Visual Data Stone 2.0
 
-1. **Detecção de Tecnologias (Technographics)** (`mining/technographics.py`):
-   * Mapeamento automatizado de ERPs (*TOTVS, SAP, Senior, Linx, Sankhya, Omie, Tiny, Bling, Odoo*), E-commerces (*VTEX, Shopify, Nuvemshop, WooCommerce, Magento*) e CRMs (*RD Station, HubSpot, ActiveCampaign, Salesforce*).
-2. **Inferência de Faturamento Estimado & Faixa de Funcionários** (`mining/estimator.py`):
-   * Modelagem estatística combinando porte RFB, capital social, CNAE e enquadramento Simples Nacional.
-3. **Localizador de Decisores & Validador de E-mails com DNS MX** (`mining/decisors.py` e `mining/email_validator.py`):
-   * Cruzamento de QSA com cargos executivos, inferência de padrões de e-mail corporativo e checagem de registros MX sem envio de mensagens.
-4. **Módulo de Enriquecimento em Lote (Batch CSV API)** (`POST /api/v1/enrich/batch`):
-   * Upload de planilhas CSV com CNPJs para qualificação e enriquecimento instantâneo.
-5. **Simplexo Reveal (B2B Website De-anonymization)** (`gateway/app/reveal.py`):
-   * Script JavaScript leve (`/api/v1/reveal/pixel.js`) e endpoint de resolução reversa (`/api/v1/reveal/identify`) para identificação de empresas visitantes.
+1. **Design System Claro & Moderno (Benchmark Data Stone / Oportunidados)**:
+   * Interface Enterprise em Modo Claro (`#F8FAFC`, cartões `#FFFFFF` com bordas sutis `#E2E8F0`, tipografia *Plus Jakarta Sans* e contrastes `#0F172A`).
+   * Omnibar de busca global (`Ctrl + K`) com atalhos por setor (Software, Transportes, Saúde, Alimentos, Construção).
+   * Dashboards analíticos em tempo real com gráficos Chart.js (Distribuição Geográfica e Faixa de Faturamento).
+2. **5 Planos Comerciais de Assinatura & Cotas de Exportação**:
+   * *Bronze* (500 leads), *Prata* (2.000 leads), *Ouro* (6.000 leads), *Diamante* (15.000 leads) e *Black Enterprise* (ilimitado/personalizado).
+   * Ciclos Mensal e Anual (33% OFF + dobro de cotas no anual) com modal de checkout integrado e gestão de créditos.
+3. **Radar de Oportunidades Recentes & Obras CNO**:
+   * Monitoramento de novas aberturas nos últimos 30 dias com botão de qualificação instantânea.
+   * Feeds de Obras CNO com valor de investimento estimado, área em m² e atalho direto para WhatsApp do responsável.
+4. **Exportação & Conexão Odoo 18 / CRM**:
+   * Exportação seletiva de leads para o CRM do Odoo 18 e downloads diretos em CSV/Excel.
+5. **Dossiê Company 360 Slide-over**:
+   * Visão integrada com QSA, sócios, links para LinkedIn, technographics, e-mail validado e badges WhatsApp.
 
 ---
 
 ## 4. Testes & Homologação
-* **Testes unitários**: `python -m tests.test_features` executado e aprovado com 100% de sucesso.
-* **Testes na VM**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/company/{cnpj}`, `/api/v1/enrich/batch` e `/api/v1/reveal/pixel.js` validados via curl e HTTP live.
+* **Frontend Web**: `http://8.234.211.34:8000/` validado com HTTP 200 e assets compilados.
+* **Backend API**: Endpoints `/health`, `/api/v1/stats`, `/api/v1/search`, `/api/v1/plans`, `/api/v1/dashboard/charts`, `/api/v1/opportunities/*`, `/api/v1/company/{cnpj}` e `/api/v1/export/crm-odoo` testados e operacionais.
+
