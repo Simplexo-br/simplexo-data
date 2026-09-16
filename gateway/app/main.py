@@ -69,8 +69,6 @@ def get_platform_stats():
             valid_whats = cur.fetchone()["valid_whatsapps"]
             
             cur.execute("SELECT COUNT(*) as valid_emails FROM data_mining.commercial_scores WHERE has_valid_email = TRUE;")
-            valid_emails = cur.fetchone()["valid_emails"]
-
             return {
                 "total_companies": total_est,
                 "total_simples_nacional": simples_stat["total_simples"],
@@ -79,6 +77,132 @@ def get_platform_stats():
                 "valid_whatsapps": valid_whats,
                 "valid_emails": valid_emails
             }
+
+PLANS_CATALOG = [
+    {
+        "id": "bronze",
+        "name": "Plano Bronze",
+        "badge": "Iniciante",
+        "price_monthly": 99.00,
+        "price_annual_monthly": 66.33,
+        "price_annual_total": 795.96,
+        "export_credits": 1000,
+        "features": [
+            "Consultas ilimitadas no painel",
+            "1.000 exportações / leads por mês",
+            "Acesso à base oficial de 50.39M de empresas",
+            "Filtros por CNAE, UF, Cidade e Porte",
+            "Regime Tributário (Simples Nacional & MEI)",
+            "Exportação em CSV"
+        ],
+        "is_popular": False,
+        "color": "slate"
+    },
+    {
+        "id": "prata",
+        "name": "Plano Prata",
+        "badge": "Mais Popular",
+        "price_monthly": 149.00,
+        "price_annual_monthly": 99.83,
+        "price_annual_total": 1197.96,
+        "export_credits": 2500,
+        "features": [
+            "Tudo do Plano Bronze",
+            "2.500 exportações / leads por mês",
+            "Validação de WhatsApp Ativo & Telefones",
+            "Quadro Societário (QSA) & Decisores com LinkedIn",
+            "Filtro de Faturamento Presumido e Faixa de Funcionários",
+            "Validação de E-mails Corporativos (DNS MX)"
+        ],
+        "is_popular": True,
+        "color": "blue"
+    },
+    {
+        "id": "ouro",
+        "name": "Plano Ouro",
+        "badge": "Escala",
+        "price_monthly": 299.00,
+        "price_annual_monthly": 200.33,
+        "price_annual_total": 2403.96,
+        "export_credits": 10000,
+        "features": [
+            "Tudo do Plano Prata",
+            "10.000 exportações / leads por mês",
+            "Enriquecimento em Lote via Planilha CSV",
+            "Cadastro Nacional de Obras (CNO)",
+            "Acesso à API REST Simplexo Gateway",
+            "Exportação em Excel (XLSX) e CSV"
+        ],
+        "is_popular": False,
+        "color": "amber"
+    },
+    {
+        "id": "diamante",
+        "name": "Plano Diamante",
+        "badge": "Avançado",
+        "price_monthly": 899.00,
+        "price_annual_monthly": 602.33,
+        "price_annual_total": 7227.96,
+        "export_credits": 50000,
+        "features": [
+            "Tudo do Plano Ouro",
+            "50.000 exportações / leads por mês",
+            "Technographics (Detecção de ERPs, E-commerce, CRMs)",
+            "Integração Direta com Odoo 18 / CRM Webhooks",
+            "Multi-usuários para equipes de SDR",
+            "Suporte Prioritário VIP"
+        ],
+        "is_popular": False,
+        "color": "purple"
+    },
+    {
+        "id": "black",
+        "name": "Plano Black",
+        "badge": "Enterprise",
+        "price_monthly": 1999.00,
+        "price_annual_monthly": 1339.33,
+        "price_annual_total": 16071.96,
+        "export_credits": 200000,
+        "features": [
+            "Tudo do Plano Diamante",
+            "200.000+ exportações / leads por mês",
+            "Simplexo Reveal (De-anonymization Pixel B2B)",
+            "Acesso ilimitado de alto débito à API",
+            "Data Lake dedicado & Ingestão Customizada",
+            "Gerente de Contas Dedicado"
+        ],
+        "is_popular": False,
+        "color": "emerald"
+    }
+]
+
+@app.get("/api/v1/plans")
+def get_plans_catalog():
+    """Returns the commercial subscription and credit packages catalog."""
+    return {"status": "ok", "plans": PLANS_CATALOG}
+
+class SubscribeRequest(BaseModel):
+    plan_id: str
+    billing_cycle: str # 'monthly' or 'annual'
+    company_name: Optional[str] = "Simplexo Cliente"
+    email: Optional[str] = "admin@simplexo.com.br"
+
+@app.post("/api/v1/plans/subscribe")
+def subscribe_plan(payload: SubscribeRequest):
+    """Handles plan subscription or upgrade."""
+    selected = next((p for p in PLANS_CATALOG if p["id"] == payload.plan_id), None)
+    if not selected:
+        raise HTTPException(status_code=404, detail="Plano não encontrado.")
+    
+    price = selected["price_annual_total"] if payload.billing_cycle == "annual" else selected["price_monthly"]
+    return {
+        "status": "success",
+        "message": f"Assinatura do {selected['name']} ({payload.billing_cycle}) processada com sucesso!",
+        "plan": selected,
+        "billing_cycle": payload.billing_cycle,
+        "total_amount": price,
+        "allocated_credits": selected["export_credits"] * (2 if payload.billing_cycle == "annual" else 1)
+    }
 
 @app.get("/api/v1/search")
 def search_companies(
