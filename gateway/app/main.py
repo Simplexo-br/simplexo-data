@@ -18,11 +18,13 @@ from mining.decisors import profile_decisors
 from mining.email_validator import validate_corporate_email
 from mining.technographics import detect_technologies
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from gateway.app.reveal import PIXEL_JS, resolve_ip_to_host
 from etl.receita_federal.live_lookup import fetch_and_ingest_cnpj, search_and_ingest_by_name
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://simplexo:simplexo_secure_pass_2026@localhost:5432/simplexo_data")
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "index.html")
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 app = FastAPI(
     title="Simplexo Data Gateway API",
@@ -37,6 +39,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 FAVICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#4f46e5"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#g)"/><path d="M8 22L16 10l8 12H8z" fill="#ffffff" opacity="0.9"/></svg>"""
 

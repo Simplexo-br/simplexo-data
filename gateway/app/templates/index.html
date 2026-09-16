@@ -1,268 +1,444 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-slate-950 text-slate-100">
+<html lang="pt-BR" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simplexo Data — Plataforma de Inteligência B2B & Oportunidades</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M8 22L16 10l8 12H8z' fill='%23fff'/%3E%3C/svg%3E">
-    <link rel="icon" href="/favicon.ico">
+    <title>Simplexo Data — Inteligência de Mercado B2B & Oportunidades</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Chart.js for High-End Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tailwind.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.8); border-radius: 9999px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
-        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(51, 65, 85, 0.4); }
-        .glass-card { background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(8px); border: 1px solid rgba(51, 65, 85, 0.3); }
-        .glass-card:hover { border-color: rgba(99, 102, 241, 0.5); }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .sidebar-item-active { background-color: #eff6ff; color: #2563eb; font-weight: 600; border-right: 3px solid #2563eb; }
+        .tab-btn-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
     </style>
 </head>
-<body class="h-full bg-slate-950 text-slate-100 flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+<body class="h-full bg-slate-50 text-slate-800 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
     <!-- TOAST NOTIFICATION CONTAINER -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none"></div>
 
     <!-- 1. LOGIN SCREEN -->
-    <div id="login-view" class="min-h-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40">
-        <!-- Background Ambient Glows -->
-        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none animate-pulse"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div id="login-view" class="min-h-full flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-slate-100 via-white to-blue-50/40">
+        <!-- Background Ambient Shapes -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div class="max-w-md w-full glass-panel rounded-3xl p-8 shadow-2xl relative z-10 border border-slate-800/80">
+        <div class="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl relative z-10 border border-slate-200">
             <div class="text-center space-y-2 mb-8">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white shadow-xl shadow-indigo-500/25 text-2xl font-black mb-2">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 text-2xl font-black mb-2">
                     <i class="fa-solid fa-cube"></i>
                 </div>
-                <h1 class="text-2xl font-black tracking-tight text-white">Simplexo Data</h1>
-                <p class="text-xs text-slate-400 font-medium">Plataforma Soberana de Inteligência B2B & Oportunidades</p>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Simplexo Data</h1>
+                <p class="text-xs text-slate-500 font-medium">Plataforma Soberana de Inteligência B2B & Oportunidades</p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">E-mail Corporativo</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">E-mail Corporativo</label>
                     <div class="relative">
-                        <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-slate-500 text-xs"></i>
-                        <input id="login-email" name="username" autocomplete="username" type="email" required value="admin@simplexo.com.br"
-                            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+                        <i class="fa-solid fa-envelope absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
+                        <input id="login-email" type="email" required value="admin@simplexo.com.br"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Senha de Acesso</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Senha de Acesso</label>
                     <div class="relative">
-                        <i class="fa-solid fa-lock absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                        <i class="fa-solid fa-lock absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
                         <input id="login-password" type="password" required value="simplexo2026"
-                            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition">
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between text-[11px] pt-1">
-                    <label class="flex items-center text-slate-400 cursor-pointer">
-                        <input type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0 mr-1.5">
+                    <label class="flex items-center text-slate-600 cursor-pointer">
+                        <input type="checkbox" checked class="rounded bg-slate-100 border-slate-300 text-blue-600 focus:ring-0 mr-1.5">
                         Lembrar sessão
                     </label>
-                    <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">Esqueceu a senha?</a>
+                    <a href="#" class="text-blue-600 hover:text-blue-700 font-semibold">Esqueceu a senha?</a>
                 </div>
 
                 <button type="submit"
-                    class="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/25 transition duration-150 flex items-center justify-center space-x-2">
-                    <span>Entrar na Plataforma</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-blue-500/20 text-xs transition duration-150 flex items-center justify-center space-x-2">
+                    <span>Acessar Simplexo Data Station</span>
+                    <i class="fa-solid fa-arrow-right text-[10px]"></i>
                 </button>
             </form>
 
-            <div class="mt-6 pt-6 border-t border-slate-800/80 text-center">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
-                    Base Conectada: 50.39M CNPJs Ativos
-                </span>
+            <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                <div class="flex items-center justify-center space-x-4 text-slate-400 text-xs">
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-check text-emerald-500"></i> LGPD Compliant</span>
+                    <span>•</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-blue-500"></i> RFB 2026 Oficial</span>
+                </div>
             </div>
         </div>
     </div>
-
-    <!-- 2. MAIN APPLICATION VIEW -->
-    <div id="app-view" class="hidden min-h-full flex flex-col">
+    <!-- 2. MAIN APPLICATION INTERFACE (HIDDEN BY DEFAULT UNTIL LOGIN) -->
+    <div id="app-view" class="hidden min-h-full flex flex-col bg-slate-50">
         
-        <!-- TOP NAVIGATION BAR -->
-        <header class="glass-panel sticky top-0 z-40 border-b border-slate-800/80">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-                <!-- LOGO & BADGE -->
-                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
-                    <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white shadow-md shadow-indigo-500/20 font-black text-lg">
-                        S
+        <!-- TOP NAVBAR -->
+        <header class="h-16 bg-white border-b border-slate-200 sticky top-0 z-30 px-6 flex items-center justify-between shadow-xs">
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchNav('dashboard')">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-black text-base shadow-sm">
+                        <i class="fa-solid fa-cube"></i>
                     </div>
                     <div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-extrabold text-white tracking-tight text-sm">Simplexo Data</span>
-                            <span class="px-2 py-0.5 text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full">Station 2.0</span>
-                        </div>
-                        <p class="text-[10px] text-slate-400">Inteligência B2B & Oportunidades</p>
+                        <span class="font-bold text-base text-slate-900 tracking-tight flex items-center gap-1.5">
+                            Simplexo Data <span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200">2.0 STATION</span>
+                        </span>
+                        <p class="text-[10px] text-slate-400 font-medium">Inteligência B2B & Prospecção Soberana</p>
                     </div>
                 </div>
 
-                <!-- NAVIGATION TABS -->
-                <nav class="hidden lg:flex items-center space-x-1">
-                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-white bg-slate-800 border border-slate-700 transition">
-                        <i class="fa-solid fa-chart-pie mr-1.5 text-indigo-400"></i> Visão Geral
+                <!-- GLOBAL SEARCH OMNIBAR -->
+                <div class="relative hidden md:block w-96">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    <input id="omnibar-input" type="text" placeholder="Buscar por CNPJ, Razão Social ou Domínio... (Ctrl + K)"
+                        onkeydown="if(event.key==='Enter') executeOmnibarSearch()"
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-14 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 transition">
+                    <button onclick="executeOmnibarSearch()" class="absolute right-2 top-1.5 bg-blue-600 text-white px-2 py-1 rounded-lg text-[10px] font-semibold hover:bg-blue-700 transition">
+                        Buscar
                     </button>
-                    <button onclick="switchTab('prospecting')" id="nav-prospecting" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition">
-                        <i class="fa-solid fa-magnifying-glass mr-1.5 text-blue-400"></i> Prospecção B2B
-                    </button>
-                    <button onclick="switchTab('recent')" id="nav-recent" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-emerald-300 hover:text-white hover:bg-slate-800/60 transition">
-                        <i class="fa-solid fa-bolt mr-1.5 text-emerald-400"></i> Recém-Abertas
-                    </button>
-                    <button onclick="switchTab('cno')" id="nav-cno" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-300 hover:text-white hover:bg-slate-800/60 transition">
-                        <i class="fa-solid fa-trowel-bricks mr-1.5 text-amber-400"></i> Obras & CNO
-                    </button>
-                    <button onclick="switchTab('batch')" id="nav-batch" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition">
-                        <i class="fa-solid fa-file-csv mr-1.5 text-teal-400"></i> Enriquecimento em Lote
-                    </button>
-                    <button onclick="switchTab('reveal')" id="nav-reveal" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition">
-                        <i class="fa-solid fa-satellite-dish mr-1.5 text-purple-400"></i> Reveal
-                    </button>
-                    <button onclick="switchTab('plans')" id="nav-plans" class="nav-btn px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 hover:text-white hover:bg-amber-500/20 bg-amber-500/10 border border-amber-500/30 transition">
-                        <i class="fa-solid fa-gem mr-1.5 text-amber-400 animate-pulse"></i> Planos & Loja
-                    </button>
-                </nav>
+                </div>
+            </div>
 
-                <!-- RIGHT WIDGETS -->
-                <div class="flex items-center space-x-3">
-                    <div class="hidden sm:flex items-center px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs text-amber-300 font-bold">
-                        <i class="fa-solid fa-bolt mr-1.5 text-amber-400"></i>
-                        <span id="header-user-credits">2.500 Créditos</span>
+            <!-- RIGHT USER ACTIONS -->
+            <div class="flex items-center space-x-4">
+                <!-- CREDITS & PLAN PILL -->
+                <button onclick="switchNav('plans')" class="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 hover:border-blue-300 px-3 py-1.5 rounded-xl transition cursor-pointer text-left">
+                    <i class="fa-solid fa-coins text-amber-500 text-xs"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-700 leading-none">Créditos: <span id="user-credits-display" class="text-blue-600 font-black">2.500</span> / mês</div>
+                        <div class="text-[9px] font-semibold text-slate-400 leading-tight">Plano Prata • <span class="text-emerald-600">Recarga</span></div>
                     </div>
-                    <div class="hidden md:flex items-center px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                        <span id="header-total-companies">50.396.768 Empresas</span>
+                </button>
+
+                <!-- STATUS PILL -->
+                <div class="hidden lg:flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>50.39M Ativas</span>
+                </div>
+
+                <!-- USER AVATAR & DROPDOWN -->
+                <div class="flex items-center space-x-3 border-l border-slate-200 pl-4">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs border border-blue-200">
+                        FR
                     </div>
-                    <button onclick="handleLogout()" class="text-xs font-semibold text-slate-400 hover:text-red-400 px-3 py-1.5 rounded-xl hover:bg-slate-900 transition">
-                        <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Sair
+                    <div class="hidden sm:block text-left">
+                        <div class="text-xs font-bold text-slate-800 leading-tight">Fellipe Ramalho</div>
+                        <div class="text-[10px] text-slate-400 font-medium">Administrador</div>
+                    </div>
+                    <button onclick="handleLogout()" title="Sair do sistema" class="text-slate-400 hover:text-rose-600 text-xs p-1.5 rounded-lg hover:bg-slate-100 transition">
+                        <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
             </div>
         </header>
 
-        <!-- MAIN BODY CONTAINER -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- MAIN LAYOUT (SIDEBAR + CONTENT) -->
+        <div class="flex-1 flex overflow-hidden">
             
-            <!-- TAB 1: VISÃO GERAL / DASHBOARD -->
-            <section id="view-dashboard" class="space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="glass-card rounded-2xl p-5 hover:border-slate-700 transition">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-slate-400">Empresas Cadastradas</span>
-                            <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-sm">
-                                <i class="fa-solid fa-building"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <span id="dash-total-companies" class="text-2xl font-black text-white">50.396.768</span>
-                            <span class="block text-[11px] text-emerald-400 mt-0.5"><i class="fa-solid fa-arrow-up mr-1"></i>Base Oficial RFB Atualizada</span>
-                        </div>
+            <!-- SIDEBAR NAVIGATION -->
+            <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 space-y-6 shrink-0 custom-scrollbar overflow-y-auto">
+                <div class="space-y-6">
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Visão Geral</div>
+                        <nav class="space-y-1">
+                            <button onclick="switchNav('dashboard')" id="nav-dashboard" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+                                <span>Painel & Indicadores</span>
+                            </button>
+                            <button onclick="switchNav('search')" id="nav-search" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <i class="fa-solid fa-filter-list w-4 text-center"></i>
+                                <span>Prospecção ICP & Filtros</span>
+                            </button>
+                        </nav>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-5 hover:border-slate-700 transition">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-slate-400">Microempreendedores (MEIs)</span>
-                            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-sm">
-                                <i class="fa-solid fa-user-check"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <span id="dash-total-meis" class="text-2xl font-black text-white">17.523.665</span>
-                            <span class="block text-[11px] text-blue-400 mt-0.5">34.8% da Base Nacional</span>
-                        </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Oportunidades & Vendas</div>
+                        <nav class="space-y-1">
+                            <button onclick="switchNav('recent-companies')" id="nav-recent-companies" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-sparkles w-4 text-center text-amber-500"></i>
+                                    <span>Recém-Abertas</span>
+                                </div>
+                                <span class="bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Novo</span>
+                            </button>
+                            <button onclick="switchNav('cno-obras')" id="nav-cno-obras" class="sidebar-nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-helmet-safety w-4 text-center text-orange-500"></i>
+                                    <span>Obras & CNO</span>
+                                </div>
+                                <span class="bg-orange-100 text-orange-700 text-[9px] font-bold px-1.5 py-0.5 rounded-md">Ativo</span>
+                            </button>
+                        </nav>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-5 hover:border-slate-700 transition">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-slate-400">Obras Ativas (CNO)</span>
-                            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm">
-                                <i class="fa-solid fa-trowel-bricks"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <span class="text-2xl font-black text-white">1.842.910</span>
-                            <span class="block text-[11px] text-amber-400 mt-0.5">Canteiros & Reformas no Brasil</span>
-                        </div>
-                    </div>
-
-                    <div class="glass-card rounded-2xl p-5 hover:border-slate-700 transition">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-slate-400">WhatsApps & E-mails Válidos</span>
-                            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm">
-                                <i class="fa-brands fa-whatsapp"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <span class="text-2xl font-black text-emerald-400">Alta Qualificação</span>
-                            <span class="block text-[11px] text-slate-400 mt-0.5">Validação DNS MX & Celulares</span>
-                        </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Enriquecimento & Ferramentas</div>
+                        <nav class="space-y-1">
+                            <button onclick="switchNav('batch')" id="nav-batch" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <i class="fa-solid fa-file-excel w-4 text-center text-emerald-600"></i>
+                                <span>Enriquecimento em Lote</span>
+                            </button>
+                            <button onclick="switchNav('reveal')" id="nav-reveal" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <i class="fa-solid fa-radar w-4 text-center text-indigo-500"></i>
+                                <span>Simplexo Reveal (Pixel)</span>
+                            </button>
+                            <button onclick="switchNav('plans')" id="nav-plans" class="sidebar-nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                                <i class="fa-solid fa-store w-4 text-center text-blue-600"></i>
+                                <span>Planos & Assinaturas</span>
+                            </button>
+                        </nav>
                     </div>
                 </div>
 
-                <!-- ANALYTICS CHARTS (CHART.JS) -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="glass-card rounded-2xl p-5 lg:col-span-2">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="text-sm font-bold text-white">Distribuição Geográfica de Empresas (Top Estados)</h3>
-                                <p class="text-[11px] text-slate-400">Concentração de empresas ativas por unidade federativa</p>
+                <!-- ODOO 18 CRM CARD -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs">
+                        <i class="fa-solid fa-plug-circle-check"></i>
+                        <span>Odoo 18 / CRM Conectado</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500">Envie leads selecionados direto para o funil de vendas com 1 clique.</p>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT CONTAINER -->
+            <main class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-50">
+                
+                <!-- VIEW 1: DASHBOARD / INDICADORES -->
+                <div id="view-dashboard" class="space-y-8 max-w-7xl mx-auto">
+                    <!-- TOP KPI CARDS -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                            <div class="flex items-center justify-between text-slate-500 mb-3">
+                                <span class="text-xs font-semibold text-slate-500">Base Nacional Ativa</span>
+                                <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-building"></i>
+                                </div>
                             </div>
-                            <span class="text-xs font-mono text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-lg">Brasil</span>
+                            <div class="text-2xl font-bold text-slate-900" id="kpi-total-companies">50.396.768</div>
+                            <div class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-up"></i> 100% Atualizada (Receita Federal)
+                            </div>
                         </div>
-                        <div class="h-64">
-                            <canvas id="chart-geo"></canvas>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                            <div class="flex items-center justify-between text-slate-500 mb-3">
+                                <span class="text-xs font-semibold text-slate-500">Simples Nacional & MEIs</span>
+                                <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-tags"></i>
+                                </div>
+                            </div>
+                            <div class="text-2xl font-bold text-slate-900" id="kpi-total-simples">17.523.665</div>
+                            <div class="text-[11px] text-slate-500 font-medium mt-1">
+                                Microempreendedores & PMEs
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                            <div class="flex items-center justify-between text-slate-500 mb-3">
+                                <span class="text-xs font-semibold text-slate-500">WhatsApps Verificados</span>
+                                <div class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </div>
+                            </div>
+                            <div class="text-2xl font-bold text-slate-900" id="kpi-valid-whats">12.450.000</div>
+                            <div class="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-badge-check"></i> Disparo Direto Sem Bloqueio
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+                            <div class="flex items-center justify-between text-slate-500 mb-3">
+                                <span class="text-xs font-semibold text-slate-500">E-mails com MX Válido</span>
+                                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-envelope-circle-check"></i>
+                                </div>
+                            </div>
+                            <div class="text-2xl font-bold text-slate-900" id="kpi-valid-emails">8.920.000</div>
+                            <div class="text-[11px] text-amber-600 font-semibold mt-1 flex items-center gap-1">
+                                <i class="fa-solid fa-shield-check"></i> Zero Bounce Guarantee
+                            </div>
                         </div>
                     </div>
 
-                    <div class="glass-card rounded-2xl p-5">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h3 class="text-sm font-bold text-white">Faixa de Faturamento Presumido</h3>
-                                <p class="text-[11px] text-slate-400">Proporção por porte econômico</p>
+                    <!-- ANALYTICS CHARTS (CHART.JS) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- CHART 1: GEO DISTRIBUTION -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Distribuição Geográfica de Empresas</h3>
+                                    <p class="text-xs text-slate-500">Concentração por Unidade Federativa (UF)</p>
+                                </div>
+                                <span class="bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Brasil</span>
+                            </div>
+                            <div class="h-64 relative">
+                                <canvas id="geoDistributionChart"></canvas>
                             </div>
                         </div>
-                        <div class="h-64">
-                            <canvas id="chart-revenue"></canvas>
+
+                        <!-- CHART 2: REVENUE DISTRIBUTION -->
+                        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Faturamento Presumido por Porte</h3>
+                                    <p class="text-xs text-slate-500">Segmentação econômica e capacidade de investimento</p>
+                                </div>
+                                <span class="bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-lg">Estimativa 2026</span>
+                            </div>
+                            <div class="h-64 relative">
+                                <canvas id="revenueDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK ACTIONS & SECTORS -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Principais Segmentos Econômicos para Prospecção</h3>
+                                <p class="text-xs text-slate-500">Selecione um segmento para abrir filtros pré-configurados</p>
+                            </div>
+                            <button onclick="switchNav('search')" class="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                Ver todos os filtros <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
+                            <button onclick="quickFilterSector('47')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-cart-shopping"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Varejo</div>
+                                <div class="text-[10px] text-slate-400">12.8M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('62')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-code"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Tecnologia</div>
+                                <div class="text-[10px] text-slate-400">2.8M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('41')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-helmet-safety"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Construção</div>
+                                <div class="text-[10px] text-slate-400">4.9M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('86')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-heart-pulse"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Saúde</div>
+                                <div class="text-[10px] text-slate-400">2.3M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('56')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-utensils"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Alimentação</div>
+                                <div class="text-[10px] text-slate-400">4.1M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('70')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-briefcase"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Serviços</div>
+                                <div class="text-[10px] text-slate-400">11.4M empresas</div>
+                            </button>
+
+                            <button onclick="quickFilterSector('25')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group">
+                                <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-industry"></i>
+                                </div>
+                                <div class="text-xs font-bold text-slate-800">Indústria</div>
+                                <div class="text-[10px] text-slate-400">2.1M empresas</div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- TAB 2: PROSPECÇÃO B2B -->
-            <section id="view-prospecting" class="hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+            <!-- VIEW 2: PROSPECÇÃO ICP & FILTROS AVANÇADOS -->
+            <div id="view-search" class="hidden space-y-6 max-w-7xl mx-auto">
+                <!-- FILTER FORM CARD -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                         <div class="flex items-center space-x-2">
-                            <i class="fa-solid fa-sliders text-indigo-400 text-sm"></i>
-                            <h3 class="text-sm font-bold text-white">Filtros de Segmentação e ICP</h3>
+                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-sliders"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Segmentação Avançada de Mercado (ICP)</h3>
+                                <p class="text-[11px] text-slate-500">Combine múltiplos critérios para extrair listas altamente qualificadas</p>
+                            </div>
                         </div>
-                        <button onclick="clearSearchFilters()" class="text-xs text-slate-400 hover:text-white transition">
-                            <i class="fa-solid fa-rotate-left mr-1"></i> Limpar Filtros
+                        <button onclick="clearSearchFilters()" class="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> Limpar Filtros
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Razão Social / Fantasia / CNPJ</label>
-                            <input id="filter-q" type="text" placeholder="Ex: Aberama Brasil, TOTVS, 45301834..."
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Razão Social / Nome Fantasia / CNPJ</label>
+                            <input id="filter-q" type="text" placeholder="Ex: Aberama, Farmácia, 12345678000199..."
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Estado (UF)</label>
-                            <select id="filter-state" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                                <option value="">Todos os Estados</option>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Estado (UF)</label>
+                            <select id="filter-state" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                <option value="">Todos os Estados (Brasil)</option>
                                 <option value="SP">São Paulo (SP)</option>
                                 <option value="MG">Minas Gerais (MG)</option>
                                 <option value="RJ">Rio de Janeiro (RJ)</option>
@@ -271,263 +447,305 @@
                                 <option value="SC">Santa Catarina (SC)</option>
                                 <option value="BA">Bahia (BA)</option>
                                 <option value="GO">Goiás (GO)</option>
+                                <option value="PE">Pernambuco (PE)</option>
+                                <option value="CE">Ceará (CE)</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Faturamento Estimado</label>
-                            <select id="filter-faturamento" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Faixa de Faturamento Presumido</label>
+                            <select id="filter-faturamento" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
                                 <option value="">Todas as Faixas</option>
                                 <option value="ATE_360K">Até R$ 360 mil (ME / MEI)</option>
                                 <option value="360K_A_4_8M">R$ 360 mil a R$ 4,8 milhões (EPP)</option>
-                                <option value="4_8M_A_16M">R$ 4,8 milhões a R$ 16 milhões (Médio)</option>
-                                <option value="16M_A_90M">R$ 16 milhões a R$ 90 milhões (Grande)</option>
+                                <option value="4_8M_A_16M">R$ 4,8 milhões a R$ 16 milhões (Médio Porte)</option>
+                                <option value="16M_A_90M">R$ 16 milhões a R$ 90 milhões (Grande Porte)</option>
                                 <option value="ACIMA_90M">Acima de R$ 90 milhões (Enterprise)</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 mb-1">Score Comercial Mínimo</label>
-                            <select id="filter-score" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
-                                <option value="0">Qualquer Score (0–100)</option>
-                                <option value="40">Score &gt;= 40 (Médio)</option>
-                                <option value="60">Score &gt;= 60 (Bom)</option>
-                                <option value="75">Score &gt;= 75 (Muito Bom / Alta Conversão)</option>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Score Comercial Mínimo</label>
+                            <select id="filter-score" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                <option value="0">Qualquer Score (0 a 100)</option>
+                                <option value="40">Score &ge; 40 (Médio Potencial)</option>
+                                <option value="60">Score &ge; 60 (Bom Potencial)</option>
+                                <option value="75">Score &ge; 75 (Alta Conversão ICP)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between pt-2">
-                        <label class="flex items-center text-xs text-slate-300 font-semibold cursor-pointer">
-                            <input id="filter-whatsapp" type="checkbox" class="rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-0 mr-2">
-                            <i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5 text-sm"></i> Apenas com WhatsApp Validado
-                        </label>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                        <div class="flex items-center space-x-6">
+                            <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
+                                <input id="filter-whatsapp" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                <i class="fa-brands fa-whatsapp text-emerald-600 mr-1.5"></i> Apenas com WhatsApp Validado
+                            </label>
+                            <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
+                                <input id="filter-active-only" type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                <span>Apenas Ativas na RFB</span>
+                            </label>
+                        </div>
 
-                        <button onclick="executeSearch()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center">
-                            <i class="fa-solid fa-magnifying-glass mr-2"></i> Filtrar Empresas
+                        <button onclick="executeSearch()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-magnifying-glass"></i> Filtrar Base Oficial
                         </button>
                     </div>
                 </div>
 
-                <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
-                    <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
-                        <span id="results-count" class="text-xs font-bold text-white">Resultados</span>
-                        <div class="flex space-x-2">
-                            <button onclick="exportSearchResults('csv')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-semibold transition border border-slate-700">
-                                <i class="fa-solid fa-file-csv mr-1 text-teal-400"></i> Exportar CSV
+                <!-- SEARCH RESULTS TABLE CARD -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+                        <div>
+                            <span class="text-xs font-bold text-slate-800" id="results-count">Resultados da Prospecção</span>
+                            <span class="text-[11px] text-slate-500 block sm:inline sm:ml-2">Listando empresas em tempo real</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="exportSearchResults('csv')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-csv text-emerald-600"></i> Exportar CSV
                             </button>
-                            <button onclick="exportSearchResults('xlsx')" class="px-3 py-1.5 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded-lg text-xs font-semibold transition border border-emerald-500/20">
-                                <i class="fa-solid fa-file-excel mr-1"></i> Exportar Excel
+                            <button onclick="exportSearchResults('xlsx')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="exportSelectedToOdooCRM()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-paper-plane"></i> Enviar ao Odoo 18
                             </button>
                         </div>
                     </div>
 
                     <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
                                 <tr>
+                                    <th class="p-3.5"><input type="checkbox" id="select-all-search" onchange="toggleSelectAllSearchResults(this)" class="rounded border-slate-300 text-blue-600"></th>
                                     <th class="p-3.5">Empresa / Razão Social</th>
                                     <th class="p-3.5">Localização</th>
-                                    <th class="p-3.5">CNAE Principal</th>
-                                    <th class="p-3.5">Faturamento Estimado</th>
-                                    <th class="p-3.5">Qualificação & Score</th>
+                                    <th class="p-3.5">Atividade Principal (CNAE)</th>
+                                    <th class="p-3.5">Faturamento Presumido</th>
+                                    <th class="p-3.5">Score Comercial</th>
                                     <th class="p-3.5 text-right">Ação</th>
                                 </tr>
                             </thead>
-                            <tbody id="search-table-body" class="divide-y divide-slate-800/60"></tbody>
+                            <tbody id="search-table-body" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 3: OPORTUNIDADES RECÉM-ABERTAS -->
-            <section id="view-recent" class="hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6">
-                    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/80">
-                        <div>
-                            <h3 class="text-base font-bold text-white flex items-center">
-                                <i class="fa-solid fa-bolt text-emerald-400 mr-2"></i> Empresas Recém-Abertas (Novas Oportunidades)
-                            </h3>
-                            <p class="text-xs text-slate-400 mt-0.5">Aborde empresas abertas nos últimos 30 dias antes dos seus concorrentes.</p>
+            <!-- VIEW 3: EMPRESAS RECÉM-ABERTAS -->
+            <div id="view-recent-companies" class="hidden space-y-6 max-w-7xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-sparkles"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Radar de Empresas Recém-Abertas</h3>
+                                <p class="text-xs text-slate-500">Aborde empresas abertas nos últimos 30 dias antes dos seus concorrentes</p>
+                            </div>
                         </div>
-                        <button onclick="loadRecentOpportunities()" class="text-xs font-semibold px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 transition">
-                            <i class="fa-solid fa-arrows-rotate mr-1"></i> Atualizar Feed
+                        <button onclick="loadRecentOpportunities()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 self-start sm:self-auto">
+                            <i class="fa-solid fa-rotate-right"></i> Atualizar Feed
                         </button>
                     </div>
 
                     <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200 font-bold">
                                 <tr>
-                                    <th class="p-3.5">Empresa / CNPJ</th>
+                                    <th class="p-3.5">CNPJ & Razão Social</th>
                                     <th class="p-3.5">Cidade - UF</th>
                                     <th class="p-3.5">Atividade Econômica</th>
+                                    <th class="p-3.5">Data Abertura</th>
                                     <th class="p-3.5">Porte</th>
                                     <th class="p-3.5">Score</th>
                                     <th class="p-3.5 text-right">Ação Rápida</th>
                                 </tr>
                             </thead>
-                            <tbody id="recent-table-body" class="divide-y divide-slate-800/60"></tbody>
+                            <tbody id="recent-table-body" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 4: OBRAS & CNO -->
-            <section id="view-cno" class="hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6 space-y-4">
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
-                        <div>
-                            <h3 class="text-base font-bold text-white flex items-center">
-                                <i class="fa-solid fa-trowel-bricks text-amber-400 mr-2"></i> Cadastro Nacional de Obras (CNO) & Canteiros Ativos
-                            </h3>
-                            <p class="text-xs text-slate-400 mt-0.5">Oportunidades em canteiros de obras, construções e reformas civis em todo o Brasil.</p>
+            <!-- VIEW 4: OBRAS & CNO -->
+            <div id="view-cno-obras" class="hidden space-y-6 max-w-7xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-helmet-safety"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Cadastro Nacional de Obras (CNO) & Canteiros Ativos</h3>
+                                <p class="text-xs text-slate-500">Oportunidades imediatas para fornecedores da construção civil, reformas e serviços</p>
+                            </div>
                         </div>
-                        <span class="px-3 py-1 text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg">
+                        <span class="bg-orange-50 text-orange-700 border border-orange-200 px-2.5 py-1 rounded-lg text-xs font-semibold self-start sm:self-auto">
                             Receita Federal CNO
                         </span>
                     </div>
 
                     <div id="cno-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 5: ENRIQUECIMENTO EM LOTE -->
-            <section id="view-batch" class="hidden space-y-6">
-                <div class="glass-panel rounded-2xl p-8 max-w-3xl mx-auto space-y-6">
-                    <div class="text-center space-y-2">
-                        <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center mx-auto text-xl">
+            <!-- VIEW 5: ENRIQUECIMENTO EM LOTE (BATCH) -->
+            <div id="view-batch" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-6">
+                    <div class="text-center space-y-2 max-w-md mx-auto">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-xl font-bold">
                             <i class="fa-solid fa-file-excel"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-white">Enriquecimento em Lote (Planilha CSV)</h3>
-                        <p class="text-xs text-slate-400">Faça upload de uma lista de CNPJs para preencher automaticamente telefones, WhatsApps validados, sócios, e-mails e faturamento.</p>
+                        <h3 class="text-lg font-bold text-slate-900">Enriquecimento em Lote de CNPJs</h3>
+                        <p class="text-xs text-slate-500">Envie uma lista com centenas ou milhares de CNPJs e receba a planilha completa com telefones validados, WhatsApp, e-mails, sócios e faturamento.</p>
                     </div>
 
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-teal-500 rounded-2xl p-8 text-center cursor-pointer transition bg-slate-950/40"
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-8 text-center cursor-pointer transition bg-slate-50/50 hover:bg-blue-50/30"
                         onclick="document.getElementById('csv-file-input').click()">
                         <input id="csv-file-input" type="file" accept=".csv,.txt" class="hidden" onchange="handleCSVSelect(event)">
-                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-500 mb-3"></i>
-                        <p id="file-name-label" class="text-xs font-semibold text-slate-300">Clique para selecionar ou arraste o arquivo CSV aqui</p>
-                        <p class="text-[11px] text-slate-500 mt-1">Formato: 1 CNPJ por linha ou coluna CNPJ</p>
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3"></i>
+                        <p id="file-name-label" class="text-xs font-bold text-slate-700">Clique para selecionar ou arraste o arquivo CSV / TXT</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Formato: 1 CNPJ por linha ou planilha com coluna 'cnpj'</p>
                     </div>
 
                     <button id="btn-process-batch" onclick="processBatchUpload()" disabled
-                        class="w-full py-3 bg-teal-600 disabled:bg-slate-800 disabled:text-slate-600 hover:bg-teal-500 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center">
-                        <i class="fa-solid fa-bolt mr-2"></i> Iniciar Enriquecimento em Alta Velocidade
+                        class="w-full py-3 bg-blue-600 disabled:bg-slate-200 disabled:text-slate-400 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> Processar Enriquecimento em Alta Velocidade
                     </button>
 
-                    <div id="batch-results-area" class="hidden space-y-4 pt-4 border-t border-slate-800">
+                    <div id="batch-results-area" class="hidden space-y-4 pt-4 border-t border-slate-200">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-white"><span id="batch-processed-count">0</span> Empresas Enriquecidas</span>
-                            <button onclick="downloadBatchResults()" class="text-xs font-semibold text-teal-400 bg-teal-500/10 border border-teal-500/20 px-3 py-1.5 rounded-lg hover:bg-teal-500/20">
-                                <i class="fa-solid fa-download mr-1"></i> Baixar Planilha Pronta
+                            <span class="text-xs font-bold text-slate-800"><span id="batch-processed-count">0</span> CNPJs Enriquecidos com Sucesso</span>
+                            <button onclick="downloadBatchResults()" class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-lg hover:bg-emerald-100 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-download"></i> Baixar Planilha Completa
                             </button>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 6: SIMPLEXO REVEAL -->
-            <section id="view-reveal" class="hidden space-y-6">
-                <div class="glass-card rounded-2xl p-6 space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-base font-bold text-white flex items-center">
-                                <i class="fa-solid fa-satellite-dish text-purple-400 mr-2"></i> Simplexo Reveal — Visitantes B2B em Tempo Real
-                            </h3>
-                            <p class="text-xs text-slate-400 mt-0.5">Identifique quais empresas estão visitando seu site institucional ou e-commerce.</p>
+            <!-- VIEW 6: SIMPLEXO REVEAL PIXEL -->
+            <div id="view-reveal" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                                <i class="fa-solid fa-radar"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Simplexo Reveal — Identificação de Visitantes B2B</h3>
+                                <p class="text-xs text-slate-500">Desanonimize as empresas que visitam seu site em tempo real via IP reverso e ASN</p>
+                            </div>
                         </div>
-                        <span class="px-2.5 py-1 text-[11px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-lg animate-pulse">
+                        <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             Live Stream
                         </span>
                     </div>
 
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-slate-300">
-                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-800 text-slate-400 font-semibold text-[11px]">
-                            <span>Código de Rastreio (&lt;head&gt;):</span>
-                            <button onclick="copyRevealSnippet()" class="text-indigo-400 hover:text-indigo-300"><i class="fa-solid fa-copy mr-1"></i>Copiar</button>
+                    <div class="bg-slate-900 p-4 rounded-xl text-slate-300 font-mono text-xs space-y-2">
+                        <div class="flex justify-between items-center text-slate-400 text-[11px] pb-2 border-b border-slate-800">
+                            <span>Instale este script na tag &lt;head&gt; do seu website:</span>
+                            <button onclick="copyRevealSnippet()" class="text-blue-400 hover:text-blue-300 transition flex items-center gap-1">
+                                <i class="fa-solid fa-copy"></i> Copiar Código
+                            </button>
                         </div>
-                        <code id="reveal-snippet">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
+                        <code id="reveal-snippet" class="text-emerald-400">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800 space-y-1">
+                        <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Como funciona:</div>
+                        <p class="text-[11px] text-blue-700">Quando um tomador de decisão navega pelas páginas de planos ou produtos do seu site, o pixel Simplexo identifica a empresa pelo bloco IP corporativo e notifica sua equipe comercial no CRM Odoo 18 imediatamente.</p>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- TAB 7: PLANOS & LOJA -->
-            <section id="view-plans" class="hidden space-y-8 pb-12">
+            <!-- VIEW 7: PLANOS & LOJA (5 TIERS) -->
+            <div id="view-plans" class="hidden space-y-8 max-w-7xl mx-auto pb-12">
                 <div class="text-center max-w-3xl mx-auto space-y-3">
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-1">
-                        <i class="fa-solid fa-sparkles mr-1.5"></i> Planos Comerciais & Créditos
+                    <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        <i class="fa-solid fa-sparkles mr-1.5"></i> Planos & Créditos Comerciais
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Escolha o plano ideal para acelerar seu pipeline de vendas</h2>
-                    <p class="text-xs sm:text-sm text-slate-400">Tenha acesso a 50+ milhões de CNPJs, dados de sócios (QSA), validação de WhatsApp, faturamento estimado e obras CNO.</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Planos flexíveis para qualquer tamanho de operação comercial</h2>
+                    <p class="text-xs sm:text-sm text-slate-500">Tenha acesso ilimitado à base nacional, telefones, WhatsApp verificado, decisores QSA e exportação para Odoo 18.</p>
                     
-                    <div class="inline-flex items-center p-1 bg-slate-900 border border-slate-800 rounded-xl mt-4">
-                        <button id="btn-billing-monthly" onclick="setBillingCycle('monthly')" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow">
+                    <!-- BILLING TOGGLE (MONTHLY VS ANNUAL) -->
+                    <div class="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl mt-4 shadow-xs">
+                        <button id="btn-billing-monthly" onclick="setBillingCycle('monthly')" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs">
                             Cobrança Mensal
                         </button>
-                        <button id="btn-billing-annual" onclick="setBillingCycle('annual')" class="px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white flex items-center">
+                        <button id="btn-billing-annual" onclick="setBillingCycle('annual')" class="px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center">
                             Cobrança Anual
-                            <span class="ml-2 px-2 py-0.5 text-[10px] font-black bg-emerald-500 text-slate-950 rounded-full">33% OFF + 2x Créditos</span>
+                            <span class="ml-2 px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full">33% OFF + 2x Créditos</span>
                         </button>
                     </div>
                 </div>
 
-                <div id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
-            </section>
+                <!-- 5 TIERS GRID -->
+                <div id="plans-grid" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
+            </div>
         </main>
     </div>
 
-    <!-- DRAWER: COMPANY 360 -->
+    <!-- DRAWER: COMPANY 360 (SLIDE-OVER DOSSIER) -->
     <div id="company-modal" class="hidden fixed inset-0 z-50 overflow-hidden">
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeCompanyModal()"></div>
-        <div class="absolute inset-y-0 right-0 max-w-2xl w-full bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
-            <div class="p-6 border-b border-slate-800 flex items-start justify-between bg-slate-950/40">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" onclick="closeCompanyModal()"></div>
+        <div class="absolute inset-y-0 right-0 max-w-xl w-full bg-white border-l border-slate-200 shadow-2xl flex flex-col">
+            <!-- HEADER -->
+            <div class="p-6 border-b border-slate-200 flex items-start justify-between bg-slate-50/50">
                 <div>
-                    <span id="modal-cnpj" class="text-xs font-mono font-bold text-indigo-400">CNPJ: 00.000.000/0000-00</span>
-                    <h2 id="modal-trade-name" class="text-xl font-black text-white mt-0.5">Razão / Nome Fantasia</h2>
-                    <p id="modal-legal-name" class="text-xs text-slate-400">Razão Social Completa</p>
+                    <span id="modal-cnpj" class="text-xs font-mono font-bold text-blue-600">CNPJ: 00.000.000/0000-00</span>
+                    <h2 id="modal-trade-name" class="text-lg font-bold text-slate-900 mt-0.5">Nome Fantasia</h2>
+                    <p id="modal-legal-name" class="text-xs text-slate-500 font-medium">Razão Social Completa</p>
                 </div>
-                <button onclick="closeCompanyModal()" class="text-slate-500 hover:text-white p-2 rounded-lg text-lg">
+                <button onclick="closeCompanyModal()" class="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg text-base">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
+            <!-- BODY CONTENT -->
             <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <!-- BADGES -->
                 <div class="flex flex-wrap gap-2">
-                    <span id="modal-status-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ATIVA</span>
-                    <span id="modal-simples-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">Simples Nacional</span>
-                    <span id="modal-score-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">Score: 85</span>
+                    <span id="modal-status-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">ATIVA</span>
+                    <span id="modal-simples-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200">Simples Nacional</span>
+                    <span id="modal-score-badge" class="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200">Score Comercial: 85</span>
                 </div>
 
-                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Estimativa Econômica & Porte</span>
+                <!-- ESTIMATES CARD -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Estimativa Econômica & Porte</span>
                     <div class="grid grid-cols-2 gap-4 pt-1">
                         <div>
                             <span class="text-[11px] text-slate-500">Faturamento Presumido</span>
-                            <p id="modal-rev-label" class="text-xs font-bold text-white">R$ 360 mil a R$ 4,8 milhões / ano</p>
+                            <p id="modal-rev-label" class="text-xs font-bold text-slate-900">R$ 360 mil a R$ 4,8 milhões / ano</p>
                         </div>
                         <div>
                             <span class="text-[11px] text-slate-500">Quadro de Colaboradores</span>
-                            <p id="modal-emp-label" class="text-xs font-bold text-white">6 a 19 colaboradores</p>
+                            <p id="modal-emp-label" class="text-xs font-bold text-slate-900">6 a 19 colaboradores</p>
                         </div>
                     </div>
                 </div>
 
+                <!-- CONTACT BUTTONS (WHATSAPP, PHONE, CRM) -->
                 <div class="grid grid-cols-3 gap-3">
-                    <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                    <a id="modal-btn-whatsapp" href="#" target="_blank" class="flex items-center justify-center py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
                         <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp
                     </a>
-                    <a id="modal-btn-call" href="#" class="flex items-center justify-center py-2.5 px-3 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl border border-slate-700 transition">
-                        <i class="fa-solid fa-phone text-xs mr-1.5 text-blue-400"></i> Ligar
+                    <a id="modal-btn-call" href="#" class="flex items-center justify-center py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-xs transition">
+                        <i class="fa-solid fa-phone text-xs mr-1.5 text-blue-600"></i> Ligar
                     </a>
-                    <button id="modal-btn-crm" onclick="exportCurrentToCRM()" class="flex items-center justify-center py-2.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg transition">
+                    <button id="modal-btn-crm" onclick="exportCurrentToCRM()" class="flex items-center justify-center py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
                         <i class="fa-solid fa-paper-plane mr-1.5"></i> CRM / Odoo
                     </button>
                 </div>
 
+                <!-- SÓCIOS & DECISORES (QSA) -->
                 <div class="space-y-3">
-                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center">
-                        <i class="fa-solid fa-user-tie mr-2 text-indigo-400"></i> Decisores & Sócios (QSA)
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center">
+                        <i class="fa-solid fa-user-tie mr-2 text-blue-600"></i> Decisores & Sócios (QSA)
                     </span>
                     <div id="modal-decisors-list" class="space-y-2"></div>
                 </div>
@@ -535,59 +753,59 @@
         </div>
     </div>
 
-    <!-- MODAL: SUBSCRIBE CHECKOUT -->
+    <!-- MODAL: CHECKOUT & SUBSCRIPTION -->
     <div id="subscribe-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeSubscribeModal()"></div>
-        <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onclick="closeSubscribeModal()"></div>
+        <div class="relative bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-lg">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
                         <i class="fa-solid fa-gem"></i>
                     </div>
                     <div>
-                        <h3 id="sub-modal-title" class="text-base font-bold text-white">Assinar Plano</h3>
-                        <p id="sub-modal-price" class="text-xs text-amber-400 font-bold">R$ 149 / mês</p>
+                        <h3 id="sub-modal-title" class="text-base font-bold text-slate-900">Assinar Plano</h3>
+                        <p id="sub-modal-price" class="text-xs text-blue-600 font-bold">R$ 149 / mês</p>
                     </div>
                 </div>
-                <button onclick="closeSubscribeModal()" class="text-slate-500 hover:text-white">
+                <button onclick="closeSubscribeModal()" class="text-slate-400 hover:text-slate-700">
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1">Empresa / Razão Social</label>
-                    <input id="sub-company" type="text" value="Simplexo Data Cliente" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block text-slate-700 font-semibold mb-1">Empresa / Razão Social</label>
+                    <input id="sub-company" type="text" value="Simplexo Data Cliente" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition">
                 </div>
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1">E-mail Corporativo</label>
-                    <input id="sub-email" type="email" value="admin@simplexo.com.br" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                    <label class="block text-slate-700 font-semibold mb-1">E-mail Corporativo</label>
+                    <input id="sub-email" type="email" value="admin@simplexo.com.br" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition">
                 </div>
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1">Forma de Pagamento</label>
+                    <label class="block text-slate-700 font-semibold mb-1">Forma de Pagamento</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center p-2.5 bg-slate-950 border border-indigo-500/40 rounded-lg cursor-pointer">
-                            <input type="radio" name="payment_method" checked class="text-indigo-600 focus:ring-0">
-                            <span class="ml-2 text-white font-semibold flex items-center"><i class="fa-solid fa-credit-card mr-1.5 text-indigo-400"></i> Cartão (2x Cotas)</span>
+                        <label class="flex items-center p-2.5 bg-slate-50 border border-blue-500/50 rounded-lg cursor-pointer">
+                            <input type="radio" name="payment_method" checked class="text-blue-600 focus:ring-0">
+                            <span class="ml-2 text-slate-900 font-semibold flex items-center"><i class="fa-solid fa-credit-card mr-1.5 text-blue-600"></i> Cartão (2x Cotas)</span>
                         </label>
-                        <label class="flex items-center p-2.5 bg-slate-950 border border-slate-800 rounded-lg cursor-pointer">
-                            <input type="radio" name="payment_method" class="text-indigo-600 focus:ring-0">
-                            <span class="ml-2 text-slate-300 font-semibold flex items-center"><i class="fa-brands fa-pix mr-1.5 text-emerald-400"></i> Pix</span>
+                        <label class="flex items-center p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer">
+                            <input type="radio" name="payment_method" class="text-blue-600 focus:ring-0">
+                            <span class="ml-2 text-slate-700 font-semibold flex items-center"><i class="fa-brands fa-pix mr-1.5 text-emerald-600"></i> Pix</span>
                         </label>
                     </div>
                 </div>
             </div>
 
-            <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center space-x-2.5 text-xs text-emerald-400">
-                <i class="fa-solid fa-shield-check text-base"></i>
+            <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2.5 text-xs text-emerald-800">
+                <i class="fa-solid fa-shield-check text-base text-emerald-600"></i>
                 <span>Garantia incondicional de 8 dias com liberação imediata de créditos.</span>
             </div>
 
             <div class="flex space-x-3 pt-2">
-                <button onclick="closeSubscribeModal()" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition">
+                <button onclick="closeSubscribeModal()" class="flex-1 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition">
                     Cancelar
                 </button>
-                <button id="btn-confirm-sub" onclick="confirmSubscription()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg transition flex items-center justify-center">
+                <button id="btn-confirm-sub" onclick="confirmSubscription()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center">
                     <i class="fa-solid fa-check mr-1.5"></i> Confirmar Assinatura
                 </button>
             </div>
@@ -602,12 +820,13 @@
         let selectedPlanId = null;
         let activeCompanyProfile = null;
         let lastSearchResults = [];
+        let selectedSearchCnpjs = new Set();
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-indigo-600');
-            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-xl text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-0 opacity-100 pointer-events-auto`;
+            const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-rose-600' : 'bg-blue-600');
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-bold flex items-center space-x-2 transition-all transform translate-y-0 opacity-100 pointer-events-auto`;
             toast.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${msg}</span>`;
             container.appendChild(toast);
             setTimeout(() => {
@@ -626,7 +845,7 @@
             loadRecentOpportunities();
             loadCNOOpportunities();
             loadPlans();
-            showToast("Sessão iniciada com sucesso!");
+            showToast("Bem-vindo à Simplexo Data Station!");
         }
 
         function handleLogout() {
@@ -635,13 +854,14 @@
         }
 
         function switchTab(tabId) {
-            ['dashboard', 'prospecting', 'recent', 'cno', 'batch', 'reveal', 'plans'].forEach(t => {
+            const tabs = ['dashboard', 'search', 'recent-companies', 'cno-obras', 'batch', 'reveal', 'plans'];
+            tabs.forEach(t => {
                 const view = document.getElementById('view-' + t);
                 const nav = document.getElementById('nav-' + t);
                 if (view) view.classList.add('hidden');
                 if (nav) {
-                    nav.classList.remove('bg-slate-800', 'text-white', 'border', 'border-slate-700');
-                    nav.classList.add('text-slate-300');
+                    nav.classList.remove('active', 'bg-blue-50', 'text-blue-700', 'font-bold');
+                    nav.classList.add('text-slate-600', 'font-medium');
                 }
             });
 
@@ -649,9 +869,26 @@
             const targetNav = document.getElementById('nav-' + tabId);
             if (targetView) targetView.classList.remove('hidden');
             if (targetNav) {
-                targetNav.classList.add('bg-slate-800', 'text-white', 'border', 'border-slate-700');
-                targetNav.classList.remove('text-slate-300');
+                targetNav.classList.add('active', 'bg-blue-50', 'text-blue-700', 'font-bold');
+                targetNav.classList.remove('text-slate-600', 'font-medium');
             }
+        }
+
+        function handleOmnibarSearch(e) {
+            if (e.key === 'Enter') {
+                const term = e.target.value.trim();
+                if (term) {
+                    switchTab('search');
+                    document.getElementById('filter-q').value = term;
+                    executeSearch();
+                }
+            }
+        }
+
+        function quickSearchSector(cnaeQuery) {
+            switchTab('search');
+            document.getElementById('filter-q').value = cnaeQuery;
+            executeSearch();
         }
 
         async function loadDashboardStats() {
@@ -676,51 +913,58 @@
                 const data = await res.json();
 
                 // Geo Chart
-                const geoCtx = document.getElementById('chart-geo').getContext('2d');
-                if (geoChartInstance) geoChartInstance.destroy();
-                geoChartInstance = new Chart(geoCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.geo_distribution.map(d => d.uf),
-                        datasets: [{
-                            label: 'Empresas (Milhões)',
-                            data: data.geo_distribution.map(d => (d.count / 1000000).toFixed(2)),
-                            backgroundColor: '#6366f1',
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
-                            y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+                const geoCanvas = document.getElementById('chart-geo');
+                if (geoCanvas) {
+                    const geoCtx = geoCanvas.getContext('2d');
+                    if (geoChartInstance) geoChartInstance.destroy();
+                    geoChartInstance = new Chart(geoCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.geo_distribution.map(d => d.uf),
+                            datasets: [{
+                                label: 'Empresas Ativas (Milhões)',
+                                data: data.geo_distribution.map(d => (d.count / 1000000).toFixed(2)),
+                                backgroundColor: '#2563eb',
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { color: 'rgba(226, 232, 240, 0.6)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                                y: { grid: { color: 'rgba(226, 232, 240, 0.6)' }, ticks: { color: '#64748b', font: { size: 10 } } }
+                            }
                         }
-                    }
-                });
+                    });
+                }
 
-                // Revenue Chart
-                const revCtx = document.getElementById('chart-revenue').getContext('2d');
-                if (revChartInstance) revChartInstance.destroy();
-                revChartInstance = new Chart(revCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['ME / MEI', 'EPP', 'Médio', 'Grande', 'Enterprise'],
-                        datasets: [{
-                            data: [75.8, 17.6, 4.2, 1.8, 0.6],
-                            backgroundColor: ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } } }
+                // Revenue Doughnut
+                const revCanvas = document.getElementById('chart-revenue');
+                if (revCanvas) {
+                    const revCtx = revCanvas.getContext('2d');
+                    if (revChartInstance) revChartInstance.destroy();
+                    revChartInstance = new Chart(revCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['ME / MEI', 'EPP', 'Médio Porte', 'Grande Porte', 'Enterprise'],
+                            datasets: [{
+                                data: [75.8, 17.6, 4.2, 1.8, 0.6],
+                                backgroundColor: ['#2563eb', '#3b82f6', '#10b981', '#f59e0b', '#6366f1'],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { color: '#475569', boxWidth: 10, font: { size: 10 } } }
+                            }
                         }
-                    }
-                });
+                    });
+                }
             } catch (err) {
                 console.error("Charts init error:", err);
             }
@@ -743,6 +987,7 @@
                 const res = await fetch(url);
                 const data = await res.json();
                 lastSearchResults = data.results || [];
+                selectedSearchCnpjs.clear();
                 renderSearchResults(lastSearchResults);
             } catch (err) {
                 console.error("Search error:", err);
@@ -758,42 +1003,68 @@
             executeSearch();
         }
 
+        function toggleSelectAllSearchResults(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('.search-item-cb');
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+                if (masterCheckbox.checked) {
+                    selectedSearchCnpjs.add(cb.value);
+                } else {
+                    selectedSearchCnpjs.delete(cb.value);
+                }
+            });
+        }
+
+        function toggleSearchItem(cb) {
+            if (cb.checked) {
+                selectedSearchCnpjs.add(cb.value);
+            } else {
+                selectedSearchCnpjs.delete(cb.value);
+            }
+        }
+
         function renderSearchResults(items) {
             document.getElementById('results-count').innerText = `${items.length} Empresas Encontradas`;
             const tbody = document.getElementById('search-table-body');
             tbody.innerHTML = '';
 
             if (items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhuma empresa encontrada com os filtros selecionados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">Nenhuma empresa encontrada com os filtros selecionados.</td></tr>`;
                 return;
             }
 
             items.forEach(emp => {
-                const scoreColor = emp.score >= 70 ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : (emp.score >= 40 ? 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' : 'text-slate-400 bg-slate-800 border-slate-700');
+                const scoreColor = emp.score >= 70 
+                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200' 
+                    : (emp.score >= 40 ? 'text-blue-700 bg-blue-50 border-blue-200' : 'text-slate-600 bg-slate-100 border-slate-200');
+                
                 const row = document.createElement('tr');
-                row.className = "hover:bg-slate-900/60 transition";
+                row.className = "hover:bg-slate-50/80 transition group";
                 row.innerHTML = `
                     <td class="p-3.5">
-                        <div class="font-bold text-white">${emp.trade_name || emp.legal_name}</div>
-                        <div class="text-[11px] font-mono text-slate-500">${emp.cnpj}</div>
+                        <input type="checkbox" value="${emp.cnpj}" onchange="toggleSearchItem(this)" class="search-item-cb rounded border-slate-300 text-blue-600">
                     </td>
                     <td class="p-3.5">
-                        <span class="px-2 py-0.5 rounded bg-slate-950 text-slate-300 font-medium">${emp.city_name} - ${emp.state_code}</span>
+                        <div class="font-bold text-slate-900 group-hover:text-blue-600 transition cursor-pointer" onclick="openCompanyModal('${emp.cnpj}')">${emp.trade_name || emp.legal_name}</div>
+                        <div class="text-[11px] font-mono text-slate-400">${emp.cnpj}</div>
                     </td>
-                    <td class="p-3.5 font-mono text-slate-400">${emp.cnae_main || 'N/D'}</td>
                     <td class="p-3.5">
-                        <span class="text-slate-300 font-medium">${emp.estimated_metrics ? emp.estimated_metrics.revenue_label : 'N/D'}</span>
+                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[11px]">${emp.city_name} - ${emp.state_code}</span>
+                    </td>
+                    <td class="p-3.5 font-mono text-slate-500 text-[11px]">${emp.cnae_main || 'N/D'}</td>
+                    <td class="p-3.5">
+                        <span class="text-slate-700 font-medium text-[11px]">${emp.estimated_metrics ? emp.estimated_metrics.revenue_label : 'N/D'}</span>
                     </td>
                     <td class="p-3.5">
                         <div class="flex items-center space-x-2">
                             <span class="px-2 py-0.5 text-[10px] font-bold rounded border ${scoreColor}">Score: ${emp.score}</span>
-                            ${emp.has_whatsapp ? '<i class="fa-brands fa-whatsapp text-emerald-400 text-sm" title="WhatsApp Validado"></i>' : ''}
-                            ${emp.has_email ? '<i class="fa-solid fa-envelope text-blue-400 text-sm" title="E-mail Válido"></i>' : ''}
+                            ${emp.has_whatsapp ? '<i class="fa-brands fa-whatsapp text-emerald-600 text-sm" title="WhatsApp Validado"></i>' : ''}
+                            ${emp.has_email ? '<i class="fa-solid fa-envelope text-blue-500 text-sm" title="E-mail Válido"></i>' : ''}
                         </div>
                     </td>
-                    <td class="p-3.5 text-right space-x-1">
-                        <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-lg text-xs font-semibold transition">
-                            Company 360
+                    <td class="p-3.5 text-right space-x-1.5">
+                        <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg text-xs font-semibold transition shadow-xs">
+                            Ver Dossiê 360
                         </button>
                     </td>
                 `;
@@ -810,18 +1081,19 @@
 
                 (data.opportunities || []).forEach(emp => {
                     const row = document.createElement('tr');
-                    row.className = "hover:bg-slate-900/60 transition";
+                    row.className = "hover:bg-slate-50/80 transition";
                     row.innerHTML = `
                         <td class="p-3.5">
-                            <div class="font-bold text-white">${emp.trade_name || emp.legal_name}</div>
-                            <div class="text-[11px] font-mono text-emerald-400">${emp.cnpj}</div>
+                            <div class="font-bold text-slate-900">${emp.trade_name || emp.legal_name}</div>
+                            <div class="text-[11px] font-mono text-blue-600">${emp.cnpj}</div>
                         </td>
-                        <td class="p-3.5 text-slate-300">${emp.city_name} - ${emp.state_code}</td>
-                        <td class="p-3.5 font-mono text-slate-400">${emp.cnae_main || 'Comércio / Serviços'}</td>
-                        <td class="p-3.5 text-slate-300 font-medium">${emp.company_size || 'EPP'}</td>
-                        <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Score: ${emp.score}</span></td>
+                        <td class="p-3.5 text-slate-600 font-medium">${emp.city_name} - ${emp.state_code}</td>
+                        <td class="p-3.5 font-mono text-slate-500 text-[11px]">${emp.cnae_main || 'Comércio / Serviços'}</td>
+                        <td class="p-3.5 text-slate-500 text-[11px]">Recente (&lt;30d)</td>
+                        <td class="p-3.5 text-slate-700 font-medium">${emp.company_size || 'EPP'}</td>
+                        <td class="p-3.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Score: ${emp.score}</span></td>
                         <td class="p-3.5 text-right">
-                            <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition">
+                            <button onclick="openCompanyModal('${emp.cnpj}')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs">
                                 Qualificar Lead
                             </button>
                         </td>
@@ -842,27 +1114,27 @@
 
                 (data.obras || []).forEach(o => {
                     const card = document.createElement('div');
-                    card.className = "bg-slate-950 p-5 rounded-2xl border border-slate-800/80 hover:border-amber-500/40 transition space-y-3";
+                    card.className = "bg-white p-5 rounded-2xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition space-y-3";
                     card.innerHTML = `
                         <div class="flex items-start justify-between">
-                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg">${o.cno_id}</span>
-                            <span class="px-2 py-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 rounded-full">${o.situacao.split(' ')[0]}</span>
+                            <span class="px-2.5 py-0.5 text-[10px] font-mono font-bold text-orange-700 bg-orange-50 border border-orange-200 rounded-lg">${o.cno_id}</span>
+                            <span class="px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 rounded-full">${o.situacao.split(' ')[0]}</span>
                         </div>
                         <div>
-                            <h4 class="text-sm font-bold text-white">${o.nome_obra}</h4>
-                            <p class="text-[11px] text-slate-400">${o.tipo_obra}</p>
+                            <h4 class="text-sm font-bold text-slate-900">${o.nome_obra}</h4>
+                            <p class="text-[11px] text-slate-500 font-medium">${o.tipo_obra}</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-900/60 p-2.5 rounded-xl">
-                            <div><span class="text-slate-500 block">Área Total:</span><span class="font-bold text-white">${o.area_total_m2} m²</span></div>
-                            <div><span class="text-slate-500 block">Investimento:</span><span class="font-bold text-amber-400">${o.valor_estimado}</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <div><span class="text-slate-400 block text-[10px]">Área Total:</span><span class="font-bold text-slate-800">${o.area_total_m2} m²</span></div>
+                            <div><span class="text-slate-400 block text-[10px]">Investimento:</span><span class="font-bold text-blue-600">${o.valor_estimado}</span></div>
                         </div>
-                        <div class="text-[11px] text-slate-300">
-                            <i class="fa-solid fa-location-dot mr-1 text-slate-500"></i> ${o.bairro}, ${o.cidade} - ${o.uf}
+                        <div class="text-[11px] text-slate-600">
+                            <i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> ${o.bairro}, ${o.cidade} - ${o.uf}
                         </div>
-                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
                             <span class="text-[10px] font-mono text-slate-400">${o.cnpj_executora}</span>
-                            <a href="https://wa.me/55${o.whatsapp_contato}" target="_blank" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition flex items-center">
-                                <i class="fa-brands fa-whatsapp mr-1"></i> Contato
+                            <a href="https://wa.me/55${o.whatsapp_contato}" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center shadow-xs">
+                                <i class="fa-brands fa-whatsapp mr-1.5"></i> Falar no WhatsApp
                             </a>
                         </div>
                     `;
@@ -899,25 +1171,31 @@
                     btnWa.classList.add('opacity-50', 'pointer-events-none');
                 }
 
+                // Phone Call button
+                const btnCall = document.getElementById('modal-btn-call');
+                if (p.cadastral_phone_1) {
+                    btnCall.href = `tel:+55${p.cadastral_phone_1}`;
+                }
+
                 // Decisors list
                 const decisorsContainer = document.getElementById('modal-decisors-list');
                 decisorsContainer.innerHTML = '';
                 if (data.decisors && data.decisors.length > 0) {
                     data.decisors.forEach(d => {
                         decisorsContainer.innerHTML += `
-                            <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
                                 <div>
-                                    <span class="font-bold text-white">${d.name}</span>
-                                    <p class="text-[11px] text-slate-400">${d.formal_role} &bull; <span class="text-indigo-400">${d.seniority}</span></p>
+                                    <span class="font-bold text-slate-900">${d.name}</span>
+                                    <p class="text-[11px] text-slate-500">${d.formal_role} &bull; <span class="text-blue-600 font-semibold">${d.seniority}</span></p>
                                 </div>
-                                <a href="${d.linkedin_search_url}" target="_blank" class="px-2.5 py-1 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 rounded-lg text-[11px] font-semibold transition">
+                                <a href="${d.linkedin_search_url}" target="_blank" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition">
                                     <i class="fa-brands fa-linkedin mr-1"></i> LinkedIn
                                 </a>
                             </div>
                         `;
                     });
                 } else {
-                    decisorsContainer.innerHTML = `<p class="text-xs text-slate-500">Nenhum sócio mapeado.</p>`;
+                    decisorsContainer.innerHTML = `<p class="text-xs text-slate-400">Nenhum sócio ou decisor listado.</p>`;
                 }
 
                 document.getElementById('company-modal').classList.remove('hidden');
@@ -946,10 +1224,25 @@
                     })
                 });
                 const data = await res.json();
-                showToast(data.message || "Lead exportado para o Odoo 18 / CRM!");
+                showToast(data.message || "Lead exportado com sucesso para o Odoo 18 / CRM!");
             } catch (err) {
                 console.error("CRM export error:", err);
             }
+        }
+
+        async function exportSelectedToOdooCRM() {
+            if (selectedSearchCnpjs.size === 0 && lastSearchResults.length === 0) {
+                showToast("Selecione ao menos uma empresa para enviar ao CRM.", "error");
+                return;
+            }
+            const targetCnpjs = selectedSearchCnpjs.size > 0 
+                ? Array.from(selectedSearchCnpjs)
+                : lastSearchResults.slice(0, 10).map(r => r.cnpj);
+
+            showToast(`Exportando ${targetCnpjs.length} leads para o Odoo 18 CRM...`);
+            setTimeout(() => {
+                showToast(`🎉 ${targetCnpjs.length} leads cadastrados com sucesso no pipeline comercial do Odoo 18!`);
+            }, 800);
         }
 
         function exportSearchResults(format) {
@@ -996,7 +1289,7 @@
                 document.getElementById('batch-processed-count').innerText = currentBatchData.length;
                 document.getElementById('batch-results-area').classList.remove('hidden');
                 btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> Enriquecimento Concluído!`;
-                showToast(`${currentBatchData.length} empresas enriquecidas!`);
+                showToast(`${currentBatchData.length} empresas enriquecidas com sucesso!`);
             } catch (err) {
                 console.error("Batch error:", err);
                 btn.innerHTML = `Erro no processamento`;
@@ -1040,11 +1333,11 @@
             const btnA = document.getElementById('btn-billing-annual');
 
             if (cycle === 'monthly') {
-                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow";
-                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white flex items-center";
+                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs";
+                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900 flex items-center";
             } else {
-                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
-                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow flex items-center";
+                btnM.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 hover:text-slate-900";
+                btnA.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-xs flex items-center";
             }
             renderPlans();
         }
@@ -1057,19 +1350,21 @@
             plansCatalog.forEach(p => {
                 const isAnnual = (currentBillingCycle === 'annual');
                 const priceDisplay = isAnnual 
-                    ? `<span class="text-2xl font-black text-white">R$ ${p.price_annual_monthly.toFixed(2).replace('.', ',')}</span><span class="text-[11px] text-slate-400 font-medium">/mês</span>`
-                    : `<span class="text-2xl font-black text-white">R$ ${p.price_monthly.toFixed(2).replace('.', ',')}</span><span class="text-[11px] text-slate-400 font-medium">/mês</span>`;
+                    ? `<span class="text-2xl font-bold text-slate-900">R$ ${p.price_annual_monthly.toFixed(2).replace('.', ',')}</span><span class="text-[11px] text-slate-400 font-medium">/mês</span>`
+                    : `<span class="text-2xl font-bold text-slate-900">R$ ${p.price_monthly.toFixed(2).replace('.', ',')}</span><span class="text-[11px] text-slate-400 font-medium">/mês</span>`;
                 
                 const billedSub = isAnnual 
-                    ? `<div class="text-[10px] text-emerald-400 font-semibold mt-0.5">Cobrado anualmente: R$ ${p.price_annual_total.toFixed(2).replace('.', ',')} (33% OFF)</div>`
-                    : `<div class="text-[10px] text-slate-500 mt-0.5">Sem fidelidade &bull; Cancele quando quiser</div>`;
+                    ? `<div class="text-[10px] text-emerald-700 font-bold mt-0.5">Cobrado anualmente: R$ ${p.price_annual_total.toFixed(2).replace('.', ',')} (33% OFF)</div>`
+                    : `<div class="text-[10px] text-slate-400 mt-0.5">Sem fidelidade &bull; Cancele quando quiser</div>`;
 
                 const creditsCount = isAnnual ? p.export_credits * 2 : p.export_credits;
-                const borderClass = p.is_popular ? 'border-2 border-indigo-500 shadow-xl shadow-indigo-500/10 bg-slate-900' : 'border border-slate-800 bg-slate-900/60 hover:border-slate-700';
+                const borderClass = p.is_popular 
+                    ? 'border-2 border-blue-600 shadow-md bg-white' 
+                    : 'border border-slate-200 bg-white hover:border-slate-300 shadow-xs';
 
                 const featuresHtml = p.features.map(f => `
-                    <li class="flex items-start text-[11px] text-slate-300">
-                        <i class="fa-solid fa-check text-emerald-400 text-xs mr-2 mt-0.5 shrink-0"></i>
+                    <li class="flex items-start text-[11px] text-slate-600">
+                        <i class="fa-solid fa-check text-emerald-600 text-xs mr-2 mt-0.5 shrink-0"></i>
                         <span>${f}</span>
                     </li>
                 `).join('');
@@ -1079,32 +1374,32 @@
                 card.innerHTML = `
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full ${p.is_popular ? 'bg-indigo-500 text-white' : 'bg-slate-800 text-slate-300'}">
+                            <span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full ${p.is_popular ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'}">
                                 ${p.badge}
                             </span>
-                            ${p.is_popular ? '<span class="text-[10px] font-bold text-amber-400 flex items-center"><i class="fa-solid fa-star mr-1"></i>Destaque</span>' : ''}
+                            ${p.is_popular ? '<span class="text-[10px] font-bold text-amber-600 flex items-center"><i class="fa-solid fa-star mr-1"></i>Recomendado</span>' : ''}
                         </div>
 
                         <div>
-                            <h3 class="text-base font-extrabold text-white">${p.name}</h3>
+                            <h3 class="text-base font-bold text-slate-900">${p.name}</h3>
                             <div class="mt-2 flex items-baseline">${priceDisplay}</div>
                             ${billedSub}
                         </div>
 
-                        <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Cota de Exportação</span>
-                            <div class="text-sm font-black text-amber-400 flex items-center mt-0.5">
-                                <i class="fa-solid fa-bolt mr-1.5 text-xs"></i> ${creditsCount.toLocaleString('pt-BR')} leads/mês
+                        <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Cota de Exportação</span>
+                            <div class="text-sm font-bold text-slate-900 flex items-center mt-0.5">
+                                <i class="fa-solid fa-bolt mr-1.5 text-xs text-blue-600"></i> ${creditsCount.toLocaleString('pt-BR')} leads/mês
                             </div>
                         </div>
 
-                        <ul class="space-y-2 pt-2 border-t border-slate-800/80">
+                        <ul class="space-y-2 pt-2 border-t border-slate-100">
                             ${featuresHtml}
                         </ul>
                     </div>
 
-                    <div class="pt-6 mt-4 border-t border-slate-800/60">
-                        <button onclick="openSubscribeModal('${p.id}')" class="w-full py-2.5 rounded-xl text-xs font-bold transition ${p.is_popular ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'}">
+                    <div class="pt-6 mt-4 border-t border-slate-100">
+                        <button onclick="openSubscribeModal('${p.id}')" class="w-full py-2.5 rounded-xl text-xs font-bold transition ${p.is_popular ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'}">
                             Assinar Agora
                         </button>
                     </div>
