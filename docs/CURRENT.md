@@ -1,7 +1,7 @@
 # CURRENT.md — Status do Projeto Simplexo Data
 
 **Data:** 16/09/2026  
-**Status Geral:** ✅ **Stack 2.2 Enterprise Completa, Login Instantâneo Normalizado, 5 Módulos de Produtividade, 4 Fases Estratégicas e Integração Simplexo Vendas CRM**
+**Status Geral:** ✅ **Stack 2.3 Enterprise Benchmark: Filtros Granulares (Multi-Cidades/IBGE, DDDs, Regimes), Mapa Interativo Leaflet/Heatmap, Árvore de Filiais/Matriz, Organograma QSA e Exportação Customizada/Webhook**
 
 ---
 

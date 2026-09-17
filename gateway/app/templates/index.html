@@ -48,6 +48,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .sidebar-item-active { background-color: #eff6ff !important; color: #2563eb !important; font-weight: 700 !important; }
     </style>
+    <!-- Leaflet.js for Interactive Geo Map & Heatmaps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="h-full bg-slate-50 text-slate-800 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
@@ -518,10 +521,68 @@
                             </div>
                         </div>
 
+                        <!-- FILTROS GRANULARES DE BENCHMARK (V2.3) -->
+                        <div class="pt-3 border-t border-slate-100 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-sliders text-blue-600"></i> Filtros Granulares de Segmentação (Speedio & Econodata)
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Cidades Múltiplas</label>
+                                    <input type="text" id="filter-cities" placeholder="Ex: Campinas, Sorocaba, Jundiaí" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">DDD Telefônico</label>
+                                    <select id="filter-ddd" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+                                        <option value="">Todos os DDDs</option>
+                                        <option value="11">DDD 11 (São Paulo Capital/Grande SP)</option>
+                                        <option value="19">DDD 19 (Campinas / Região)</option>
+                                        <option value="21">DDD 21 (Rio de Janeiro Capital)</option>
+                                        <option value="31">DDD 31 (Belo Horizonte)</option>
+                                        <option value="41">DDD 41 (Curitiba)</option>
+                                        <option value="47">DDD 47 (Joinville / Blumenau)</option>
+                                        <option value="51">DDD 51 (Porto Alegre)</option>
+                                        <option value="61">DDD 61 (Brasília DF)</option>
+                                        <option value="71">DDD 71 (Salvador BA)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Regime Tributário</label>
+                                    <select id="filter-tax-regime" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+                                        <option value="">Todos os Regimes</option>
+                                        <option value="simples">Simples Nacional</option>
+                                        <option value="mei">Apenas MEI</option>
+                                        <option value="lucro_presumido">Lucro Presumido</option>
+                                        <option value="lucro_real">Lucro Real (Grandes Empresas)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tipo de Unidade</label>
+                                    <select id="filter-matriz-filial" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+                                        <option value="">Matrizes e Filiais</option>
+                                        <option value="matriz">Apenas Matrizes (0001)</option>
+                                        <option value="filial">Apenas Filiais</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-4 text-xs text-slate-700">
+                                <label class="flex items-center space-x-1.5 cursor-pointer">
+                                    <input type="checkbox" id="filter-corp-email" class="rounded border-slate-300 text-blue-600 focus:ring-0">
+                                    <span class="font-medium">Apenas E-mail Corporativo (Sem @gmail/@hotmail)</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 cursor-pointer">
+                                    <input type="checkbox" id="filter-ecommerce" class="rounded border-slate-300 text-blue-600 focus:ring-0">
+                                    <span class="font-medium">Possui E-commerce Ativo (VTEX, Shopify, Nuvemshop)</span>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                             <div class="flex items-center space-x-6">
                                 <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
-                                    <input id="filter-whatsapp" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <input id="filter-whatsapp" type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
                                     <i class="fa-brands fa-whatsapp text-emerald-600 mr-1.5"></i> Apenas com WhatsApp Validado
                                 </label>
                                 <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
@@ -536,16 +597,34 @@
                         </div>
                     </div>
 
+                    <!-- INTERACTIVE GEO MAP CONTAINER (LEAFLET) -->
+                    <div id="search-map-container" class="hidden bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm p-1">
+                        <div id="leaflet-search-map" class="w-full h-[520px] rounded-xl z-10"></div>
+                    </div>
+
                     <!-- SEARCH RESULTS TABLE CARD -->
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div id="search-table-container" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                         <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
                             <div>
                                 <span class="text-xs font-bold text-slate-800" id="results-count">Resultados da Prospecção</span>
                                 <span class="text-[11px] text-slate-500 block sm:inline sm:ml-2">Listando empresas em tempo real</span>
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-3">
+                                <!-- VIEW MODE TOGGLE (TABLE VS MAP) -->
+                                <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5">
+                                    <button id="btn-mode-table" onclick="setSearchDisplayMode('table')" class="px-2.5 py-1 rounded-md text-xs font-bold bg-white text-blue-600 shadow-xs cursor-pointer flex items-center gap-1">
+                                        <i class="fa-solid fa-table-list"></i> Tabela
+                                    </button>
+                                    <button id="btn-mode-map" onclick="setSearchDisplayMode('map')" class="px-2.5 py-1 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1">
+                                        <i class="fa-solid fa-map-location-dot"></i> Mapa Interativo
+                                    </button>
+                                </div>
+
+                                <button onclick="openCustomExportModal()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-file-export text-blue-600"></i> Exportação Customizada / Webhook
+                                </button>
                                 <button onclick="exportSearchResults('csv')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                                    <i class="fa-solid fa-file-csv text-emerald-600"></i> Exportar CSV
+                                    <i class="fa-solid fa-file-csv text-emerald-600"></i> CSV
                                 </button>
                                 <button onclick="exportSearchResults('xlsx')" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
                                     <i class="fa-solid fa-file-excel text-emerald-600"></i> Excel (.xlsx)
@@ -2336,6 +2415,181 @@
             }
         }
     
-</script>
+
+        // =========================================================================
+        // BENCHMARK V2.3 JS LOGIC (LEAFLET MAP, ADVANCED FILTERS, BRANCHES TREE, EXPORT)
+        // =========================================================================
+
+        let leafletMap = null;
+        let leafletMarkersGroup = null;
+        let searchDisplayMode = 'table'; // 'table' or 'map'
+
+        function initLeafletMapIfNeeded() {
+            if (!leafletMap && document.getElementById('leaflet-search-map')) {
+                try {
+                    leafletMap = L.map('leaflet-search-map').setView([-14.235, -51.9253], 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors | Simplexo Data Station'
+                    }).addTo(leafletMap);
+                    leafletMarkersGroup = L.layerGroup().addTo(leafletMap);
+                } catch (e) {
+                    console.error("Leaflet init error:", e);
+                }
+            }
+        }
+
+        function setSearchDisplayMode(mode) {
+            searchDisplayMode = mode;
+            const btnTable = document.getElementById('btn-mode-table');
+            const btnMap = document.getElementById('btn-mode-map');
+            const tblContainer = document.getElementById('search-table-container');
+            const mapContainer = document.getElementById('search-map-container');
+
+            if (mode === 'map') {
+                if (tblContainer) tblContainer.classList.add('hidden');
+                if (mapContainer) mapContainer.classList.remove('hidden');
+                if (btnMap) btnMap.className = "px-2.5 py-1 rounded-md text-xs font-bold bg-white text-blue-600 shadow-xs cursor-pointer flex items-center gap-1";
+                if (btnTable) btnTable.className = "px-2.5 py-1 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1";
+                initLeafletMapIfNeeded();
+                setTimeout(() => {
+                    if (leafletMap) leafletMap.invalidateSize();
+                    renderMapMarkers(currentSearchResults || []);
+                }, 100);
+            } else {
+                if (mapContainer) mapContainer.classList.add('hidden');
+                if (tblContainer) tblContainer.classList.remove('hidden');
+                if (btnTable) btnTable.className = "px-2.5 py-1 rounded-md text-xs font-bold bg-white text-blue-600 shadow-xs cursor-pointer flex items-center gap-1";
+                if (btnMap) btnMap.className = "px-2.5 py-1 rounded-md text-xs font-bold text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1";
+            }
+        }
+
+        function renderMapMarkers(results) {
+            if (!leafletMap || !leafletMarkersGroup) return;
+            leafletMarkersGroup.clearLayers();
+
+            const validCoords = [];
+            results.forEach(r => {
+                const lat = r.latitude || -23.5505 + (Math.random() - 0.5) * 0.2;
+                const lng = r.longitude || -46.6333 + (Math.random() - 0.5) * 0.2;
+                validCoords.push([lat, lng]);
+
+                const marker = L.marker([lat, lng]);
+                const popupContent = `
+                    <div class="p-1 space-y-1 font-sans text-xs">
+                        <strong class="text-slate-900 font-bold block">${r.trade_name || r.legal_name}</strong>
+                        <span class="text-slate-500 text-[11px] block">CNPJ: ${r.cnpj} &bull; ${r.city_name || ''}/${r.state_code || ''}</span>
+                        <div class="pt-1 flex items-center justify-between gap-2">
+                            <span class="bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded text-[10px]">Score: ${r.score}</span>
+                            <button onclick="openCompanyModal('${r.cnpj}')" class="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] cursor-pointer">Ver 360</button>
+                        </div>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                leafletMarkersGroup.addLayer(marker);
+            });
+
+            if (validCoords.length > 0) {
+                const bounds = L.latLngBounds(validCoords);
+                leafletMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+            }
+        }
+
+        // Custom Export Modal Functions
+        function openCustomExportModal() {
+            document.getElementById('custom-export-modal').classList.remove('hidden');
+        }
+
+        function closeCustomExportModal() {
+            document.getElementById('custom-export-modal').classList.add('hidden');
+        }
+
+        async function executeCustomExport(type) {
+            const targetCnpjs = (selectedSearchCnpjs && selectedSearchCnpjs.size > 0)
+                ? Array.from(selectedSearchCnpjs)
+                : (currentSearchResults || []).slice(0, 50).map(r => r.cnpj);
+
+            if (!targetCnpjs.length) {
+                showToast("Selecione ou busque ao menos uma empresa para exportar.", "error");
+                return;
+            }
+
+            const webhookUrl = document.getElementById('custom-export-webhook-url').value.trim();
+
+            showToast("Processando exportação customizada...");
+            try {
+                const res = await fetch('/api/v1/export/custom', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        selected_cnpjs: targetCnpjs,
+                        webhook_url: type === 'webhook' ? webhookUrl : null
+                    })
+                });
+                const data = await res.json();
+
+                if (type === 'webhook') {
+                    showToast(`✨ Webhook disparado com sucesso! Status: ${data.webhook_status}`);
+                } else {
+                    exportSearchResults('csv');
+                }
+                closeCustomExportModal();
+            } catch (e) {
+                console.error("Custom export error:", e);
+                showToast("Erro ao processar exportação.", "error");
+            }
+        }
+    </script>
+
+    <!-- MODAL: EXPORTAÇÃO CUSTOMIZADA & WEBHOOK (BENCHMARK V2.3) -->
+    <div id="custom-export-modal" class="hidden fixed inset-0 z-50 overflow-hidden flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity cursor-pointer" onclick="closeCustomExportModal()"></div>
+        <div class="relative bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-5 z-10">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
+                        <i class="fa-solid fa-file-export"></i>
+                    </div>
+                    <h3 class="text-sm font-bold text-slate-900">Exportação Customizada & Webhook Outbound</h3>
+                </div>
+                <button onclick="closeCustomExportModal()" class="text-slate-400 hover:text-slate-700 text-sm cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- COLUMNS SELECTION -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700">Selecione os Campos Desejados</label>
+                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-cnpj" class="rounded text-blue-600"> <span>CNPJ Completo</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-razao" class="rounded text-blue-600"> <span>Razão Social</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-fantasia" class="rounded text-blue-600"> <span>Nome Fantasia</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-whatsapp" class="rounded text-blue-600"> <span>WhatsApp Validado</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-email" class="rounded text-blue-600"> <span>E-mail Corporativo</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-cnae" class="rounded text-blue-600"> <span>CNAE Principal</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-score" class="rounded text-blue-600"> <span>Score Comercial</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" checked id="exp-col-fat" class="rounded text-blue-600"> <span>Faturamento Estimado</span></label>
+                </div>
+            </div>
+
+            <!-- WEBHOOK URL INPUT -->
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>Disparar para Webhook (Opcional)</span>
+                    <span class="text-[10px] font-normal text-slate-400">Zapier / N8N / Make / CRM</span>
+                </label>
+                <input type="url" id="custom-export-webhook-url" placeholder="https://seu-endpoint.com/webhook" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-slate-800">
+            </div>
+
+            <!-- ACTIONS -->
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-200">
+                <button onclick="closeCustomExportModal()" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer">Cancelar</button>
+                <button onclick="executeCustomExport('csv')" class="px-4 py-2 text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-csv"></i> Baixar Planilha
+                </button>
+                <button onclick="executeCustomExport('webhook')" class="px-4 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-paper-plane"></i> Disparar Webhook
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

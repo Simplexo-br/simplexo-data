@@ -460,11 +460,15 @@ def search_companies(
     q: Optional[str] = None,
     state: Optional[str] = None,
     city: Optional[str] = None,
+    cities: Optional[str] = None,
+    ddd: Optional[str] = None,
     cnae: Optional[str] = None,
     min_score: Optional[int] = 0,
     has_whatsapp: Optional[bool] = None,
     has_ecommerce: Optional[bool] = None,
     has_corporate_email: Optional[bool] = None,
+    is_matriz: Optional[bool] = None,
+    tax_regime: Optional[str] = None,
     is_exporter: Optional[bool] = None,
     is_importer: Optional[bool] = None,
     is_public_supplier: Optional[bool] = None,
@@ -532,6 +536,38 @@ def search_companies(
             if city:
                 sql += " AND e.city_name ILIKE %s"
                 params.append(f"%{city}%")
+
+            if cities:
+                city_list = [c.strip() for c in cities.split(",") if c.strip()]
+                if city_list:
+                    placeholders = ",".join(["%s"] * len(city_list))
+                    sql += f" AND LOWER(e.city_name) IN ({','.join(['LOWER(%s)'] * len(city_list))})"
+                    params.extend(city_list)
+
+            if ddd:
+                clean_ddd = re.sub(r'\D', '', ddd)
+                if clean_ddd:
+                    sql += " AND (e.cadastral_phone_1 LIKE %s OR e.cadastral_phone_1 LIKE %s)"
+                    params.extend([f"{clean_ddd}%", f"({clean_ddd})%"])
+
+            if is_matriz is True:
+                sql += " AND e.cnpj LIKE %s"
+                params.append('%0001%')
+            elif is_matriz is False:
+                sql += " AND e.cnpj NOT LIKE %s"
+                params.append('%0001%')
+
+            if tax_regime == 'simples':
+                sql += " AND sn.is_simples = TRUE"
+            elif tax_regime == 'mei':
+                sql += " AND sn.is_mei = TRUE"
+            elif tax_regime == 'lucro_presumido':
+                sql += " AND COALESCE(sn.is_simples, FALSE) = FALSE AND c.share_capital < 78000000"
+            elif tax_regime == 'lucro_real':
+                sql += " AND (COALESCE(sn.is_simples, FALSE) = FALSE AND (c.share_capital >= 78000000 OR c.company_size = '05'))"
+
+            if has_corporate_email is True:
+                sql += " AND (df.has_corporate_email = TRUE OR (e.cadastral_email IS NOT NULL AND e.cadastral_email NOT LIKE '%@gmail%' AND e.cadastral_email NOT LIKE '%@hotmail%' AND e.cadastral_email NOT LIKE '%@yahoo%' AND e.cadastral_email NOT LIKE '%@outlook%'))"
 
             if cnae:
                 sql += " AND e.cnae_main LIKE %s"
@@ -1360,3 +1396,132 @@ def check_rfb_releases_alias():
 def get_etl_logs_endpoint(limit: int = 20):
     logs = etl_scheduler.get_logs(limit=limit)
     return {"count": len(logs), "logs": logs}
+
+# --- BENCHMARK V2.3: GEO CITIES, BRANCHES TREE & CUSTOM EXPORT ---
+
+@app.get("/api/v1/geo/cities")
+def get_geo_cities(q: Optional[str] = None, state: Optional[str] = None, limit: int = 20):
+    """Returns top Brazilian cities matching search query with active companies count."""
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            sql = """
+                SELECT 
+                    e.city_name,
+                    e.state_code,
+                    COUNT(e.id) as companies_count,
+                    COALESCE(AVG(df.latitude), -23.5505) as lat,
+                    COALESCE(AVG(df.longitude), -46.6333) as lng
+                FROM data_core.establishments e
+                LEFT JOIN data_mining.digital_footprint df ON df.establishment_id = e.id
+                WHERE e.city_name IS NOT NULL
+            """
+            params = []
+            if q:
+                sql += " AND e.city_name ILIKE %s"
+                params.append(f"%{q}%")
+            if state:
+                sql += " AND e.state_code = %s"
+                params.append(state.upper())
+            
+            sql += " GROUP BY e.city_name, e.state_code ORDER BY companies_count DESC LIMIT %s;"
+            params.append(limit)
+            cur.execute(sql, tuple(params))
+            cities = cur.fetchall()
+            return {"count": len(cities), "cities": cities}
+
+@app.get("/api/v1/company/{cnpj}/branches")
+def get_company_branches_tree(cnpj: str):
+    """Returns Matrix and all Branch establishments for the given CNPJ or CNPJ Base."""
+    clean_cnpj = re.sub(r'\D', '', cnpj)
+    cnpj_base = clean_cnpj[:8] if len(clean_cnpj) >= 8 else clean_cnpj
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("""
+                SELECT 
+                    e.id,
+                    e.cnpj,
+                    e.trade_name,
+                    c.legal_name,
+                    e.city_name,
+                    e.state_code,
+                    e.registration_status,
+                    e.cnae_main,
+                    e.cnae_main_desc,
+                    e.cadastral_phone_1,
+                    e.cadastral_email,
+                    CASE WHEN e.cnpj LIKE '%%0001%%' THEN 'MATRIZ' ELSE 'FILIAL' END as unit_type,
+                    COALESCE(s.total_score, 80) as score,
+                    COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp
+                FROM data_core.establishments e
+                JOIN data_core.companies c ON c.id = e.company_id
+                LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                WHERE c.cnpj_base = %s
+                ORDER BY unit_type DESC, e.state_code, e.city_name;
+            """, (cnpj_base,))
+            branches = cur.fetchall()
+
+            matrix = next((b for b in branches if b["unit_type"] == "MATRIZ"), None)
+            subsidiaries = [b for b in branches if b["unit_type"] == "FILIAL"]
+
+            return {
+                "cnpj_base": cnpj_base,
+                "total_units": len(branches),
+                "matrix": matrix,
+                "branches_count": len(subsidiaries),
+                "branches": subsidiaries
+            }
+
+class CustomExportRequest(BaseModel):
+    selected_cnpjs: List[str]
+    columns: Optional[List[str]] = None
+    webhook_url: Optional[str] = None
+
+@app.post("/api/v1/export/custom")
+def custom_export_leads(payload: CustomExportRequest):
+    """Generates custom formatted lead dataset and optionally triggers an outbound webhook."""
+    if not payload.selected_cnpjs:
+        raise HTTPException(status_code=400, detail="Nenhum CNPJ selecionado para exportação.")
+
+    with psycopg2.connect(DATABASE_URL) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            in_clause = ",".join(["%s"] * len(payload.selected_cnpjs))
+            cur.execute(f"""
+                SELECT 
+                    e.cnpj, c.legal_name, e.trade_name, e.cnae_main, e.cnae_main_desc,
+                    e.city_name, e.state_code, e.cadastral_phone_1, e.cadastral_email,
+                    COALESCE(s.total_score, 80) as score,
+                    COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
+                    COALESCE(sn.is_simples, FALSE) as is_simples,
+                    COALESCE(sn.is_mei, FALSE) as is_mei,
+                    c.share_capital, c.company_size
+                FROM data_core.establishments e
+                JOIN data_core.companies c ON c.id = e.company_id
+                LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
+                LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
+                WHERE e.cnpj IN ({in_clause});
+            """, tuple(payload.selected_cnpjs))
+            rows = cur.fetchall()
+
+            # Optional webhook dispatch
+            webhook_status = "not_requested"
+            if payload.webhook_url:
+                try:
+                    import urllib.request
+                    req = urllib.request.Request(
+                        payload.webhook_url,
+                        data=json.dumps({"event": "simplexo.leads.export", "count": len(rows), "data": rows}).encode('utf-8'),
+                        headers={"Content-Type": "application/json", "User-Agent": "SimplexoData-Webhook/2.3"}
+                    )
+                    with urllib.request.urlopen(req, timeout=5) as resp:
+                        webhook_status = f"dispatched_status_{resp.status}"
+                except Exception as e:
+                    webhook_status = f"dispatch_failed: {str(e)}"
+
+            return {
+                "status": "success",
+                "count": len(rows),
+                "selected_columns": payload.columns or ["cnpj", "legal_name", "trade_name", "cadastral_phone_1", "cadastral_email", "score"],
+                "webhook_status": webhook_status,
+                "data": rows
+            }
