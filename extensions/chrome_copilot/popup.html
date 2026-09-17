@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simplexo Web Copilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { width: 380px; min-height: 480px; background-color: #f8fafc; color: #0f172a; font-size: 13px; }
+    header { background: #ffffff; border-bottom: 1px solid #e2e8f0; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
+    .logo-badge { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; color: #0f172a; }
+    .logo-icon { width: 28px; height: 28px; background: linear-gradient(135deg, #2563eb, #4f46e5); color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+    .badge-pill { font-size: 9px; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 2px 6px; border-radius: 12px; }
+    .container { padding: 14px 16px; }
+    .search-box { position: relative; margin-bottom: 12px; }
+    .search-box input { width: 100%; padding: 9px 12px 9px 34px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; outline: none; transition: border-color 0.2s; }
+    .search-box input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+    .search-box i { position: absolute; left: 11px; top: 11px; color: #94a3b8; font-size: 12px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 700; }
+    .status-active { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .tag { display: inline-block; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-right: 4px; margin-bottom: 4px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: #2563eb; color: #ffffff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; margin-top: 6px; }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-wa { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; text-decoration: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-wa:hover { background: #bbf7d0; }
+    .btn-linkedin { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; text-decoration: none; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-linkedin:hover { background: #bae6fd; }
+    .partner-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed #f1f5f9; font-size: 11px; }
+    .loading { text-align: center; padding: 24px 0; color: #64748b; font-size: 12px; }
+    .empty { text-align: center; padding: 24px 12px; color: #64748b; font-size: 12px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-badge">
+      <div class="logo-icon"><i class="fa-solid fa-cube"></i></div>
+      <span>Simplexo <span style="color:#2563eb">Copilot</span></span>
+      <span class="badge-pill">B2B 2.0</span>
+    </div>
+    <div style="font-size: 10px; color: #64748b; font-weight: 600;">
+      <i class="fa-solid fa-circle" style="color: #10b981; font-size: 7px;"></i> Conectado
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- SEARCH INPUT -->
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="copilot-search-input" placeholder="Buscar por CNPJ, Razão Social ou Domínio...">
+    </div>
+
+    <!-- ACTIVE TAB DETECTION BANNER -->
+    <div id="active-page-banner" class="card hidden" style="background: #eff6ff; border-color: #bfdbfe;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="font-size: 11px; color: #1e40af; font-weight: 700;">
+          <i class="fa-solid fa-bolt" style="color: #2563eb;"></i> Detectado na Página Atual
+        </div>
+        <button id="btn-load-detected" style="background: #2563eb; color: #fff; border: none; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer;">Examinar</button>
+      </div>
+      <div id="detected-entity-name" style="font-size: 11px; color: #1e3a8a; font-weight: 600; margin-top: 4px; word-break: break-all;">...</div>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="loading-state" class="loading hidden">
+      <i class="fa-solid fa-spinner fa-spin" style="font-size: 20px; color: #2563eb; margin-bottom: 8px;"></i>
+      <p>Minerando Dossiê 360 no Simplexo Data...</p>
+    </div>
+
+    <!-- RESULT COMPANY CARD -->
+    <div id="company-card" class="card hidden">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px;">
+        <div>
+          <h3 id="comp-name" style="font-size: 13px; font-weight: 800; color: #0f172a; line-height: 1.2;">Razão Social</h3>
+          <p id="comp-cnpj" style="font-size: 11px; color: #64748b; font-family: monospace; font-weight: 600; margin-top: 2px;">00.000.000/0000-00</p>
+        </div>
+        <span id="comp-status" class="status-badge status-active"><i class="fa-solid fa-check"></i> ATIVA</span>
+      </div>
+
+      <div style="margin-bottom: 8px;">
+        <span id="comp-porte" class="tag">Porte: Demais</span>
+        <span id="comp-fat" class="tag" style="background: #ecfdf5; color: #047857;">Fat: R$ 5M - 20M</span>
+        <span id="comp-cnae" class="tag">CNAE Principal</span>
+      </div>
+
+      <!-- LOCALIZAÇÃO -->
+      <div style="font-size: 11px; color: #475569; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+        <i class="fa-solid fa-location-dot" style="color: #ef4444;"></i>
+        <span id="comp-location">São Paulo - SP</span>
+      </div>
+
+      <!-- DECISORES & SÓCIOS -->
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; display: flex; justify-content: space-between;">
+          <span><i class="fa-solid fa-user-tie" style="color: #4f46e5;"></i> Decisores & Sócios (QSA)</span>
+        </div>
+        <div id="partners-list"></div>
+      </div>
+
+      <!-- CONTATOS & TECH -->
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 8px; margin-top: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px;"><i class="fa-solid fa-address-book" style="color: #0284c7;"></i> Canais Diretos</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <a id="btn-direct-wa" target="_blank" href="#" class="btn-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+          <span id="comp-email-tag" class="tag" style="background: #e0f2fe; color: #0369a1;"><i class="fa-solid fa-envelope"></i> Email Validado</span>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 4px;">
+        <button id="btn-export-crm" class="btn btn-primary"><i class="fa-solid fa-cloud-arrow-up"></i> Enviar ao Simplexo Vendas CRM</button>
+        <button id="btn-open-station" class="btn btn-secondary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Dossiê Completo no Station</button>
+      </div>
+    </div>
+
+    <!-- EMPTY / WELCOME STATE -->
+    <div id="welcome-state" class="empty">
+      <i class="fa-solid fa-compass" style="font-size: 32px; color: #94a3b8; margin-bottom: 8px;"></i>
+      <h4 style="font-weight: 700; color: #334155;">Simplexo Web Copilot Ativo</h4>
+      <p style="margin-top: 4px;">Navegue no LinkedIn ou qualquer website corporativo para detectar CNPJs e enriquecer decisores automaticamente.</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
