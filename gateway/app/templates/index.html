@@ -1398,7 +1398,7 @@
             showToast("Sessão encerrada com sucesso.", "info");
         }
 
-                function switchNav(tabId) {
+        function switchNav(tabId) {
             const tabs = [
                 'dashboard', 'search', 'recent-companies', 'cno-obras', 'batch', 'reveal',
                 'plans', 'etl', 'alerts', 'lists', 'sales-assistant', 'history', 'exports'
@@ -1442,25 +1442,6 @@
                 loadSearchHistory();
             } else if (tabId === 'exports') {
                 loadExportLogs();
-            }
-        }
-            });
-
-            const targetView = document.getElementById('view-' + tabId);
-            const targetNav = document.getElementById('nav-' + tabId);
-            if (targetView) targetView.classList.remove('hidden');
-            if (targetNav) {
-                targetNav.classList.add('sidebar-item-active', 'bg-blue-50', 'text-blue-700', 'font-bold');
-                targetNav.classList.remove('text-slate-600', 'font-medium');
-            }
-
-            // Lazy trigger updates for specific views
-            if (tabId === 'recent-companies' && (!document.getElementById('recent-table-body').children.length)) {
-                loadRecentOpportunities();
-            } else if (tabId === 'cno-obras' && (!document.getElementById('cno-grid').children.length)) {
-                loadCNOOpportunities();
-            } else if (tabId === 'plans' && (!plansCatalog.length)) {
-                loadPlans();
             }
         }
 
