@@ -1963,19 +1963,43 @@
                     document.getElementById('modal-emp-label').innerText = e.employee_label;
                 }
 
-                // WhatsApp button
-                const btnWa = document.getElementById('modal-btn-whatsapp');
-                if (p.cadastral_phone_1) {
-                    btnWa.href = `https://wa.me/55${p.cadastral_phone_1}`;
-                    btnWa.classList.remove('opacity-50', 'pointer-events-none');
-                } else {
-                    btnWa.classList.add('opacity-50', 'pointer-events-none');
+                // Phone & WhatsApp Validation Logic
+                const rawPhone = p.cadastral_phone_1 || p.phone_1 || '';
+                let cleanPhone = rawPhone.replace(/\D/g, '').replace(/^0+/, '');
+                if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
+                    cleanPhone = cleanPhone.substring(2).replace(/^0+/, '');
                 }
 
-                // Phone Call button
+                const isMobile = cleanPhone.length === 11 && cleanPhone.charAt(2) === '9';
+                const isLandline = cleanPhone.length === 10 && ['2','3','4','5'].includes(cleanPhone.charAt(2));
+                const hasWhatsApp = (p.has_whatsapp === true || isMobile) && !isLandline && cleanPhone.length === 11;
+
+                const btnWa = document.getElementById('modal-btn-whatsapp');
                 const btnCall = document.getElementById('modal-btn-call');
-                if (p.cadastral_phone_1) {
-                    btnCall.href = `tel:+55${p.cadastral_phone_1}`;
+
+                if (hasWhatsApp) {
+                    btnWa.href = `https://wa.me/55${cleanPhone}`;
+                    btnWa.style.display = 'flex';
+                    btnWa.classList.remove('opacity-50', 'pointer-events-none');
+                    btnWa.innerHTML = `<i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp Verificado`;
+                } else {
+                    // Hide WhatsApp button if the number is a Landline / Fixo or invalid
+                    btnWa.style.display = 'none';
+                }
+
+                if (cleanPhone.length >= 10) {
+                    btnCall.href = `tel:+55${cleanPhone}`;
+                    btnCall.style.display = 'flex';
+                    btnCall.classList.remove('opacity-50', 'pointer-events-none');
+                    if (isLandline) {
+                        btnCall.innerHTML = `<i class="fa-solid fa-phone-volume text-xs mr-1.5 text-blue-600"></i> Ligar (Telefone Fixo)`;
+                    } else {
+                        btnCall.innerHTML = `<i class="fa-solid fa-phone text-xs mr-1.5 text-blue-600"></i> Ligar`;
+                    }
+                } else {
+                    btnCall.href = '#';
+                    btnCall.classList.add('opacity-50', 'pointer-events-none');
+                    btnCall.innerHTML = `<i class="fa-solid fa-phone-slash text-xs mr-1.5 text-slate-400"></i> Sem Telefone`;
                 }
 
                 // Decisors list

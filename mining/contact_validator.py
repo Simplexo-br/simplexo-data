@@ -102,22 +102,23 @@ def validate_whatsapp_phone(phone_str: str) -> Dict[str, Any]:
         return {"status": "EMPTY", "is_whatsapp": False, "formatted": "", "clean": ""}
 
     digits = "".join(filter(str.isdigit, str(phone_str)))
-    
-    # Remove Brazilian country code 55 if prefixed
+    # Strip all leading 0s
+    digits = re.sub(r"^0+", "", digits)
+
+    # Remove Brazilian country code 55 if prefixed (e.g. 5511999998888 or 551133334444)
     if digits.startswith("55") and len(digits) in (12, 13):
         digits = digits[2:]
-
-    # Remove leading 0 if present
-    if digits.startswith("0") and len(digits) in (11, 12):
-        digits = digits[1:]
+        digits = re.sub(r"^0+", "", digits)
 
     if len(digits) < 10 or len(digits) > 11:
         return {
             "status": "INVALID_LENGTH",
             "is_whatsapp": False,
+            "is_mobile": False,
+            "phone_type": "INVALIDO",
             "formatted": phone_str,
             "clean": digits,
-            "reason": "Comprimento de dígitos incompatível com telefonia nacional"
+            "reason": "Comprimento de dígitos incompatível com telefonia nacional (esperado 10 ou 11 dígitos)"
         }
 
     ddd = digits[:2]
@@ -125,6 +126,8 @@ def validate_whatsapp_phone(phone_str: str) -> Dict[str, Any]:
         return {
             "status": "INVALID_DDD",
             "is_whatsapp": False,
+            "is_mobile": False,
+            "phone_type": "INVALIDO",
             "formatted": phone_str,
             "clean": digits,
             "reason": f"DDD {ddd} não reconhecido no Brasil"

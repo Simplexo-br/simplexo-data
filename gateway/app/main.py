@@ -21,6 +21,7 @@ from psycopg2.extras import RealDictCursor
 from mining.estimator import estimate_company_metrics
 from mining.decisors import profile_decisors, clean_person_for_search, clean_company_for_search
 from mining.email_validator import validate_corporate_email
+from mining.contact_validator import validate_whatsapp_phone
 from mining.technographics import detect_technologies
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -839,6 +840,14 @@ def get_company_360(cnpj: str):
                     "detected_cms": "WordPress", "detected_crm": "RD Station", "detected_erp": "TOTVS",
                     "google_rating": 4.8, "google_review_count": 180, "latitude": -23.5505, "longitude": -46.6333
                 }
+                phone1 = est.get("cadastral_phone_1") or est.get("phone_1") or ""
+                phone_val1 = validate_whatsapp_phone(phone1)
+                est["phone_validation"] = phone_val1
+                est["has_whatsapp"] = phone_val1.get("is_whatsapp", False)
+                est["is_mobile"] = phone_val1.get("is_mobile", False)
+                est["phone_type"] = phone_val1.get("phone_type", "FIXO" if phone_val1.get("status") == "LANDLINE_FIXED" else ("CELULAR" if phone_val1.get("is_mobile") else "DESCONHECIDO"))
+                est["formatted_phone"] = phone_val1.get("formatted", phone1)
+                est["whatsapp_link"] = phone_val1.get("whatsapp_link")
 
                 return {
                     "profile": est,
