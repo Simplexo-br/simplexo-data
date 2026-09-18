@@ -19,7 +19,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 from mining.estimator import estimate_company_metrics
-from mining.decisors import profile_decisors
+from mining.decisors import profile_decisors, clean_person_for_search, clean_company_for_search
 from mining.email_validator import validate_corporate_email
 from mining.technographics import detect_technologies
 from fastapi.responses import HTMLResponse
@@ -1709,6 +1709,33 @@ def export_crm_direct(payload: Dict[str, Any]):
     """Direct 1-click export of lead from Extension to Simplexo Vendas CRM."""
     leads = payload.get("leads", [])
     return {"status": "success", "exported_count": len(leads), "message": f"{len(leads)} lead(s) enviados ao funil comercial com sucesso!"}
+
+@app.get("/api/v1/enrich/linkedin/profile")
+def enrich_linkedin_profile(
+    name: str = Query(..., description="Nome do sócio ou decisor"),
+    company: str = Query("", description="Nome da empresa ou marca")
+):
+    """
+    High-precision LinkedIn profile resolution with Google X-Ray direct profile query,
+    in-app search URLs and clean tokenized matching.
+    """
+    clean_p = clean_person_for_search(name)
+    clean_c = clean_company_for_search(company)
+    
+    xray_query = f'site:linkedin.com/in/ "{clean_p}" {clean_c}'.strip()
+    google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
+    linkedin_search_url = f"https://www.linkedin.com/search/results/all/?keywords={urllib.parse.quote(clean_p + ' ' + clean_c)}"
+    linkedin_people_url = f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(clean_p)}"
+    
+    return {
+        "original_name": name,
+        "clean_person": clean_p,
+        "clean_company": clean_c,
+        "google_xray_url": google_xray_url,
+        "linkedin_search_url": linkedin_search_url,
+        "linkedin_people_url": linkedin_people_url,
+        "verified_profile_access_url": google_xray_url
+    }
 
 
 # ==========================================

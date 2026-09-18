@@ -124,7 +124,14 @@ function renderCompany(c) {
   partners.slice(0, 3).forEach(p => {
     const pName = p.name || 'Sócio Administrador';
     const pRole = p.role || 'Sócio';
-    const linkedinUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(pName + ' ' + (c.company_name || ''))}`;
+    
+    // Clean name and company for reliable LinkedIn finding
+    const cleanPerson = pName.replace(/[^a-zA-Z0-9\s]/g, '').split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).join(' ');
+    const rawComp = c.trade_name || c.company_name || '';
+    const cleanComp = rawComp.replace(/(LTDA|S\.A\.|ME|EPP|EIRELI|HOLDING|PARTICIPACOES|SERVICOS)/gi, '').trim().split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).slice(0, 2).join(' ');
+    
+    const googleXrayUrl = `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ "' + cleanPerson + '" ' + cleanComp)}`;
+    const linkedinAppUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(cleanPerson + ' ' + cleanComp)}`;
     
     const pDiv = document.createElement('div');
     pDiv.className = 'partner-item';
@@ -133,7 +140,14 @@ function renderCompany(c) {
         <div style="font-weight:700; color:#1e293b;">${pName}</div>
         <div style="font-size:10px; color:#64748b;">${pRole}</div>
       </div>
-      <a href="${linkedinUrl}" target="_blank" class="btn-linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn</a>
+      <div style="display:flex; gap:4px; align-items:center;">
+        <a href="${googleXrayUrl}" target="_blank" rel="noopener noreferrer" class="btn-linkedin" title="Acessar Perfil Direto do Sócio (Sem login obrigatório)">
+          <i class="fa-brands fa-linkedin"></i> Perfil
+        </a>
+        <a href="${linkedinAppUrl}" target="_blank" rel="noopener noreferrer" class="btn-linkedin" style="background:#f8fafc; color:#475569; border-color:#cbd5e1;" title="Buscar no LinkedIn App">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </a>
+      </div>
     `;
     partnersContainer.appendChild(pDiv);
   });
