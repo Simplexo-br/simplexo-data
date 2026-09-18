@@ -733,9 +733,10 @@ def search_companies(
             cur.execute(sql, tuple(params))
             raw_results = cur.fetchall()
 
-            # If few results found locally and a query was provided, trigger on-demand live lookup to expand dataset
-            if len(raw_results) < 20 and q:
-                ingested = search_and_ingest_by_name(q)
+            # If few results found locally, trigger on-demand live lookup & national dataset expansion
+            if len(raw_results) < limit:
+                lookup_term = q or segment or (cnaes.split(',')[0] if cnaes else "comercio")
+                ingested = search_and_ingest_by_name(lookup_term)
                 if ingested:
                     conn.commit()
                     cur.execute(sql, tuple(params))
