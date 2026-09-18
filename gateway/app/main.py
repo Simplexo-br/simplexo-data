@@ -29,6 +29,7 @@ from gateway.app.reveal import PIXEL_JS, resolve_ip_to_host, get_recent_identifi
 from gateway.app.dataservice import sanitize_and_enrich_batch, calculate_assertiveness_score
 from mining.dataflow_waterfall import dataflow_engine
 from etl.receita_federal.live_lookup import fetch_and_ingest_cnpj, search_and_ingest_by_name
+from mining.cnae_catalog import get_cnaes_for_segment, get_available_segments, search_popular_cnaes, CNAE_SEGMENTS, POPULAR_CNAES
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://simplexo:simplexo_secure_pass_2026@localhost:5432/simplexo_data")
 TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "templates", "index.html")
@@ -540,6 +541,19 @@ def export_lead_to_crm(lead: CRMExportRequest):
         "crm_payload": crm_lead_payload
     }
 
+@app.get("/api/v1/cnaes/segments")
+def list_cnae_segments():
+    """Returns the catalog of all business sectors/segments mapped to CNAE codes."""
+    return {"status": "success", "segments": get_available_segments()}
+
+@app.get("/api/v1/cnaes/popular")
+@app.get("/api/v1/cnaes/search")
+def search_cnae_catalog(q: Optional[str] = None):
+    """Search popular CNAEs by code, description, or segment name."""
+    if not q:
+        return {"status": "success", "results": POPULAR_CNAES}
+    return {"status": "success", "results": search_popular_cnaes(q)}
+
 @app.get("/api/v1/search")
 def search_companies(
     exclude_suppressed: bool = Query(False, description='Excluir clientes e contas na lista de supressão'),
@@ -549,6 +563,8 @@ def search_companies(
     cities: Optional[str] = None,
     ddd: Optional[str] = None,
     cnae: Optional[str] = None,
+    cnaes: Optional[str] = Query(None, description="Múltiplos CNAEs separados por vírgula (ex: 6201501, 6202300, 6204000)"),
+    segment: Optional[str] = Query(None, description="Segmento de mercado (ex: tecnologia, agro, construcao, saude, industria, logistica, varejo, atacado, financeiro, educacao, consultoria, alimentos, energia, turismo)"),
     min_score: Optional[int] = 0,
     has_whatsapp: Optional[bool] = None,
     has_ecommerce: Optional[bool] = None,
@@ -655,9 +671,25 @@ def search_companies(
             if has_corporate_email is True:
                 sql += " AND (df.has_corporate_email = TRUE OR (e.cadastral_email IS NOT NULL AND e.cadastral_email NOT LIKE '%@gmail%' AND e.cadastral_email NOT LIKE '%@hotmail%' AND e.cadastral_email NOT LIKE '%@yahoo%' AND e.cadastral_email NOT LIKE '%@outlook%'))"
 
-            if cnae:
-                sql += " AND e.cnae_main LIKE %s"
-                params.append(f"{cnae}%")
+            # Multi-CNAE & Segment Filtering
+            target_cnaes = []
+            if segment:
+                target_cnaes.extend(get_cnaes_for_segment(segment))
+            
+            raw_cnaes_str = cnaes or cnae
+            if raw_cnaes_str:
+                for item in raw_cnaes_str.split(","):
+                    c_clean = re.sub(r'\D', '', item.strip())
+                    if c_clean:
+                        target_cnaes.append(c_clean)
+            
+            if target_cnaes:
+                unique_cnaes = list(dict.fromkeys(target_cnaes))
+                cnae_clauses = []
+                for c_code in unique_cnaes:
+                    cnae_clauses.append("e.cnae_main LIKE %s")
+                    params.append(f"{c_code}%")
+                sql += f" AND ({' OR '.join(cnae_clauses)})"
 
             if min_score > 0:
                 sql += " AND COALESCE(s.total_score, 0) >= %s"
@@ -1999,6 +2031,8 @@ class StoneStationB2BQuery(BaseModel):
     uf: Optional[str] = None
     city: Optional[str] = None
     cnae: Optional[str] = None
+    cnaes: Optional[List[str]] = None
+    segment: Optional[str] = None
     revenue_bracket: Optional[str] = None
     capital_min: Optional[float] = None
     capital_max: Optional[float] = None
@@ -2023,7 +2057,7 @@ class StoneStationB2CQuery(BaseModel):
 @app.post("/api/v1/stonestation/search/b2b")
 def stonestation_search_b2b(payload: StoneStationB2BQuery):
     """
-    Motor Stone Station B2B com suporte a mais de 40 filtros de ICP corporativo.
+    Motor Stone Station B2B com suporte a mais de 40 filtros de ICP corporativo e múltiplos CNAEs.
     """
     results = []
     try:
@@ -2038,9 +2072,28 @@ def stonestation_search_b2b(payload: StoneStationB2BQuery):
                 if payload.city:
                     where_clauses.append("e.city_name ILIKE %s")
                     params.append(f"%{payload.city}%")
-                if payload.cnae:
-                    where_clauses.append("e.cnae_main LIKE %s")
-                    params.append(f"{payload.cnae}%")
+                
+                # Multi-CNAE & Segment filtering
+                target_cnaes = []
+                if payload.segment:
+                    target_cnaes.extend(get_cnaes_for_segment(payload.segment))
+                if payload.cnaes:
+                    for item in payload.cnaes:
+                        c_clean = re.sub(r'\D', '', str(item).strip())
+                        if c_clean:
+                            target_cnaes.append(c_clean)
+                elif payload.cnae:
+                    c_clean = re.sub(r'\D', '', payload.cnae.strip())
+                    if c_clean:
+                        target_cnaes.append(c_clean)
+
+                if target_cnaes:
+                    unique_cnaes = list(dict.fromkeys(target_cnaes))
+                    cnae_clauses = []
+                    for c_code in unique_cnaes:
+                        cnae_clauses.append("e.cnae_main LIKE %s")
+                        params.append(f"{c_code}%")
+                    where_clauses.append(f"({' OR '.join(cnae_clauses)})")
                 
                 sql = f"""
                     SELECT e.cnpj, c.legal_name, e.trade_name, e.cnae_main, e.cnae_main_desc,

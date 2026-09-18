@@ -710,6 +710,71 @@
                             </div>
                         </div>
 
+                        <!-- FILTRO DE SEGMENTO E MÚLTIPLOS CNAES (NOVO) -->
+                        <div class="pt-3 border-t border-slate-100 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-layer-group text-blue-600"></i> Segmentação por Atividade Econômica (CNAE & Macro-Setores)
+                                </span>
+                                <span class="text-[11px] text-slate-400">Combine segmentos e múltiplos códigos CNAE</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- 1. SELECTOR DE SEGMENTO DE MERCADO -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                                        Macro-Segmento de Mercado
+                                    </label>
+                                    <select id="filter-segment" onchange="handleSegmentChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-semibold focus:outline-none focus:border-blue-600 focus:bg-white focus:ring-1 focus:ring-blue-600 transition">
+                                        <option value="">Todos os Segmentos de Mercado</option>
+                                        <option value="tecnologia">💻 Tecnologia, Software & TI</option>
+                                        <option value="agro">🌾 Agronegócio, Pecuária & Grãos</option>
+                                        <option value="construcao">🏗️ Construção Civil & Incorporação</option>
+                                        <option value="saude">🏥 Saúde, Clínicas, Hospitais & Farmácias</option>
+                                        <option value="industria">🏭 Indústria, Manufatura & Metalurgia</option>
+                                        <option value="logistica">🚚 Logística, Frotas & Armazenagem</option>
+                                        <option value="varejo">🛍️ Comércio Varejista & Lojas</option>
+                                        <option value="atacado">📦 Comércio Atacadista & Distribuição</option>
+                                        <option value="financeiro">💳 Setor Financeiro, FinTechs & Seguros</option>
+                                        <option value="educacao">🎓 Educação, Faculdades & Treinamentos</option>
+                                        <option value="consultoria">💼 Consultoria, Contabilidade & Advocacia</option>
+                                        <option value="alimentos">🍽️ Alimentos, Bares & Restaurantes</option>
+                                        <option value="energia">⚡ Energia, Combustíveis & Solar</option>
+                                        <option value="turismo">✈️ Turismo, Hotelaria & Eventos</option>
+                                    </select>
+                                </div>
+
+                                <!-- 2. MÚLTIPLOS CNAES (INPUT & TAGS) -->
+                                <div class="md:col-span-2">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase">
+                                            Múltiplos CNAEs (Códigos ou Palavras-chave)
+                                        </label>
+                                        <button type="button" onclick="openPopularCnaesDropdown()" class="text-[10px] text-blue-600 font-bold hover:underline cursor-pointer">
+                                            <i class="fa-solid fa-list-check"></i> CNAEs Populares
+                                        </button>
+                                    </div>
+                                    <div class="border border-slate-200 rounded-xl bg-slate-50 p-2 focus-within:border-blue-600 focus-within:bg-white focus-within:ring-1 focus-within:ring-blue-600 transition min-h-[42px]">
+                                        <!-- CNAE TAGS CONTAINER -->
+                                        <div id="cnae-tags-container" class="flex flex-wrap items-center gap-1.5">
+                                            <input id="filter-cnae-input" type="text" placeholder="Digite o CNAE (ex: 6201, 4120-4/00) e pressione Enter ou vírgula..."
+                                                onkeydown="handleCnaeInputKey(event)"
+                                                class="bg-transparent border-0 text-xs text-slate-900 placeholder-slate-400 focus:outline-none flex-1 min-w-[220px] py-0.5">
+                                        </div>
+                                    </div>
+                                    <!-- QUICK POPULAR CNAES PILLS (SUGGESTIONS) -->
+                                    <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                        <span class="text-[10px] text-slate-400 font-medium">Sugestões rápidas:</span>
+                                        <button type="button" onclick="addCnaeTag('6201501', 'Desenvolvimento de Software')" class="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] rounded-md border border-slate-200 transition cursor-pointer">6201-5/01 (Software)</button>
+                                        <button type="button" onclick="addCnaeTag('4120400', 'Construção de Edifícios')" class="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] rounded-md border border-slate-200 transition cursor-pointer">4120-4/00 (Construção)</button>
+                                        <button type="button" onclick="addCnaeTag('4930202', 'Transporte Rodoviário')" class="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] rounded-md border border-slate-200 transition cursor-pointer">4930-2/02 (Transporte)</button>
+                                        <button type="button" onclick="addCnaeTag('4711302', 'Supermercados')" class="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] rounded-md border border-slate-200 transition cursor-pointer">4711-3/02 (Supermercados)</button>
+                                        <button type="button" onclick="addCnaeTag('8630503', 'Consultórios Médicos')" class="px-2 py-0.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] rounded-md border border-slate-200 transition cursor-pointer">8630-5/03 (Saúde)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- FILTROS GRANULARES DE BENCHMARK (V2.3) -->
                         <div class="pt-3 border-t border-slate-100 space-y-3">
                             <div class="flex items-center justify-between">
@@ -1767,18 +1832,141 @@
             }
         }
 
+        // CNAE & Segment Multi-selection State
+        let selectedCnaeList = [];
+
+        function handleCnaeInputKey(event) {
+            if (event.key === 'Enter' || event.key === ',') {
+                event.preventDefault();
+                const input = document.getElementById('filter-cnae-input');
+                const val = input.value.trim().replace(/,/g, '');
+                if (val) {
+                    addCnaeTag(val);
+                    input.value = '';
+                }
+            }
+        }
+
+        function addCnaeTag(code, label) {
+            const cleanCode = code.replace(/\D/g, '');
+            if (!cleanCode) return;
+            // Prevent duplicate
+            if (!selectedCnaeList.some(item => item.code === cleanCode)) {
+                selectedCnaeList.push({
+                    code: cleanCode,
+                    display: code,
+                    label: label || `CNAE ${code}`
+                });
+                renderCnaeTags();
+            }
+        }
+
+        function removeCnaeTag(cleanCode) {
+            selectedCnaeList = selectedCnaeList.filter(item => item.code !== cleanCode);
+            renderCnaeTags();
+        }
+
+        function renderCnaeTags() {
+            const container = document.getElementById('cnae-tags-container');
+            const input = document.getElementById('filter-cnae-input');
+            if (!container || !input) return;
+
+            // Remove existing tags except input
+            const existingTags = container.querySelectorAll('.cnae-tag-pill');
+            existingTags.forEach(t => t.remove());
+
+            selectedCnaeList.forEach(item => {
+                const tag = document.createElement('span');
+                tag.className = 'cnae-tag-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold shadow-xs';
+                tag.innerHTML = `
+                    <span class="font-mono">${item.display || item.code}</span>
+                    <span class="text-[10px] text-blue-500 font-normal max-w-[140px] truncate" title="${item.label}">${item.label !== ('CNAE ' + item.code) ? `(${item.label})` : ''}</span>
+                    <button type="button" onclick="removeCnaeTag('${item.code}')" class="text-blue-400 hover:text-blue-700 transition cursor-pointer ml-0.5">
+                        <i class="fa-solid fa-xmark text-[11px]"></i>
+                    </button>
+                `;
+                container.insertBefore(tag, input);
+            });
+        }
+
+        function handleSegmentChange(segmentKey) {
+            if (segmentKey) {
+                showToast(`Segmento '${segmentKey.toUpperCase()}' ativado. Clique em 'Filtrar' para buscar.`, 'info');
+            }
+        }
+
+        function quickFilterSector(sectorCodeOrSegment) {
+            switchNav('search');
+            // If it's a known segment
+            const segSelect = document.getElementById('filter-segment');
+            if (segSelect) {
+                const opt = Array.from(segSelect.options).find(o => o.value === sectorCodeOrSegment);
+                if (opt) {
+                    segSelect.value = sectorCodeOrSegment;
+                } else {
+                    // It's a 2-digit prefix code
+                    addCnaeTag(sectorCodeOrSegment, `Divisão ${sectorCodeOrSegment}`);
+                }
+            }
+            executeSearch();
+        }
+
+        async function openPopularCnaesDropdown() {
+            try {
+                const res = await fetch('/api/v1/cnaes/popular');
+                const data = await res.json();
+                if (data.results && data.results.length > 0) {
+                    // Add first 3 popular CNAEs
+                    data.results.slice(0, 3).forEach(c => {
+                        addCnaeTag(c.clean, c.desc);
+                    });
+                    showToast('CNAEs populares sugeridos adicionados ao filtro.', 'success');
+                }
+            } catch (err) {
+                console.error("Error fetching popular cnaes:", err);
+            }
+        }
+
         async function executeSearch() {
             const q = document.getElementById('filter-q') ? document.getElementById('filter-q').value : '';
             const state = document.getElementById('filter-state') ? document.getElementById('filter-state').value : '';
             const faturamento = document.getElementById('filter-faturamento') ? document.getElementById('filter-faturamento').value : '';
             const minScore = document.getElementById('filter-score') ? document.getElementById('filter-score').value : '0';
             const hasWhatsApp = document.getElementById('filter-whatsapp') ? document.getElementById('filter-whatsapp').checked : false;
+            const segment = document.getElementById('filter-segment') ? document.getElementById('filter-segment').value : '';
+            const cities = document.getElementById('filter-cities') ? document.getElementById('filter-cities').value : '';
+            const ddd = document.getElementById('filter-ddd') ? document.getElementById('filter-ddd').value : '';
+            const taxRegime = document.getElementById('filter-tax-regime') ? document.getElementById('filter-tax-regime').value : '';
+            const matrizFilial = document.getElementById('filter-matriz-filial') ? document.getElementById('filter-matriz-filial').value : '';
+            const hasCorpEmail = document.getElementById('filter-corp-email') ? document.getElementById('filter-corp-email').checked : false;
+            const hasEcommerce = document.getElementById('filter-ecommerce') ? document.getElementById('filter-ecommerce').checked : false;
+
+            // Also check if user typed a CNAE in input without hitting enter
+            const cnaeInput = document.getElementById('filter-cnae-input');
+            if (cnaeInput && cnaeInput.value.trim()) {
+                addCnaeTag(cnaeInput.value.trim());
+                cnaeInput.value = '';
+            }
+
+            const cnaesParam = selectedCnaeList.map(c => c.code).join(',');
 
             let url = `/api/v1/search?limit=50&min_score=${minScore}`;
             if (q) url += `&q=${encodeURIComponent(q)}`;
             if (state) url += `&state=${encodeURIComponent(state)}`;
+            if (cities) url += `&cities=${encodeURIComponent(cities)}`;
+            if (ddd) url += `&ddd=${encodeURIComponent(ddd)}`;
+            if (segment) url += `&segment=${encodeURIComponent(segment)}`;
+            if (cnaesParam) url += `&cnaes=${encodeURIComponent(cnaesParam)}`;
             if (faturamento) url += `&faturamento_faixa=${encodeURIComponent(faturamento)}`;
+            if (taxRegime) url += `&tax_regime=${encodeURIComponent(taxRegime)}`;
+            if (matrizFilial === 'matriz') url += `&is_matriz=true`;
+            if (matrizFilial === 'filial') url += `&is_matriz=false`;
+            if (hasCorpEmail) url += `&has_corporate_email=true`;
+            if (hasEcommerce) url += `&has_ecommerce=true`;
             if (hasWhatsApp) url += `&has_whatsapp=true`;
+
+            const btn = document.querySelector("button[onclick='executeSearch()']");
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Filtrando...';
 
             try {
                 const res = await fetch(url);
@@ -1788,6 +1976,9 @@
                 renderSearchResults(lastSearchResults);
             } catch (err) {
                 console.error("Search error:", err);
+                showToast("Erro ao buscar empresas com os filtros selecionados.", "error");
+            } finally {
+                if (btn) btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> Filtrar Base Oficial';
             }
         }
 
@@ -1796,7 +1987,17 @@
             if (document.getElementById('filter-state')) document.getElementById('filter-state').value = '';
             if (document.getElementById('filter-faturamento')) document.getElementById('filter-faturamento').value = '';
             if (document.getElementById('filter-score')) document.getElementById('filter-score').value = '0';
+            if (document.getElementById('filter-segment')) document.getElementById('filter-segment').value = '';
+            if (document.getElementById('filter-cities')) document.getElementById('filter-cities').value = '';
+            if (document.getElementById('filter-ddd')) document.getElementById('filter-ddd').value = '';
+            if (document.getElementById('filter-tax-regime')) document.getElementById('filter-tax-regime').value = '';
+            if (document.getElementById('filter-matriz-filial')) document.getElementById('filter-matriz-filial').value = '';
+            if (document.getElementById('filter-corp-email')) document.getElementById('filter-corp-email').checked = false;
+            if (document.getElementById('filter-ecommerce')) document.getElementById('filter-ecommerce').checked = false;
             if (document.getElementById('filter-whatsapp')) document.getElementById('filter-whatsapp').checked = false;
+            
+            selectedCnaeList = [];
+            renderCnaeTags();
             executeSearch();
         }
 
