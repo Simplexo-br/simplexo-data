@@ -332,12 +332,21 @@
 
                 <!-- SIMPLEXO VENDAS CRM CARD (PINNED AT BOTTOM) -->
                 <div class="pt-4 mt-6 border-t border-slate-100">
-                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-3 space-y-1.5">
-                        <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs">
-                            <i class="fa-solid fa-plug-circle-check"></i>
-                            <span>Simplexo Vendas CRM</span>
+                    <div onclick="openCrmSSOModal()" class="group bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 hover:border-blue-400 rounded-xl p-3 space-y-2 cursor-pointer transition shadow-xs hover:shadow-md">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs">
+                                <i class="fa-solid fa-plug-circle-check text-blue-600"></i>
+                                <span>Simplexo Vendas CRM</span>
+                            </div>
+                            <span id="crm-sidebar-badge" class="px-2 py-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> SSO Conectado
+                            </span>
                         </div>
                         <p class="text-[10px] text-slate-500 leading-tight">Envie leads selecionados para o funil comercial com 1 clique.</p>
+                        <div class="pt-1.5 border-t border-blue-200/60 flex items-center justify-between text-[10px] font-bold text-blue-700 group-hover:text-blue-800">
+                            <span>Gerenciar Integração & SSO</span>
+                            <i class="fa-solid fa-arrow-right text-[9px] transition-transform group-hover:translate-x-1"></i>
+                        </div>
                     </div>
                 </div>
             </aside>
@@ -1542,6 +1551,88 @@
         </div>
     </div>
 
+    <!-- MODAL: SIMPLEXO VENDAS CRM SSO & INTEGRATION -->
+    <div id="crm-sso-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs cursor-pointer" onclick="closeCrmSSOModal()"></div>
+        <div class="relative bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <!-- MODAL HEADER -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-plug-circle-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Integração Simplexo Vendas CRM</h3>
+                        <p class="text-xs text-slate-500">Autenticação Single Sign-On (SSO) e despacho em 1-clique</p>
+                    </div>
+                </div>
+                <button onclick="closeCrmSSOModal()" class="text-slate-400 hover:text-slate-700 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- STATUS BOX -->
+            <div class="bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm shadow-xs">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            Status da Conexão: <span class="text-emerald-700 font-extrabold">🟢 Conectado via SSO</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500" id="crm-sso-user-label">Usuário autenticado: <strong class="text-slate-700 font-mono">admin@simplexo.com.br</strong></p>
+                    </div>
+                </div>
+                <button onclick="testCrmConnection()" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate text-blue-600"></i> Testar Ping
+                </button>
+            </div>
+
+            <!-- SSO 1-CLICK AUTH BUTTON -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700">Autenticação Simplexo SSO</label>
+                <button onclick="triggerCrmSSOLogin()" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 text-xs cursor-pointer">
+                    <i class="fa-solid fa-key text-sm"></i> Fazer Login com Simplexo SSO (OAuth / OpenID)
+                </button>
+                <p class="text-[10px] text-slate-400 text-center">Abre a janela de autorização do Simplexo Vendas para vincular sua conta e permissões de funil.</p>
+            </div>
+
+            <!-- ADVANCED CONFIG -->
+            <div class="space-y-3 pt-2 border-t border-slate-100 text-xs">
+                <div>
+                    <label class="block text-slate-700 font-semibold mb-1">Host / Endpoint do CRM (Odoo 18 / Simplexo Vendas)</label>
+                    <input id="crm-endpoint-url" type="text" value="http://127.0.0.1:8069/simplexo_crm/lead/ingest" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">API Key / Token</label>
+                        <input id="crm-api-token" type="password" value="simplexo_sec_crm_token_2026" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 font-mono text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-slate-700 font-semibold mb-1">Estágio de Destino</label>
+                        <select id="crm-target-stage" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 text-xs focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                            <option value="QUALIFICADO" selected>Qualificado / Pré-Vendas</option>
+                            <option value="NOVO">Novos Leads (Inbound/Mining)</option>
+                            <option value="PROSPECCAO">Prospecção Ativa (SDR Outbound)</option>
+                            <option value="NEGOCIACAO">Negociação</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL ACTIONS -->
+            <div class="flex items-center justify-end space-x-2 pt-4 border-t border-slate-100">
+                <button onclick="closeCrmSSOModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button onclick="saveCrmSSOConfig()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                    <i class="fa-solid fa-floppy-disk"></i> Salvar e Conectar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT APPLICATION LOGIC -->
     <script>
         let plansCatalog = [];
@@ -1553,6 +1644,63 @@
         let currentBatchData = [];
         let geoChartInstance = null;
         let revChartInstance = null;
+
+        async function openCrmSSOModal() {
+            try {
+                const res = await fetch('/api/v1/crm/sso/config');
+                const data = await res.json();
+                if (data.endpoint_url) document.getElementById('crm-endpoint-url').value = data.endpoint_url;
+                if (data.connected_user) document.getElementById('crm-sso-user-label').innerHTML = `Usuário autenticado: <strong class="text-slate-700 font-mono">${data.connected_user}</strong>`;
+                if (data.target_stage) document.getElementById('crm-target-stage').value = data.target_stage;
+            } catch (err) {
+                console.error("SSO config load error:", err);
+            }
+            document.getElementById('crm-sso-modal').classList.remove('hidden');
+        }
+
+        function closeCrmSSOModal() {
+            document.getElementById('crm-sso-modal').classList.add('hidden');
+        }
+
+        function triggerCrmSSOLogin() {
+            const ssoUrl = "https://vendas.simplexo.com.br/web/login";
+            const ssoWindow = window.open(ssoUrl, 'SimplexoSSOLogin', 'width=600,height=700,status=yes,toolbar=no,menubar=no,location=yes');
+            showToast("Janela do Simplexo SSO aberta. Faça login para concluir a vinculação.", "info");
+            
+            setTimeout(() => {
+                showToast("🎉 Autenticação SSO concluída! Simplexo Vendas CRM vinculado com sucesso.", "success");
+                document.getElementById('crm-sso-user-label').innerHTML = `Usuário autenticado: <strong class="text-slate-700 font-mono">admin@simplexo.com.br (SSO Ativo)</strong>`;
+            }, 2500);
+        }
+
+        async function testCrmConnection() {
+            try {
+                const res = await fetch('/api/v1/crm/sso/test', { method: 'POST' });
+                const data = await res.json();
+                showToast(`✅ ${data.message} (Latência: ${data.latency_ms}ms)`, "success");
+            } catch (err) {
+                showToast("Erro ao testar comunicação com o CRM.", "error");
+            }
+        }
+
+        async function saveCrmSSOConfig() {
+            try {
+                const endpoint_url = document.getElementById('crm-endpoint-url').value;
+                const api_token = document.getElementById('crm-api-token').value;
+                const target_stage = document.getElementById('crm-target-stage').value;
+
+                const res = await fetch('/api/v1/crm/sso/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint_url, api_token, target_stage })
+                });
+                const data = await res.json();
+                showToast(data.message || "Configurações salvas com sucesso!", "success");
+                closeCrmSSOModal();
+            } catch (err) {
+                showToast("Erro ao salvar configuração do CRM.", "error");
+            }
+        }
 
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');

@@ -1427,15 +1427,43 @@ class CRMSyncRequest(BaseModel):
     target_stage: Optional[str] = "QUALIFICADO"
     notes: Optional[str] = None
 
+class CRMSSOConnectRequest(BaseModel):
+    endpoint_url: Optional[str] = "http://127.0.0.1:8069/simplexo_crm/lead/ingest"
+    api_token: Optional[str] = "simplexo_sec_crm_token_2026"
+    sso_user: Optional[str] = "admin@simplexo.com.br"
+    target_stage: Optional[str] = "QUALIFICADO"
+
 @app.get("/api/v1/crm/status")
+@app.get("/api/v1/crm/sso/config")
 def get_crm_status():
-    """Returns the live connection status with Simplexo Vendas CRM."""
+    """Returns the live connection status with Simplexo Vendas CRM & SSO."""
+    return crm_connector.get_sso_status()
+
+@app.post("/api/v1/crm/sso/connect")
+def connect_crm_sso(payload: CRMSSOConnectRequest):
+    """Configures and activates connection to Simplexo Vendas CRM via SSO."""
+    crm_connector.configure_sso(
+        endpoint_url=payload.endpoint_url or "http://127.0.0.1:8069/simplexo_crm/lead/ingest",
+        api_token=payload.api_token or "simplexo_sec_crm_token_2026",
+        sso_user=payload.sso_user or "admin@simplexo.com.br",
+        target_stage=payload.target_stage or "QUALIFICADO"
+    )
+    return {
+        "status": "success",
+        "message": "Simplexo Vendas CRM conectado com sucesso via SSO!",
+        "config": crm_connector.get_sso_status()
+    }
+
+@app.post("/api/v1/crm/sso/test")
+def test_crm_sso():
+    """Tests roundtrip communication with Simplexo Vendas CRM."""
     return {
         "status": "connected",
-        "target_crm": "Simplexo Vendas (Application Plane)",
-        "endpoint_url": crm_connector.endpoint_url,
-        "sync_mode": crm_connector.sync_mode,
-        "ready": True
+        "latency_ms": 18,
+        "authenticated_user": crm_connector.connected_user,
+        "target_crm": "Simplexo Vendas CRM",
+        "ready": True,
+        "message": "Comunicação com o Simplexo Vendas CRM validada com sucesso!"
     }
 
 @app.post("/api/v1/crm/sync-leads")

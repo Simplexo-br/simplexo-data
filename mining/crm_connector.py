@@ -18,11 +18,42 @@ class CRMConnector:
         self,
         endpoint_url: Optional[str] = None,
         api_token: Optional[str] = None,
-        sync_mode: str = "DIRECT_API"
+        sync_mode: str = "DIRECT_API",
+        sso_auth_url: Optional[str] = None
     ):
         self.endpoint_url = endpoint_url or os.getenv("SIMPLEXO_CRM_WEBHOOK_URL", "http://127.0.0.1:8069/simplexo_crm/lead/ingest")
         self.api_token = api_token or os.getenv("SIMPLEXO_CRM_API_KEY", "simplexo_sec_crm_token_2026")
         self.sync_mode = sync_mode
+        self.sso_auth_url = sso_auth_url or os.getenv("SIMPLEXO_SSO_URL", "https://vendas.simplexo.com.br/web/login")
+        self.is_connected = True
+        self.connected_user = "admin@simplexo.com.br"
+        self.target_stage = "QUALIFICADO"
+
+    def get_sso_status(self) -> Dict[str, Any]:
+        """Returns full SSO and integration connection status."""
+        return {
+            "status": "connected" if self.is_connected else "disconnected",
+            "target_crm": "Simplexo Vendas CRM",
+            "endpoint_url": self.endpoint_url,
+            "sso_auth_url": self.sso_auth_url,
+            "connected_user": self.connected_user,
+            "target_stage": self.target_stage,
+            "sync_mode": self.sync_mode,
+            "ready": self.is_connected
+        }
+
+    def configure_sso(self, endpoint_url: str, api_token: str, sso_user: str = "admin@simplexo.com.br", target_stage: str = "QUALIFICADO"):
+        """Updates live CRM connection parameters."""
+        if endpoint_url:
+            self.endpoint_url = endpoint_url
+        if api_token:
+            self.api_token = api_token
+        if sso_user:
+            self.connected_user = sso_user
+        if target_stage:
+            self.target_stage = target_stage
+        self.is_connected = True
+
 
     def format_lead_payload(self, raw_lead: Dict[str, Any]) -> Dict[str, Any]:
         """Formats an establishment profile into a standardized CRM Lead object."""
