@@ -917,10 +917,37 @@ def get_company_360(cnpj: str):
             ],
             "branches": [
                 {"cnpj": f"{clean_cnpj[:8]}0002-00", "city": "Santos", "state": "SP"},
-                {"cnpj": f"{clean_cnpj[:8]}0003-00", "city": "Macaé", "state": "RJ"},
-                {"cnpj": f"{clean_cnpj[:8]}0004-00", "city": "Vitória", "state": "ES"}
             ]
         }
+
+from mining.whatsapp_checker import check_whatsapp_existence, classify_brazilian_phone
+
+@app.get("/api/v1/enrich/whatsapp/check")
+def check_single_whatsapp(phone: str):
+    """
+    Verifica determinística e em tempo real se um número de telefone brasileiro
+    é móvel válido e ativo para WhatsApp, sanitizando números fixos e inválidos.
+    """
+    res = check_whatsapp_existence(phone)
+    return res
+
+class WhatsAppBatchVerifyRequest(BaseModel):
+    phones: List[str]
+
+@app.post("/api/v1/enrich/whatsapp/verify-batch")
+def check_batch_whatsapp(payload: WhatsAppBatchVerifyRequest):
+    """
+    Higieniza e verifica em lote uma lista de telefones, separando Fixos, Celulares e WhatsApps Válidos.
+    """
+    results = []
+    for ph in payload.phones[:200]:
+        results.append(check_whatsapp_existence(ph))
+    return {
+        "total_analyzed": len(results),
+        "valid_whatsapp_count": sum(1 for r in results if r.get("exists_on_whatsapp")),
+        "landlines_count": sum(1 for r in results if r.get("type") == "landline"),
+        "results": results
+    }
 
 @app.post("/api/v1/enrich/batch")
 async def batch_enrich_companies(file: UploadFile = File(...)):
