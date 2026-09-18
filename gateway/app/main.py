@@ -1723,8 +1723,7 @@ def enrich_linkedin_profile(
     """
     clean_p = clean_person_for_search(name)
     clean_c = clean_company_for_search(company)
-    
-    xray_query = f'site:linkedin.com/in/ "{clean_p}" {clean_c}'.strip()
+    xray_query = f"site:linkedin.com/in/ {clean_p} {clean_c}".strip()
     google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
     linkedin_search_url = f"https://www.linkedin.com/search/results/all/?keywords={urllib.parse.quote(clean_p + ' ' + clean_c)}"
     linkedin_people_url = f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(clean_p)}"
@@ -2126,7 +2125,7 @@ def stonestation_search_b2c(payload: StoneStationB2CQuery):
             "uf": "RJ",
             "age_bracket": "50 a 65 anos",
             "capital_social": "R$ 205.431.999.983",
-            "google_xray_url": "https://www.google.com/search?q=site%3Alinkedin.com/in/%20%22Magda%20Maria%20Regina%20Chambriard%22%20Petroleo%20Brasileiro",
+            "google_xray_url": "https://www.google.com/search?q=site%3Alinkedin.com/in/%20Magda%20Chambriard%20Petrobras",
             "verified_status": "VERIFICADO"
         },
         {
@@ -2138,7 +2137,7 @@ def stonestation_search_b2c(payload: StoneStationB2CQuery):
             "uf": "SP",
             "age_bracket": "45 a 55 anos",
             "capital_social": "R$ 1.800.000.000",
-            "google_xray_url": "https://www.google.com/search?q=site%3Alinkedin.com/in/%20%22Dennis%20Herszkowicz%22%20Totvs",
+            "google_xray_url": "https://www.google.com/search?q=site%3Alinkedin.com/in/%20Dennis%20Herszkowicz%20Totvs",
             "verified_status": "VERIFICADO"
         }
     ]

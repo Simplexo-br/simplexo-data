@@ -97,7 +97,8 @@ def profile_decisors(partners_qsa: List[Dict], domain: str = "", company_name: s
         search_query = f"{clean_person} {clean_company}".strip()
         
         # 1. Google X-Ray (Direct public profile resolver - avoids LinkedIn login authwall)
-        xray_query = f'site:linkedin.com/in/ "{clean_person}" {clean_company}'.strip()
+        # We omit restrictive quotes so Google performs flexible fuzzy matching across middle names and abbreviations
+        xray_query = f"site:linkedin.com/in/ {clean_person} {clean_company}".strip()
         google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
         
         # 2. LinkedIn In-App Search

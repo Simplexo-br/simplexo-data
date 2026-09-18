@@ -1985,7 +1985,7 @@
                     data.decisors.forEach(d => {
                         const compBrand = (p.trade_name || p.legal_name || '').replace(/(LTDA|S\.A\.|ME|EPP|EIRELI|HOLDING|PARTICIPACOES|SERVICOS)/gi, '').trim().split(' ')[0];
                         const cleanP = (d.display_name || d.name || '').replace(/[^a-zA-Z0-9\s]/g, '').trim();
-                        const xrayUrl = d.google_xray_url || `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ "' + cleanP + '" ' + compBrand)}`;
+                        const xrayUrl = d.google_xray_url || `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ ' + cleanP + ' ' + compBrand)}`;
                         const appUrl = d.linkedin_search_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(cleanP + ' ' + compBrand)}`;
                         const escapedName = d.name.replace(/'/g, "\\'");
 

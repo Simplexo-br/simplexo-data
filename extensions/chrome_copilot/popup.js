@@ -126,11 +126,9 @@ function renderCompany(c) {
     const pRole = p.role || 'Sócio';
     
     // Clean name and company for reliable LinkedIn finding
-    const cleanPerson = pName.replace(/[^a-zA-Z0-9\s]/g, '').split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).join(' ');
     const rawComp = c.trade_name || c.company_name || '';
     const cleanComp = rawComp.replace(/(LTDA|S\.A\.|ME|EPP|EIRELI|HOLDING|PARTICIPACOES|SERVICOS)/gi, '').trim().split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).slice(0, 2).join(' ');
-    
-    const googleXrayUrl = `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ "' + cleanPerson + '" ' + cleanComp)}`;
+    const googleXrayUrl = `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ ' + cleanPerson + ' ' + cleanComp)}`;
     const linkedinAppUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(cleanPerson + ' ' + cleanComp)}`;
     
     const pDiv = document.createElement('div');
