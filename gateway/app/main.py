@@ -587,6 +587,7 @@ def search_companies(
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             sql = """
                 SELECT 
+                    COUNT(*) OVER() as total_matches,
                     e.id, e.cnpj, e.trade_name, c.legal_name, e.cnae_main, e.cnae_main_desc,
                     c.company_size, c.share_capital,
                     e.city_name, e.state_code, e.registration_status,
@@ -795,7 +796,19 @@ def search_companies(
                 row["estimated_metrics"] = est_metrics
                 formatted_results.append(row)
 
-            return {"count": len(formatted_results), "limit": limit, "offset": offset, "results": formatted_results}
+            total_count = raw_results[0]["total_matches"] if raw_results and "total_matches" in raw_results[0] else len(formatted_results)
+            page_num = (offset // limit) + 1 if limit > 0 else 1
+            total_pages = (total_count + limit - 1) // limit if limit > 0 and total_count > 0 else 1
+
+            return {
+                "count": len(formatted_results),
+                "total_count": total_count,
+                "page": page_num,
+                "limit": limit,
+                "offset": offset,
+                "total_pages": total_pages,
+                "results": formatted_results
+            }
 
 @app.get("/api/v1/company/{cnpj}")
 def get_company_360(cnpj: str):

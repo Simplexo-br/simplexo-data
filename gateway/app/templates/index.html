@@ -593,7 +593,7 @@
                         </div>
 
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 pt-2">
-                            <button onclick="quickFilterSector('47')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('varejo')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-cart-shopping"></i>
                                 </div>
@@ -601,7 +601,7 @@
                                 <div class="text-[10px] text-slate-400">12.8M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('62')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('tecnologia')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-code"></i>
                                 </div>
@@ -609,7 +609,7 @@
                                 <div class="text-[10px] text-slate-400">2.8M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('41')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('construcao')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-helmet-safety"></i>
                                 </div>
@@ -617,7 +617,7 @@
                                 <div class="text-[10px] text-slate-400">4.9M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('86')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('saude')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-heart-pulse"></i>
                                 </div>
@@ -625,7 +625,7 @@
                                 <div class="text-[10px] text-slate-400">2.3M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('56')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('alimentos')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-utensils"></i>
                                 </div>
@@ -633,7 +633,7 @@
                                 <div class="text-[10px] text-slate-400">4.1M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('70')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('consultoria')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-briefcase"></i>
                                 </div>
@@ -641,7 +641,7 @@
                                 <div class="text-[10px] text-slate-400">11.4M empresas</div>
                             </button>
 
-                            <button onclick="quickFilterSector('25')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
+                            <button onclick="quickFilterSector('industria')" class="bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 rounded-xl p-3 text-center transition group cursor-pointer">
                                 <div class="w-8 h-8 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center text-xs mx-auto mb-2 group-hover:scale-110 transition">
                                     <i class="fa-solid fa-industry"></i>
                                 </div>
@@ -913,6 +913,30 @@
                                 </thead>
                                 <tbody id="search-table-body" class="divide-y divide-slate-100"></tbody>
                             </table>
+                        </div>
+
+                        <!-- SEARCH PAGINATION & PAGE SIZE COMPONENT -->
+                        <div id="search-pagination-container" class="p-4 border-t border-slate-200 bg-slate-50/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                            <div class="flex items-center gap-3 text-slate-500">
+                                <span id="pagination-info-text">Exibindo <strong class="text-slate-800">0–0</strong> de <strong class="text-slate-800">0</strong> empresas</span>
+                                <div class="flex items-center gap-1.5 pl-3 border-l border-slate-200">
+                                    <span class="text-[11px] text-slate-400">Exibir:</span>
+                                    <select id="search-page-size" onchange="changePageSize(this.value)" class="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 shadow-xs">
+                                        <option value="20">20 por página</option>
+                                        <option value="50" selected>50 por página</option>
+                                        <option value="100">100 por página</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1" id="pagination-buttons">
+                                <button id="btn-page-prev" onclick="goToPage(currentPage - 1)" class="px-3 py-1.5 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-200 rounded-lg text-slate-700 font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    <i class="fa-solid fa-chevron-left text-[10px]"></i> Anterior
+                                </button>
+                                <div id="page-numbers-list" class="flex items-center space-x-1"></div>
+                                <button id="btn-page-next" onclick="goToPage(currentPage + 1)" class="px-3 py-1.5 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-200 rounded-lg text-slate-700 font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                    Próxima <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1869,14 +1893,6 @@
             }
         }
 
-        function quickFilterSector(cnaeQuery) {
-            switchNav('search');
-            document.getElementById('filter-q').value = cnaeQuery;
-            executeSearch();
-        }
-
-        const quickSearchSector = quickFilterSector;
-
         async function loadDashboardStats() {
             try {
                 const res = await fetch('/api/v1/stats');
@@ -2043,8 +2059,100 @@
             }
         }
 
+        // Pagination State
+        let currentPage = 1;
+        let currentLimit = 50;
+        let totalSearchMatches = 0;
+        let totalSearchPages = 1;
+
+        function changePageSize(newSize) {
+            currentLimit = parseInt(newSize, 10) || 50;
+            currentPage = 1;
+            executeSearch(1);
+        }
+
+        function goToPage(page) {
+            if (page < 1 || page > totalSearchPages) return;
+            currentPage = page;
+            executeSearch(page);
+            const tableCard = document.getElementById('view-search');
+            if (tableCard) {
+                tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function renderPaginationControls(totalCount, page, limit) {
+            totalSearchMatches = totalCount;
+            currentPage = page;
+            currentLimit = limit;
+            totalSearchPages = Math.ceil(totalCount / limit) || 1;
+
+            const start = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+            const end = Math.min(page * limit, totalCount);
+
+            const infoText = document.getElementById('pagination-info-text');
+            if (infoText) {
+                infoText.innerHTML = `Exibindo <strong class="text-slate-800">${start}–${end}</strong> de <strong class="text-slate-800">${Number(totalCount).toLocaleString('pt-BR')}</strong> empresas (Pág. <strong class="text-slate-800">${page}</strong> de <strong class="text-slate-800">${totalSearchPages}</strong>)`;
+            }
+
+            const btnPrev = document.getElementById('btn-page-prev');
+            const btnNext = document.getElementById('btn-page-next');
+            if (btnPrev) btnPrev.disabled = (page <= 1);
+            if (btnNext) btnNext.disabled = (page >= totalSearchPages);
+
+            const numbersContainer = document.getElementById('page-numbers-list');
+            if (!numbersContainer) return;
+            numbersContainer.innerHTML = '';
+
+            let startPage = Math.max(1, page - 2);
+            let endPage = Math.min(totalSearchPages, page + 2);
+
+            if (startPage > 1) {
+                numbersContainer.appendChild(createPageBtn(1, 1 === page));
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.className = 'px-1.5 text-slate-400 text-xs font-semibold';
+                    dots.innerText = '...';
+                    numbersContainer.appendChild(dots);
+                }
+            }
+
+            for (let p = startPage; p <= endPage; p++) {
+                numbersContainer.appendChild(createPageBtn(p, p === page));
+            }
+
+            if (endPage < totalSearchPages) {
+                if (endPage < totalSearchPages - 1) {
+                    const dots = document.createElement('span');
+                    dots.className = 'px-1.5 text-slate-400 text-xs font-semibold';
+                    dots.innerText = '...';
+                    numbersContainer.appendChild(dots);
+                }
+                numbersContainer.appendChild(createPageBtn(totalSearchPages, totalSearchPages === page));
+            }
+        }
+
+        function createPageBtn(pageNumber, isActive = false) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.onclick = () => goToPage(pageNumber);
+            if (isActive) {
+                btn.className = 'w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-xs shadow-xs cursor-default';
+            } else {
+                btn.className = 'w-8 h-8 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs shadow-xs transition cursor-pointer';
+            }
+            btn.innerText = pageNumber;
+            return btn;
+        }
+
         function quickFilterSector(sectorCodeOrSegment) {
             switchNav('search');
+            // Clear textual search and excessive checkboxes
+            const qInput = document.getElementById('filter-q');
+            if (qInput) qInput.value = '';
+            if (document.getElementById('filter-ecommerce')) document.getElementById('filter-ecommerce').checked = false;
+            if (document.getElementById('filter-corp-email')) document.getElementById('filter-corp-email').checked = false;
+
             // If it's a known segment
             const segSelect = document.getElementById('filter-segment');
             if (segSelect) {
@@ -2056,7 +2164,10 @@
                     addCnaeTag(sectorCodeOrSegment, `Divisão ${sectorCodeOrSegment}`);
                 }
             }
-            executeSearch();
+            selectedCnaeList = [];
+            renderCnaeTags();
+            currentPage = 1;
+            executeSearch(1);
         }
 
         async function openPopularCnaesDropdown() {
@@ -2075,7 +2186,8 @@
             }
         }
 
-        async function executeSearch() {
+        async function executeSearch(page = 1) {
+            currentPage = page || 1;
             const q = document.getElementById('filter-q') ? document.getElementById('filter-q').value : '';
             const state = document.getElementById('filter-state') ? document.getElementById('filter-state').value : '';
             const faturamento = document.getElementById('filter-faturamento') ? document.getElementById('filter-faturamento').value : '';
@@ -2097,8 +2209,10 @@
             }
 
             const cnaesParam = selectedCnaeList.map(c => c.code).join(',');
+            const limit = currentLimit || 50;
+            const offset = (currentPage - 1) * limit;
 
-            let url = `/api/v1/search?limit=50&min_score=${minScore}`;
+            let url = `/api/v1/search?limit=${limit}&offset=${offset}&min_score=${minScore}`;
             if (q) url += `&q=${encodeURIComponent(q)}`;
             if (state) url += `&state=${encodeURIComponent(state)}`;
             if (cities) url += `&cities=${encodeURIComponent(cities)}`;
@@ -2121,7 +2235,8 @@
                 const data = await res.json();
                 lastSearchResults = data.results || [];
                 selectedSearchCnpjs.clear();
-                renderSearchResults(lastSearchResults);
+                renderSearchResults(lastSearchResults, data.total_count !== undefined ? data.total_count : lastSearchResults.length);
+                renderPaginationControls(data.total_count !== undefined ? data.total_count : lastSearchResults.length, data.page || currentPage, data.limit || limit);
             } catch (err) {
                 console.error("Search error:", err);
                 showToast("Erro ao buscar empresas com os filtros selecionados.", "error");
@@ -2169,9 +2284,10 @@
             }
         }
 
-        function renderSearchResults(items) {
+        function renderSearchResults(items, totalCount) {
             const countEl = document.getElementById('results-count');
-            if (countEl) countEl.innerText = `${items.length} Empresas Encontradas`;
+            const total = totalCount !== undefined ? totalCount : items.length;
+            if (countEl) countEl.innerText = `${Number(total).toLocaleString('pt-BR')} Empresas Encontradas`;
             const tbody = document.getElementById('search-table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
