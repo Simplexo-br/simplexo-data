@@ -99,13 +99,19 @@ def clean_person_for_search(name: str) -> str:
     words = [p.capitalize() for p in clean.split() if len(p) > 1 and p.lower() not in ('de', 'da', 'do', 'dos', 'das', 'e', 'junior', 'filho', 'neto', 'sobrinho')]
     return " ".join(words) if words else name.title()
 
+from mining.linkedin_verifier import (
+    extract_concise_name,
+    clean_company_keyword,
+    generate_linkedin_search_url,
+    verify_public_linkedin_profile
+)
+
 def profile_decisors(partners_qsa: List[Dict], domain: str = "", company_name: str = "") -> List[Dict[str, Any]]:
     """
-    Enriches QSA partners list with decisor profiles, high-precision LinkedIn people search URLs,
-    Google X-Ray direct profile URLs and verified email guesses.
+    Enriches QSA partners list with decisor profiles, verified direct LinkedIn profiles,
+    and high-precision native LinkedIn people searches.
     """
     decisors = []
-    clean_company = clean_company_for_search(company_name)
     
     for partner in partners_qsa:
         name = partner.get("name") or partner.get("partner_name", "")
@@ -117,50 +123,43 @@ def profile_decisors(partners_qsa: List[Dict], domain: str = "", company_name: s
         is_pj = is_corporate_entity(name) or any(k in role.lower() for k in ["pessoa juridica", "socio domiciliado no exterior", "socio pj", "entidade"])
         
         clean_person = clean_person_for_search(name)
+        concise_name = extract_concise_name(name) if not is_pj else name
         name_parts = clean_person.split()
         is_valid_person = (not is_pj) and len(name_parts) >= 2
         
         inferred_emails = infer_email_patterns(name, domain) if (domain and is_valid_person) else []
         validated_emails = [validate_corporate_email(em) for em in inferred_emails]
         
-        # High Precision Clean Search
-        search_query = f"{clean_person} {clean_company}".strip() if is_valid_person else ""
-        
-        # Determine verified LinkedIn presence
+        # Determine verified LinkedIn direct profile vs native search
         has_verified_linkedin = False
-        google_xray_url = ""
+        linkedin_direct_url = None
         linkedin_search_url = ""
         
         if is_valid_person:
-            # Executive check: C-Level, Director, Partner Administrator
-            is_executive = any(w in role.lower() for w in ["administrador", "diretor", "presidente", "socio", "ceo", "gestao", "gerente", "titular"])
+            # 1. Check if direct profile already registered in partner record
+            raw_linkedin = partner.get("linkedin_url") or partner.get("linkedin")
+            if raw_linkedin and "linkedin.com/in/" in raw_linkedin:
+                has_verified_linkedin = True
+                linkedin_direct_url = raw_linkedin
             
-            if partner.get("linkedin_url"):
-                has_verified_linkedin = True
-                google_xray_url = partner.get("linkedin_url")
-                linkedin_search_url = partner.get("linkedin_url")
-            elif is_executive and len(clean_company) > 1 and len(clean_person) > 3:
-                # Verified executive resolution
-                has_verified_linkedin = True
-                xray_query = f"site:linkedin.com/in/ {clean_person} {clean_company}".strip()
-                google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
-                linkedin_search_url = f"https://www.linkedin.com/search/results/all/?keywords={urllib.parse.quote(search_query)}"
+            # 2. Native LinkedIn Search URL (Opens clean inside LinkedIn with concise name)
+            linkedin_search_url = generate_linkedin_search_url(name, company_name)
         
         decisors.append({
             "name": name,
-            "display_name": clean_person if is_valid_person else name,
+            "display_name": concise_name if is_valid_person else name,
+            "concise_name": concise_name,
             "formal_role": role,
             "seniority": "Holding / Sócia PJ" if is_pj else ("C-Level / Sócio" if any(w in role.lower() for w in ["administrador", "diretor", "presidente", "socio"]) else "Gestão"),
             "domain": domain,
             "is_person": not is_pj,
             "has_linkedin": has_verified_linkedin,
-            "inferred_emails": validated_emails,
-            "google_xray_url": google_xray_url,
+            "linkedin_url": linkedin_direct_url,
             "linkedin_search_url": linkedin_search_url,
-            "linkedin_people_url": f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(clean_person)}" if is_valid_person else "",
-            "linkedin_direct_url": google_xray_url,
-            "search_query": search_query
+            "inferred_emails": validated_emails,
+            "search_query": f"{concise_name} {clean_company_keyword(company_name)}".strip() if is_valid_person else ""
         })
         
     return decisors
+
 

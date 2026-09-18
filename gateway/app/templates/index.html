@@ -2209,14 +2209,14 @@
                 if (data.decisors && data.decisors.length > 0) {
                     data.decisors.forEach(d => {
                         const isPJ = d.is_person === false;
-                        const hasLinkedIn = d.has_linkedin === true && !isPJ && (d.google_xray_url || d.linkedin_url);
-                        const escapedName = d.name.replace(/'/g, "\\'");
+                        const hasVerifiedLinkedIn = d.has_linkedin === true && !isPJ && Boolean(d.linkedin_url);
+                        const escapedName = (d.name || '').replace(/'/g, "\\'");
+                        const conciseName = d.concise_name || d.display_name || d.name;
 
                         let linkedinActionsHtml = '';
-                        if (hasLinkedIn) {
-                            const verifiedUrl = d.linkedin_url || d.google_xray_url;
+                        if (hasVerifiedLinkedIn) {
                             linkedinActionsHtml = `
-                                <a href="${verifiedUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition cursor-pointer flex items-center gap-1" title="Acessar Perfil Verificado no LinkedIn">
+                                <a href="${d.linkedin_url}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 shadow-xs" title="Acessar Perfil Verificado no LinkedIn">
                                     <i class="fa-brands fa-linkedin"></i> Perfil Verificado
                                 </a>
                             `;
@@ -2225,6 +2225,12 @@
                                 <span class="px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded text-[10px] font-medium flex items-center gap-1" title="Sócio Pessoa Jurídica / Holding">
                                     <i class="fa-solid fa-building"></i> Pessoa Jurídica
                                 </span>
+                            `;
+                        } else if (d.linkedin_search_url) {
+                            linkedinActionsHtml = `
+                                <a href="${d.linkedin_search_url}" target="_blank" rel="noopener noreferrer" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg text-[10px] font-medium transition cursor-pointer flex items-center gap-1" title="Pesquisar '${conciseName}' no LinkedIn">
+                                    <i class="fa-brands fa-linkedin text-blue-600"></i> Buscar no LinkedIn
+                                </a>
                             `;
                         }
 
