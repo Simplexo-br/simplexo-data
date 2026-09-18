@@ -1983,25 +1983,34 @@
                 decisorsContainer.innerHTML = '';
                 if (data.decisors && data.decisors.length > 0) {
                     data.decisors.forEach(d => {
-                        const compBrand = (p.trade_name || p.legal_name || '').replace(/(LTDA|S\.A\.|ME|EPP|EIRELI|HOLDING|PARTICIPACOES|SERVICOS)/gi, '').trim().split(' ')[0];
-                        const cleanP = (d.display_name || d.name || '').replace(/[^a-zA-Z0-9\s]/g, '').trim();
-                        const xrayUrl = d.google_xray_url || `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ ' + cleanP + ' ' + compBrand)}`;
-                        const appUrl = d.linkedin_search_url || `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(cleanP + ' ' + compBrand)}`;
+                        const isPJ = d.is_person === false;
+                        const hasLinkedIn = d.has_linkedin === true && !isPJ && (d.google_xray_url || d.linkedin_url);
                         const escapedName = d.name.replace(/'/g, "\\'");
+
+                        let linkedinActionsHtml = '';
+                        if (hasLinkedIn) {
+                            const verifiedUrl = d.linkedin_url || d.google_xray_url;
+                            linkedinActionsHtml = `
+                                <a href="${verifiedUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition cursor-pointer flex items-center gap-1" title="Acessar Perfil Verificado no LinkedIn">
+                                    <i class="fa-brands fa-linkedin"></i> Perfil Verificado
+                                </a>
+                            `;
+                        } else if (isPJ) {
+                            linkedinActionsHtml = `
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 border border-slate-200 rounded text-[10px] font-medium flex items-center gap-1" title="Sócio Pessoa Jurídica / Holding">
+                                    <i class="fa-solid fa-building"></i> Pessoa Jurídica
+                                </span>
+                            `;
+                        }
 
                         decisorsContainer.innerHTML += `
                             <div class="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200 flex items-center justify-between text-xs transition">
                                 <div class="pr-2">
                                     <span class="font-bold text-slate-900">${d.name}</span>
-                                    <p class="text-[11px] text-slate-500">${d.formal_role} &bull; <span class="text-blue-600 font-semibold">${d.seniority}</span></p>
+                                    <p class="text-[11px] text-slate-500">${d.formal_role} &bull; <span class="${isPJ ? 'text-slate-500' : 'text-blue-600 font-semibold'}">${isPJ ? 'Holding / Sócia PJ' : d.seniority}</span></p>
                                 </div>
                                 <div class="flex items-center gap-1.5 flex-shrink-0">
-                                    <a href="${xrayUrl}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white border border-blue-200 rounded-lg text-[11px] font-semibold transition cursor-pointer flex items-center gap-1" title="Acessar Perfil Direto do Sócio (Sem bloqueio de login)">
-                                        <i class="fa-brands fa-linkedin"></i> Perfil Verificado
-                                    </a>
-                                    <a href="${appUrl}" target="_blank" rel="noopener noreferrer" class="p-1 px-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-[11px] transition cursor-pointer" title="Buscar no App do LinkedIn">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    </a>
+                                    ${linkedinActionsHtml}
                                     <button onclick="navigator.clipboard.writeText('${escapedName}'); showToast('Nome copiado com sucesso!', 'success');" class="p-1 px-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg text-[11px] transition cursor-pointer" title="Copiar Nome">
                                         <i class="fa-solid fa-copy"></i>
                                     </button>

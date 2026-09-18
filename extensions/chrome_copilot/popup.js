@@ -121,30 +121,39 @@ function renderCompany(c) {
   const partnersContainer = document.getElementById('partners-list');
   partnersContainer.innerHTML = '';
   const partners = c.partners || [{ name: 'Sócio / Administrador', role: 'Diretor Geral' }];
-  partners.slice(0, 3).forEach(p => {
+  partners.slice(0, 4).forEach(p => {
     const pName = p.name || 'Sócio Administrador';
     const pRole = p.role || 'Sócio';
     
-    // Clean name and company for reliable LinkedIn finding
+    // Check if corporate entity
+    const isPJ = p.is_person === false || /(LTDA|S\.A\.|S\/A|LLC|INC|HOLDING|PARTICIPACOES|INVESTIMENTOS|FUNDO|CORP|EIRELI|SERVICOS|BRASIL|ADMINISTRADORA)/i.test(pName);
+    const cleanPerson = pName.replace(/[^a-zA-Z0-9\s]/g, '').split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).join(' ');
     const rawComp = c.trade_name || c.company_name || '';
     const cleanComp = rawComp.replace(/(LTDA|S\.A\.|ME|EPP|EIRELI|HOLDING|PARTICIPACOES|SERVICOS)/gi, '').trim().split(' ').filter(w => w.length > 1 && !['de', 'da', 'do', 'dos', 'das', 'e'].includes(w.toLowerCase())).slice(0, 2).join(' ');
-    const googleXrayUrl = `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ ' + cleanPerson + ' ' + cleanComp)}`;
-    const linkedinAppUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(cleanPerson + ' ' + cleanComp)}`;
+    
+    const hasLinkedIn = (!isPJ) && (p.has_linkedin === true || (cleanPerson.split(' ').length >= 2 && cleanComp.length > 1));
+    const googleXrayUrl = p.linkedin_url || p.google_xray_url || `https://www.google.com/search?q=${encodeURIComponent('site:linkedin.com/in/ ' + cleanPerson + ' ' + cleanComp)}`;
+    
+    let btnHtml = '';
+    if (hasLinkedIn) {
+      btnHtml = `
+        <a href="${googleXrayUrl}" target="_blank" rel="noopener noreferrer" class="btn-linkedin" title="Acessar Perfil Verificado no LinkedIn">
+          <i class="fa-brands fa-linkedin"></i> Perfil
+        </a>
+      `;
+    } else if (isPJ) {
+      btnHtml = `<span style="font-size:9px; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:600;">🏢 PJ</span>`;
+    }
     
     const pDiv = document.createElement('div');
     pDiv.className = 'partner-item';
     pDiv.innerHTML = `
       <div>
         <div style="font-weight:700; color:#1e293b;">${pName}</div>
-        <div style="font-size:10px; color:#64748b;">${pRole}</div>
+        <div style="font-size:10px; color:#64748b;">${pRole} &bull; <span style="color:${isPJ ? '#64748b' : '#2563eb'}; font-weight:600;">${isPJ ? 'Holding / Sócia PJ' : 'Decisor'}</span></div>
       </div>
       <div style="display:flex; gap:4px; align-items:center;">
-        <a href="${googleXrayUrl}" target="_blank" rel="noopener noreferrer" class="btn-linkedin" title="Acessar Perfil Direto do Sócio (Sem login obrigatório)">
-          <i class="fa-brands fa-linkedin"></i> Perfil
-        </a>
-        <a href="${linkedinAppUrl}" target="_blank" rel="noopener noreferrer" class="btn-linkedin" style="background:#f8fafc; color:#475569; border-color:#cbd5e1;" title="Buscar no LinkedIn App">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </a>
+        ${btnHtml}
       </div>
     `;
     partnersContainer.appendChild(pDiv);

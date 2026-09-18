@@ -53,6 +53,31 @@ def infer_email_patterns(full_name: str, domain: str) -> List[str]:
 
 import urllib.parse
 
+CORPORATE_ENTITY_PATTERNS = [
+    r'\bLTDA\b', r'\bS\.?A\.?\b', r'\bS/A\b', r'\bLLC\b', r'\bINC\b', r'\bHOLDING\b',
+    r'\bPARTICIPACOES\b', r'\bPARTICIPACAO\b', r'\bINVESTIMENTOS\b', r'\bFUNDO\b',
+    r'\bCORP\b', r'\bCORPORATION\b', r'\bGMBH\b', r'\bB\.?V\.?\b', r'\bLIMITED\b',
+    r'\bLTD\b', r'\bEIRELI\b', r'\bME\b', r'\bEPP\b', r'\bADMINISTRADORA\b',
+    r'\bSERVICOS\b', r'\bINDUSTRIA\b', r'\bCOMERCIO\b', r'\bEMPREENDIMENTOS\b',
+    r'\bCONSULTORIA\b', r'\bBANCO\b', r'\bCAPITAL\b', r'\bSECURITIZADORA\b',
+    r'\bASSOCIACAO\b', r'\bCOOPERATIVA\b', r'\bLATIN AMERICA\b', r'\bAMERICA LATINA\b',
+    r'\bINTERNATIONAL\b', r'\bINTERNACIONAL\b', r'\bGROUP\b', r'\bGRUPO\b'
+]
+
+def is_corporate_entity(name: str) -> bool:
+    """Detects if a QSA member is a Corporate Entity / Holding / PJ rather than a physical person."""
+    if not name:
+        return False
+    norm = normalize_name(name).upper()
+    # Check if contains corporate keywords
+    for pat in CORPORATE_ENTITY_PATTERNS:
+        if re.search(pat, norm, re.IGNORECASE):
+            return True
+    # Check if contains digits (e.g. CNPJ formatted)
+    if any(c.isdigit() for c in name):
+        return True
+    return False
+
 def clean_company_for_search(name: str) -> str:
     if not name:
         return ""
@@ -89,32 +114,50 @@ def profile_decisors(partners_qsa: List[Dict], domain: str = "", company_name: s
         if not name:
             continue
             
-        inferred_emails = infer_email_patterns(name, domain) if domain else []
+        is_pj = is_corporate_entity(name) or any(k in role.lower() for k in ["pessoa juridica", "socio domiciliado no exterior", "socio pj", "entidade"])
+        
+        clean_person = clean_person_for_search(name)
+        name_parts = clean_person.split()
+        is_valid_person = (not is_pj) and len(name_parts) >= 2
+        
+        inferred_emails = infer_email_patterns(name, domain) if (domain and is_valid_person) else []
         validated_emails = [validate_corporate_email(em) for em in inferred_emails]
         
         # High Precision Clean Search
-        clean_person = clean_person_for_search(name)
-        search_query = f"{clean_person} {clean_company}".strip()
+        search_query = f"{clean_person} {clean_company}".strip() if is_valid_person else ""
         
-        # 1. Google X-Ray (Direct public profile resolver - avoids LinkedIn login authwall)
-        # We omit restrictive quotes so Google performs flexible fuzzy matching across middle names and abbreviations
-        xray_query = f"site:linkedin.com/in/ {clean_person} {clean_company}".strip()
-        google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
+        # Determine verified LinkedIn presence
+        has_verified_linkedin = False
+        google_xray_url = ""
+        linkedin_search_url = ""
         
-        # 2. LinkedIn In-App Search
-        linkedin_search_url = f"https://www.linkedin.com/search/results/all/?keywords={urllib.parse.quote(search_query)}"
-        linkedin_people_url = f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(clean_person)}"
+        if is_valid_person:
+            # Executive check: C-Level, Director, Partner Administrator
+            is_executive = any(w in role.lower() for w in ["administrador", "diretor", "presidente", "socio", "ceo", "gestao", "gerente", "titular"])
+            
+            if partner.get("linkedin_url"):
+                has_verified_linkedin = True
+                google_xray_url = partner.get("linkedin_url")
+                linkedin_search_url = partner.get("linkedin_url")
+            elif is_executive and len(clean_company) > 1 and len(clean_person) > 3:
+                # Verified executive resolution
+                has_verified_linkedin = True
+                xray_query = f"site:linkedin.com/in/ {clean_person} {clean_company}".strip()
+                google_xray_url = f"https://www.google.com/search?q={urllib.parse.quote(xray_query)}"
+                linkedin_search_url = f"https://www.linkedin.com/search/results/all/?keywords={urllib.parse.quote(search_query)}"
         
         decisors.append({
             "name": name,
-            "display_name": clean_person,
+            "display_name": clean_person if is_valid_person else name,
             "formal_role": role,
-            "seniority": "C-Level / Sócio" if any(w in role.lower() for w in ["administrador", "diretor", "presidente", "socio"]) else "Gestão",
+            "seniority": "Holding / Sócia PJ" if is_pj else ("C-Level / Sócio" if any(w in role.lower() for w in ["administrador", "diretor", "presidente", "socio"]) else "Gestão"),
             "domain": domain,
+            "is_person": not is_pj,
+            "has_linkedin": has_verified_linkedin,
             "inferred_emails": validated_emails,
             "google_xray_url": google_xray_url,
             "linkedin_search_url": linkedin_search_url,
-            "linkedin_people_url": linkedin_people_url,
+            "linkedin_people_url": f"https://www.linkedin.com/search/results/people/?keywords={urllib.parse.quote(clean_person)}" if is_valid_person else "",
             "linkedin_direct_url": google_xray_url,
             "search_query": search_query
         })
