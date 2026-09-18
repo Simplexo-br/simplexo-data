@@ -40,6 +40,10 @@
 * data_core.simples_nacional: 50.396.768 registros carregados via streaming COPY.
 * data_core (MEIs): 17.523.665 MEIs ativos e históricos indexados.
 * data_core (CNAEs): 1.359 códigos CNAE estruturados com descrições e catálogo de 14 macro-segmentos econômicos.
-* Multi-CNAE & Macro-Segment Filtering: Suporte completo a tags/chips múltiplos de CNAE e seleção de verticais econômicas na busca e no Stone Station B2B.
+* Multi-CNAE & Macro-Segment Filtering: Suporte completo a atalhos rápidos de setores (Alimentação, Varejo, Tecnologia, Construção, Saúde, Serviços e Indústria) e chips/tags múltiplos de CNAE.
+* Paginação Avançada: Padrão de 50 empresas por página, seletor de densidade (20, 50, 100) e barra de navegação numerada com controle anterior/próxima e contagem exata no PostgreSQL.
+* Validação HLR & WhatsApp: Classificador de telefones fixos (10 dígitos) vs móveis (11 dígitos) com verificação em lote e ocultação inteligente de WhatsApp em fixos.
+* LinkedIn Decisor Verification: Extração de nomes concisos para busca corporativa e distinção entre links diretos verificados e busca nativa.
+* Integração CRM Simplexo SSO: Modal interativo de autenticação SSO, configuração de pipeline e teste de latência/ping.
 * Google BigQuery Integration: Dataset simplexo_data_lake conectado e resiliente.
 * CNO (Obras Civis), PGFN (Dívida Ativa), Comex Stat, PNCP (Licitações) e ANTT (Frotas) 100% integrados.
