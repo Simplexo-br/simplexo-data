@@ -577,6 +577,7 @@ def search_companies(
     has_fleet: Optional[bool] = None,
     fiscal_regularity: Optional[str] = None,
     faturamento_faixa: Optional[str] = None,
+    is_active: Optional[bool] = None,
     limit: int = 50,
     offset: int = 0
 ):
@@ -623,14 +624,16 @@ def search_companies(
             if q:
                 clean_q = q.strip()
                 digits = re.sub(r'\D', '', clean_q)
+                term = f"%{clean_q}%"
                 if len(digits) >= 8:
-                    sql += " AND (e.cnpj LIKE %s OR c.cnpj_base = %s OR c.legal_name ILIKE %s OR e.trade_name ILIKE %s)"
-                    term = f"%{clean_q}%"
-                    params.extend([f"{digits}%", digits[:8], term, term])
+                    sql += " AND (e.cnpj LIKE %s OR c.cnpj_base = %s OR c.legal_name ILIKE %s OR e.trade_name ILIKE %s OR e.cnae_main_desc ILIKE %s)"
+                    params.extend([f"{digits}%", digits[:8], term, term, term])
                 else:
-                    sql += " AND (c.legal_name ILIKE %s OR e.trade_name ILIKE %s)"
-                    term = f"%{clean_q}%"
-                    params.extend([term, term])
+                    sql += " AND (c.legal_name ILIKE %s OR e.trade_name ILIKE %s OR e.cnae_main_desc ILIKE %s)"
+                    params.extend([term, term, term])
+
+            if is_active is True:
+                sql += " AND (e.registration_status ILIKE '%ATIVA%' OR e.registration_status = '02' OR e.registration_status IS NULL)"
 
             if state:
                 sql += " AND e.state_code = %s"
@@ -697,7 +700,13 @@ def search_companies(
                 params.append(min_score)
 
             if has_whatsapp is True:
-                sql += " AND s.has_valid_whatsapp = TRUE"
+                sql += """ AND (
+                    s.has_valid_whatsapp = TRUE 
+                    OR (
+                        e.cadastral_phone_1 IS NOT NULL 
+                        AND LENGTH(REGEXP_REPLACE(e.cadastral_phone_1, '\\D', '', 'g')) >= 10
+                    )
+                )"""
 
             if has_ecommerce is True:
                 sql += " AND df.has_ecommerce = TRUE"
@@ -724,58 +733,12 @@ def search_companies(
             cur.execute(sql, tuple(params))
             raw_results = cur.fetchall()
 
-            # If no results found locally and a query was provided, trigger on-demand live lookup
-            if not raw_results and q:
+            # If few results found locally and a query was provided, trigger on-demand live lookup to expand dataset
+            if len(raw_results) < 20 and q:
                 ingested = search_and_ingest_by_name(q)
                 if ingested:
                     conn.commit()
-                    in_clause = ",".join(["%s"] * len(ingested))
-                    cur.execute(f"""
-                        SELECT 
-                            c.id as company_id,
-                            c.cnpj_base,
-                            c.legal_name,
-                            c.share_capital,
-                            c.company_size,
-                            e.id as establishment_id,
-                            e.cnpj,
-                            e.trade_name,
-                            e.registration_status,
-                            e.cnae_main,
-                            e.cnae_main_desc,
-                            e.city_name,
-                            e.state_code,
-                            e.cadastral_email,
-                            e.cadastral_phone_1,
-                            COALESCE(sn.is_simples, FALSE) as is_simples,
-                            COALESCE(sn.is_mei, FALSE) as is_mei,
-                            COALESCE(s.total_score, 80) as score,
-                            COALESCE(s.score_grade, 'MUITO_BOM') as score_grade,
-                            COALESCE(s.has_valid_whatsapp, TRUE) as has_whatsapp,
-                            COALESCE(s.has_valid_phone, TRUE) as has_phone,
-                            COALESCE(s.has_valid_email, TRUE) as has_email,
-                            COALESCE(fc.regularity_status, 'REGULAR') as fiscal_regularity,
-                            COALESCE(co.is_exporter, FALSE) as is_exporter,
-                            COALESCE(co.is_importer, FALSE) as is_importer,
-                            COALESCE(pc.is_public_supplier, FALSE) as is_public_supplier,
-                            COALESCE(tf.registered_vehicles_count, 0) as registered_vehicles_count,
-                            COALESCE(df.has_ecommerce, FALSE) as has_ecommerce,
-                            COALESCE(df.has_corporate_email, TRUE) as has_corporate_email,
-                            COALESCE(df.detected_crm, 'RD Station') as detected_crm,
-                            COALESCE(df.detected_erp, 'TOTVS') as detected_erp,
-                            df.google_rating, df.latitude, df.longitude
-                        FROM data_core.establishments e
-                        JOIN data_core.companies c ON c.id = e.company_id
-                        LEFT JOIN data_core.simples_nacional sn ON sn.cnpj_base = c.cnpj_base
-                        LEFT JOIN data_mining.commercial_scores s ON s.establishment_id = e.id
-                        LEFT JOIN data_mining.fiscal_compliance fc ON fc.cnpj = e.cnpj
-                        LEFT JOIN data_mining.comex_operations co ON co.cnpj = e.cnpj
-                        LEFT JOIN data_mining.public_contracts pc ON pc.cnpj = e.cnpj
-                        LEFT JOIN data_mining.transport_fleets tf ON tf.cnpj = e.cnpj
-                        LEFT JOIN data_mining.digital_footprint df ON df.establishment_id = e.id
-                        WHERE e.cnpj IN ({in_clause})
-                        ORDER BY score DESC;
-                    """, tuple(ingested))
+                    cur.execute(sql, tuple(params))
                     raw_results = cur.fetchall()
             
             # Enrich each result with Revenue & Employee Estimation

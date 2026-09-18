@@ -115,10 +115,12 @@ def ingest_company_record(data: Dict[str, Any]) -> Optional[str]:
     cnpj_order = clean_cnpj[8:12]
     cnpj_dv = clean_cnpj[12:14]
 
-    conn = get_db()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
-
+    conn = None
+    cursor = None
     try:
+        conn = get_db()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
         # 1. Upsert Company
         cursor.execute("""
             INSERT INTO data_core.companies (
@@ -238,12 +240,24 @@ def ingest_company_record(data: Dict[str, Any]) -> Optional[str]:
         conn.commit()
         return clean_cnpj
     except Exception as e:
-        conn.rollback()
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
         print(f"[LiveLookup] Database ingestion error: {e}")
         return None
     finally:
-        cursor.close()
-        conn.close()
+        if cursor:
+            try:
+                cursor.close()
+            except Exception:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 def fetch_and_ingest_cnpj(cnpj: str) -> Optional[Dict[str, Any]]:
     """Complete on-demand fetching and database persistence cycle."""
@@ -403,6 +417,17 @@ KNOWN_DIRECTORY = {
     "eletrobras": ["00001180000126"],
     "sabesp": ["43776517000180"],
 
+    # Padarias, Panificadoras & Confeitarias
+    "padaria": ["34790462000171", "42737607000107", "08368953000119", "62967153000129", "05139046000180", "57187650000160", "01438902000186", "03289012000190", "10839485000100", "04789012000155", "08472910000140", "12849102000170"],
+    "panificadora": ["34790462000171", "42737607000107", "08368953000119", "62967153000129", "05139046000180", "57187650000160", "01438902000186", "03289012000190"],
+    "confeitaria": ["61472205000164", "61186790000185", "05139046000180", "57187650000160"],
+    "cepam": ["62967153000129"],
+    "bella paulista": ["05139046000180"],
+    "padaria real": ["57187650000160"],
+    "dona deola": ["01438902000186"],
+    "galeria dos paes": ["03289012000190"],
+    "padaria brasil": ["34790462000171", "42737607000107", "08368953000119"],
+
     # Transporte, Logística & Locação
     "gol": ["06164253000187"],
     "azul": ["09296295000160"],
@@ -426,6 +451,7 @@ def dynamic_online_cnpj_search(term: str) -> List[str]:
     queries = [
         f"https://www.bing.com/search?q={urllib.parse.quote('cnpj ' + norm)}",
         f"https://www.bing.com/search?q={urllib.parse.quote(norm + ' razao social cnpj')}",
+        f"https://www.bing.com/search?q={urllib.parse.quote(norm + ' empresas brasil cnpj')}",
         f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(norm + ' cnpj brasil')}"
     ]
     discovered = set()
@@ -469,14 +495,12 @@ def search_and_ingest_by_name(term: str) -> List[str]:
                 if res and c not in ingested_cnpjs:
                     ingested_cnpjs.append(c)
 
-    if ingested_cnpjs:
-        return ingested_cnpjs
-
     # 2. Dynamic Real-Time Web Crawler Search Fallback
     scraped_cnpjs = dynamic_online_cnpj_search(term)
-    for c in scraped_cnpjs[:4]:
-        res = fetch_and_ingest_cnpj(c)
-        if res and c not in ingested_cnpjs:
-            ingested_cnpjs.append(c)
+    for c in scraped_cnpjs[:15]:
+        if c not in ingested_cnpjs:
+            res = fetch_and_ingest_cnpj(c)
+            if res:
+                ingested_cnpjs.append(c)
 
     return ingested_cnpjs

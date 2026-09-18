@@ -845,7 +845,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-slate-100">
                             <div class="flex items-center space-x-6">
                                 <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
-                                    <input id="filter-whatsapp" type="checkbox" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
+                                    <input id="filter-whatsapp" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 mr-2">
                                     <i class="fa-brands fa-whatsapp text-emerald-600 mr-1.5"></i> Apenas com WhatsApp Validado
                                 </label>
                                 <label class="flex items-center text-xs text-slate-700 font-medium cursor-pointer">
@@ -2226,6 +2226,8 @@
             if (hasCorpEmail) url += `&has_corporate_email=true`;
             if (hasEcommerce) url += `&has_ecommerce=true`;
             if (hasWhatsApp) url += `&has_whatsapp=true`;
+            const activeOnly = document.getElementById('filter-active-only');
+            if (activeOnly && activeOnly.checked) url += `&is_active=true`;
 
             const btn = document.querySelector("button[onclick='executeSearch()']");
             if (btn) btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Filtrando...';

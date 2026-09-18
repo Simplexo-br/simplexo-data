@@ -40,8 +40,10 @@
 * data_core.simples_nacional: 50.396.768 registros carregados via streaming COPY.
 * data_core (MEIs): 17.523.665 MEIs ativos e históricos indexados.
 * data_core (CNAEs): 1.359 códigos CNAE estruturados com descrições e catálogo de 14 macro-segmentos econômicos.
+* Busca Textual Ampla em Toda a Base: Pesquisa textual abrangendo Razão Social (`c.legal_name`), Nome Fantasia (`e.trade_name`) e Atividade Econômica CNAE (`e.cnae_main_desc`), permitindo localizar termos genéricos de negócios (ex: "padaria", "farmácia", "restaurante") em toda a base de dados.
 * Multi-CNAE & Macro-Segment Filtering: Suporte completo a atalhos rápidos de setores (Alimentação, Varejo, Tecnologia, Construção, Saúde, Serviços e Indústria) e chips/tags múltiplos de CNAE.
 * Paginação Avançada: Padrão de 50 empresas por página, seletor de densidade (20, 50, 100) e barra de navegação numerada com controle anterior/próxima e contagem exata no PostgreSQL.
+* Filtro de WhatsApp & Ativas RFB Desacoplado: Suporte ao parâmetro `is_active` e verificação flexível de WhatsApp com base no padrão móvel cadastral (11 dígitos) e scores, sem restringir a busca geral por padrão.
 * Validação HLR & WhatsApp: Classificador de telefones fixos (10 dígitos) vs móveis (11 dígitos) com verificação em lote e ocultação inteligente de WhatsApp em fixos.
 * LinkedIn Decisor Verification: Extração de nomes concisos para busca corporativa e distinção entre links diretos verificados e busca nativa.
 * Integração CRM Simplexo SSO: Modal interativo de autenticação SSO, configuração de pipeline e teste de latência/ping.
