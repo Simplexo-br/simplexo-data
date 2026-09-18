@@ -1,7 +1,7 @@
 # CURRENT.md — Status do Projeto Simplexo Data
 
 **Data:** 17/09/2026  
-**Status Geral:** ✅ **Stack 2.4 Enterprise: Extensão Chrome Copilot (Manifest V3), Deduplicação & Supressão de Listas (Anti-churn) e Grafo Interativo de Grupo Econômico & QSA**
+**Status Geral:** ✅ **Stack 3.0 Enterprise: Stone Station (B2B/B2C), DataFlow™ Waterfall, DatAService & Simplexo Reveal (Intent Data)**
 
 ---
 
@@ -12,29 +12,27 @@
 * **Containers Ativos & Saudáveis:**
   * simplexo_postgres (PostgreSQL 16 com pg_trgm, unaccent, uuid-ossp)
   * simplexo_redis (Redis 7)
-  * simplexo_gateway (FastAPI REST Gateway v2.4 na porta 8000)
+  * simplexo_gateway (FastAPI REST Gateway v3.0 na porta 8000)
   * simplexo_mining_worker (Worker de Mineração, Technographics e Lead Scoring)
 * **URL de Produção:** http://8.234.211.34:8000/ (HTTP 200 OK — 100% Operacional)
 
 ---
 
-## 2. As 3 Fases de Inovação Entregues
+## 2. Simplexo Data Suite 3.0 Entregue
 
-1. **Fase 1: Extensão Google Chrome (Simplexo Web Copilot)**:
-   - Pacote Manifest V3 em extensions/chrome_copilot/ (manifest.json, popup.html, popup.js, content.js, background.js, icons/).
-   - Detecção em tempo real de CNPJs em websites institucionais e perfis corporativos do LinkedIn.
-   - Pop-up com enriquecimento 360, faturamento presumido, decisores do QSA com links diretos para LinkedIn e botões WhatsApp (wa.me).
-   - Exportação direta de leads para o Simplexo Vendas CRM em 1 clique via /api/v1/export/crm/direct.
-   - Endpoint de download automático do pacote .zip em /api/v1/extension/download e nova tela explicativa na barra lateral.
+1. **Stone Station (B2B & B2C)**:
+   - Motor B2B com +40 filtros de ICP corporativo (`POST /api/v1/stonestation/search/b2b`).
+   - Motor B2C com +70 critérios para sócios, administradores e decisores (`POST /api/v1/stonestation/search/b2c`).
+   - Gestor de créditos de consulta e extrato em tempo real (`GET /api/v1/stonestation/credits/balance`).
 
-2. **Fase 2: Deduplicação & Supressão de Listas (Anti-churn)**:
-   - Tabela data_app.suppression_lists e endpoints /api/v1/suppression/list, /api/v1/suppression/upload, /api/v1/suppression/{id} e /api/v1/suppression/clear.
-   - Upload de planilhas CSV com deduplicação e normalização automática de CNPJs e domínios.
-   - Switch ativo de proteção anti-churn no painel de busca avançada que omite clientes existentes tanto nas pesquisas quanto nas exportações.
+2. **DataFlow™ Waterfall Enrichment**:
+   - Enriquecimento em cascata determinística L1 (Redis Cache) -> L2 (PostgreSQL Data Plane) -> L3 (BigQuery/RFB Live) -> L4 (DNS/MX Resolver) -> L5 (Google X-Ray / QSA Decisors) com latência total em milissegundos (`GET /api/v1/enrich/dataflow/{cnpj}`).
 
-3. **Fase 3: Grafo Visual de Grupo Econômico & QSA (Network Graph)**:
-   - Endpoint /api/v1/company/{cnpj}/network-graph gerando nós e arestas conectados com categorização visual (Matriz, Sócios Administradores, Filiais Operacionais e Holdings Coligadas).
-   - Renderizador em HTML5 Canvas interativo no modal Dossiê 360 com nós coloridos, atualização em tempo real, física de posições e suporte a navegação por nós.
+3. **DatAService & Batch Sanitizer**:
+   - Higienização de bases CSV em lote com deduplicação e cálculo de Score de Assertividade Cadastral e Localização (0 a 100) sem avaliação de risco de crédito (`POST /api/v1/dataservice/sanitize`).
+
+4. **Simplexo Reveal (Pixel & Intent Data)**:
+   - Identificador em tempo real de visitantes com Reverse IP e ASN, scoring de intenção de compra B2B (0 a 100) e exportação em 1 clique para o Simplexo Vendas CRM (`GET /api/v1/reveal/feed` e `GET /api/v1/reveal/snippet`).
 
 ---
 

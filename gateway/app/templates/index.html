@@ -944,19 +944,25 @@
                     </div>
                 </div>
 
-                <!-- VIEW 6: SIMPLEXO REVEAL (PIXEL) -->
+                <!-- VIEW 6: SIMPLEXO REVEAL (PIXEL & VISITOR INTENT) -->
                 <div id="view-reveal" class="hidden space-y-6 max-w-7xl mx-auto">
                     <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-                        <div class="border-b border-slate-100 pb-4 flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
-                                <i class="fa-solid fa-radar"></i>
+                        <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                                    <i class="fa-solid fa-radar"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900">Simplexo Reveal — De-anonimizador B2B & Intent Data</h3>
+                                    <p class="text-xs text-slate-500">Identifique quais empresas visitam seu website em tempo real com cálculo de intenção de compra</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-900">Simplexo Reveal — De-anonimizador B2B</h3>
-                                <p class="text-xs text-slate-500">Identifique quais empresas visitam seu website antes mesmo de preencherem formulários</p>
-                            </div>
+                            <button onclick="loadRevealFeed()" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="fa-solid fa-rotate-right"></i> Atualizar Feed
+                            </button>
                         </div>
 
+                        <!-- SNIPPET BOX -->
                         <div class="bg-slate-900 p-4 rounded-xl text-slate-300 font-mono text-xs space-y-2">
                             <div class="flex justify-between items-center text-slate-400 text-[11px] pb-2 border-b border-slate-800">
                                 <span>Instale este script na tag &lt;head&gt; do seu website:</span>
@@ -967,9 +973,34 @@
                             <code id="reveal-snippet" class="text-emerald-400">&lt;script src="http://8.234.211.34:8000/api/v1/reveal/pixel.js" async&gt;&lt;/script&gt;</code>
                         </div>
 
-                        <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-xs text-blue-800 space-y-1">
-                            <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-circle-info"></i> Como funciona:</div>
-                            <p class="text-[11px] text-blue-700">Quando um tomador de decisão navega pelas páginas de planos ou produtos do seu site, o pixel Simplexo identifica a empresa pelo bloco IP corporativo e notifica sua equipe comercial no Simplexo Vendas CRM imediatamente.</p>
+                        <!-- LIVE VISITORS FEED TABLE -->
+                        <div class="space-y-3 pt-2">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-900 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Empresas Identificadas Navegando Agora
+                                </h4>
+                                <span class="text-[11px] text-slate-400">Resolução reversa de IP & ASN em tempo real</span>
+                            </div>
+
+                            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                                <table class="w-full text-left text-xs text-slate-600">
+                                    <thead class="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 uppercase text-[10px]">
+                                        <tr>
+                                            <th class="p-3.5">Empresa Visitante</th>
+                                            <th class="p-3.5">Localização</th>
+                                            <th class="p-3.5">Página Acessada</th>
+                                            <th class="p-3.5">Origem</th>
+                                            <th class="p-3.5">Intenção de Compra</th>
+                                            <th class="p-3.5">Duração</th>
+                                            <th class="p-3.5 text-right">Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reveal-visitors-table" class="divide-y divide-slate-100">
+                                        <!-- Loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1601,6 +1632,8 @@
                 loadSearchHistory();
             } else if (tabId === 'exports') {
                 loadExportLogs();
+            } else if (tabId === 'reveal') {
+                loadRevealFeed();
             }
         }
 
@@ -2096,6 +2129,51 @@
             const snippet = document.getElementById('reveal-snippet').innerText;
             navigator.clipboard.writeText(snippet);
             showToast("Snippet copiado para a área de transferência!");
+        }
+
+        async function loadRevealFeed() {
+            const tbody = document.getElementById('reveal-visitors-table');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Identificando visitantes...</td></tr>';
+            try {
+                const res = await fetch('/api/v1/reveal/feed');
+                const data = await res.json();
+                const visitors = data.visitors || [];
+                tbody.innerHTML = '';
+                if (visitors.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Nenhum visitante anônimo detectado recentemente.</td></tr>';
+                    return;
+                }
+                visitors.forEach(v => {
+                    const badgeClass = v.buying_intent_score >= 80 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50/80 transition";
+                    tr.innerHTML = `
+                        <td class="p-3.5">
+                            <div class="font-bold text-slate-900">${v.company_name}</div>
+                            <div class="text-[11px] font-mono text-blue-600">${v.cnpj} &bull; ${v.domain}</div>
+                        </td>
+                        <td class="p-3.5 text-slate-600 font-medium">${v.location}</td>
+                        <td class="p-3.5 font-mono text-slate-500 text-[11px]">${v.page_visited}</td>
+                        <td class="p-3.5 text-slate-500 text-[11px]">${v.referrer}</td>
+                        <td class="p-3.5">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}">
+                                ${v.buying_intent_score}% &bull; ${v.intent_badge}
+                            </span>
+                        </td>
+                        <td class="p-3.5 text-slate-500 text-[11px]">${v.duration_seconds}s</td>
+                        <td class="p-3.5 text-right">
+                            <button onclick="openCompanyModal('${v.cnpj}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer">
+                                Qualificar
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Reveal feed error:", err);
+                tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-rose-500">Erro ao carregar feed de visitantes.</td></tr>';
+            }
         }
 
         async function loadPlans() {

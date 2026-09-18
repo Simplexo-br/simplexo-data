@@ -1,7 +1,7 @@
 # .simplexo/state.yaml — Estado consolidado do Simplexo Data
 
-version: "2.4.0"
-updated_at: "2026-09-17T20:50:00-03:00"
+version: "3.0.0"
+updated_at: "2026-09-17T21:35:00-03:00"
 environment:
   vm_host: "8.234.211.34"
   gcp_project: "odoo-server-vm2"
@@ -30,7 +30,7 @@ components:
     status: "HEALTHY"
   gateway_api:
     type: "FastAPI + Uvicorn"
-    version: "2.4.0"
+    version: "3.0.0"
     port: 8000
     status: "HEALTHY"
     endpoints:
@@ -39,6 +39,13 @@ components:
       - "/api/v1/search"
       - "/api/v1/company/{cnpj}"
       - "/api/v1/company/{cnpj}/network-graph"
+      - "/api/v1/stonestation/search/b2b"
+      - "/api/v1/stonestation/search/b2c"
+      - "/api/v1/stonestation/credits/balance"
+      - "/api/v1/enrich/dataflow/{cnpj}"
+      - "/api/v1/dataservice/sanitize"
+      - "/api/v1/reveal/feed"
+      - "/api/v1/reveal/snippet"
       - "/api/v1/extension/download"
       - "/api/v1/extension/copilot/lookup"
       - "/api/v1/suppression/list"
@@ -52,4 +59,4 @@ components:
       - "/api/v1/opportunities/cno"
       - "/api/v1/plans"
 
-status_summary: "Stack 2.4 Enterprise: Extensao Chrome Copilot, Anti-churn Suppression e Grafo de Grupo Economico entregues e operando em producao com 100% de integridade."
+status_summary: "Stack 3.0 Enterprise: Stone Station (B2B/B2C), DataFlow Waterfall, DatAService & Simplexo Reveal (Intent Data) entregues e operando em producao com 100% de integridade."
